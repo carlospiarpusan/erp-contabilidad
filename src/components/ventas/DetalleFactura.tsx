@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { FormRecibo } from './FormRecibo'
 import { formatCOP, formatFecha } from '@/utils/cn'
+import Link from 'next/link'
 import { FileText, User, CreditCard, Warehouse, CheckCircle, XCircle, Printer } from 'lucide-react'
 
 interface FormaPago { id: string; descripcion: string }
@@ -105,9 +106,11 @@ export function DetalleFactura({ factura, formasPago }: Props) {
               <XCircle className="h-4 w-4 mr-1" /> Cancelar
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={() => window.print()}>
-            <Printer className="h-4 w-4 mr-1" /> Imprimir
-          </Button>
+          <Link href={`/print/factura/${factura.id}`} target="_blank">
+            <Button size="sm" variant="outline">
+              <Printer className="h-4 w-4 mr-1" /> Imprimir
+            </Button>
+          </Link>
         </div>
       </div>
 

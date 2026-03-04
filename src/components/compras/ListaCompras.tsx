@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { Eye, Plus } from 'lucide-react'
+import { Eye, Plus, Download } from 'lucide-react'
 import Link from 'next/link'
 
 interface Compra {
@@ -62,6 +62,10 @@ export function ListaCompras({ compras: inicial, total }: Props) {
             </button>
           ))}
         </div>
+        <a href="/api/export/compras" download>
+          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />CSV</Button>
+        </a>
+
         <Link href="/compras/facturas/nueva">
           <Button size="sm">
             <Plus className="h-4 w-4 mr-1" /> Nueva compra

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Paginacion } from '@/components/ui/paginacion'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { Search, Plus, Eye, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, Eye, SlidersHorizontal, Download } from 'lucide-react'
 import Link from 'next/link'
 
 const COLUMNAS = [
@@ -99,6 +99,10 @@ export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFi
           <SlidersHorizontal className="h-4 w-4" /> Filtros
           {estado && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-bold">!</span>}
         </button>
+
+        <a href="/api/export/ventas" download>
+          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />CSV</Button>
+        </a>
 
         <Link href="/ventas/facturas/nueva">
           <Button variant="success" size="sm"><Plus className="h-4 w-4 mr-1" />Nueva factura</Button>

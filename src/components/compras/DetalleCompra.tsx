@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { ShoppingCart, Truck, Warehouse, CheckCircle, XCircle, CreditCard } from 'lucide-react'
+import Link from 'next/link'
+import { ShoppingCart, Truck, Warehouse, CheckCircle, XCircle, CreditCard, Printer } from 'lucide-react'
 
 interface FormaPago { id: string; descripcion: string }
 
@@ -132,6 +133,11 @@ export function DetalleCompra({ compra, formasPago }: Props) {
               <XCircle className="h-4 w-4 mr-1" /> Cancelar
             </Button>
           )}
+          <Link href={`/print/compra/${compra.id}`} target="_blank">
+            <Button size="sm" variant="outline">
+              <Printer className="h-4 w-4 mr-1" /> Imprimir
+            </Button>
+          </Link>
         </div>
       </div>
 
