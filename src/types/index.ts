@@ -114,6 +114,9 @@ export interface GrupoCliente {
   empresa_id: string
   nombre: string
   descuento_porcentaje: number
+  limite_credito?: number
+  color?: string
+  descripcion?: string
 }
 
 export interface Cliente {
@@ -137,6 +140,9 @@ export interface Cliente {
   pais: string
   colaborador_id?: string
   observaciones?: string
+  regimen_tributario?: string
+  limite_credito?: number
+  dias_credito?: number
   activo: boolean
   created_at: string
   updated_at?: string

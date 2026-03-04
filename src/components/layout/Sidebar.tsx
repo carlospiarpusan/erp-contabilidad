@@ -44,7 +44,10 @@ const menuItems = [
   {
     label: 'Clientes',
     icon: Users,
-    href: '/clientes',
+    children: [
+      { label: 'Todos los clientes', href: '/clientes' },
+      { label: 'Grupos',             href: '/clientes/grupos' },
+    ],
   },
   {
     label: 'Compras',
