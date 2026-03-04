@@ -10,7 +10,8 @@ import { Paginacion } from '@/components/ui/paginacion'
 import { FormProducto } from './FormProducto'
 import type { Producto, Familia, Fabricante, Impuesto } from '@/types'
 import { formatCOP } from '@/utils/cn'
-import { Search, Plus, Pencil, Layers, AlertTriangle } from 'lucide-react'
+import { Search, Plus, Pencil, Layers, AlertTriangle, Eye, SlidersHorizontal } from 'lucide-react'
+import Link from 'next/link'
 
 const COLUMNAS = [
   { key: 'codigo',      label: 'Código' },
@@ -20,64 +21,69 @@ const COLUMNAS = [
   { key: 'pcompra',     label: 'P. Compra',  className: 'text-right' },
   { key: 'margen',      label: 'Margen',     className: 'text-right' },
   { key: 'stock',       label: 'Stock',      className: 'text-center' },
-  { key: 'acciones',    label: '',           className: 'w-20' },
+  { key: 'acciones',    label: '',           className: 'w-24' },
 ]
 
 interface ListaProductosProps {
-  productos:   Producto[]
-  total:       number
-  familias:    Familia[]
-  fabricantes: Fabricante[]
-  impuestos:   Impuesto[]
-  busqueda:    string
-  offset:      number
-  limit:       number
+  productos:       Producto[]
+  total:           number
+  familias:        Familia[]
+  fabricantes:     Fabricante[]
+  impuestos:       Impuesto[]
+  busqueda:        string
+  familiaFiltro?:  string
+  fabricanteFiltro?: string
+  offset:          number
+  limit:           number
 }
 
-export function ListaProductos({ productos, total, familias, fabricantes, impuestos, busqueda: busqInicial, offset: offsetInicial, limit }: ListaProductosProps) {
+export function ListaProductos({
+  productos, total, familias, fabricantes, impuestos,
+  busqueda: busqInicial, familiaFiltro: familiaInicial = '',
+  fabricanteFiltro: fabricanteInicial = '', offset: offsetInicial, limit,
+}: ListaProductosProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
-  const [busqueda, setBusqueda]    = useState(busqInicial)
-  const [offset, setOffset]        = useState(offsetInicial)
-  const [modal, setModal]          = useState(false)
-  const [editar, setEditar]        = useState<Producto | null>(null)
-  const [cargando, setCargando]    = useState(false)
-  const [error, setError]          = useState('')
+  const [busqueda, setBusqueda]          = useState(busqInicial)
+  const [familia_id, setFamiliaId]       = useState(familiaInicial)
+  const [fabricante_id, setFabricanteId] = useState(fabricanteInicial)
+  const [offset, setOffset]              = useState(offsetInicial)
+  const [showFiltros, setFiltros]        = useState(false)
+  const [modal, setModal]                = useState(false)
+  const [editar, setEditar]              = useState<Producto | null>(null)
+  const [cargando, setCargando]          = useState(false)
+  const [error, setError]                = useState('')
 
   function navegar(params: Record<string, string | number>) {
     const sp = new URLSearchParams()
-    if (params.q)      sp.set('q', String(params.q))
-    if (params.offset) sp.set('offset', String(params.offset))
+    if (params.q)             sp.set('q', String(params.q))
+    if (params.offset)        sp.set('offset', String(params.offset))
+    if (params.familia_id)    sp.set('familia_id', String(params.familia_id))
+    if (params.fabricante_id) sp.set('fabricante_id', String(params.fabricante_id))
     startTransition(() => router.push(`/productos?${sp.toString()}`))
   }
 
   function handleBuscar(e: React.FormEvent) {
     e.preventDefault()
     setOffset(0)
-    navegar({ q: busqueda })
+    navegar({ q: busqueda, familia_id, fabricante_id })
   }
 
-  async function handleGuardar(datos: any) {
-    setCargando(true)
-    setError('')
+  function handleFiltros() {
+    setOffset(0)
+    navegar({ q: busqueda, familia_id, fabricante_id })
+  }
+
+  async function handleGuardar(datos: Record<string, unknown>) {
+    setCargando(true); setError('')
     try {
-      const { variantes, ...productoData } = datos
       const url    = editar ? `/api/productos/${editar.id}` : '/api/productos'
       const method = editar ? 'PATCH' : 'POST'
-      const res    = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...productoData, variantes }),
-      })
-      if (!res.ok) {
-        const body = await res.json()
-        throw new Error(body.error ?? 'Error al guardar')
-      }
-      setModal(false)
-      setEditar(null)
-      router.refresh()
-    } catch (e: any) {
-      setError(e.message)
+      const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
+      if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? 'Error') }
+      setModal(false); setEditar(null); router.refresh()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setCargando(false)
     }
@@ -101,7 +107,7 @@ export function ListaProductos({ productos, total, familias, fabricantes, impues
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
+              onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar por código, nombre, barras..."
               className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -109,15 +115,52 @@ export function ListaProductos({ productos, total, familias, fabricantes, impues
           <Button type="submit" variant="outline" size="sm">Buscar</Button>
         </form>
 
-        <Button
-          variant="success"
-          size="sm"
-          onClick={() => { setEditar(null); setModal(true) }}
+        <button
+          onClick={() => setFiltros(p => !p)}
+          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors ${showFiltros ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'}`}
         >
-          <Plus className="h-4 w-4" />
-          Nuevo producto
+          <SlidersHorizontal className="h-4 w-4" /> Filtros
+          {(familia_id || fabricante_id) && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-bold">!</span>}
+        </button>
+
+        <Button variant="success" size="sm" onClick={() => { setEditar(null); setModal(true) }}>
+          <Plus className="h-4 w-4 mr-1" /> Nuevo
         </Button>
       </div>
+
+      {/* Panel filtros */}
+      {showFiltros && (
+        <div className="flex flex-wrap gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray-600">Familia / Categoría</label>
+            <select
+              value={familia_id}
+              onChange={e => setFamiliaId(e.target.value)}
+              className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">Todas</option>
+              {familias.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-gray-600">Fabricante / Marca</label>
+            <select
+              value={fabricante_id}
+              onChange={e => setFabricanteId(e.target.value)}
+              className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">Todos</option>
+              {fabricantes.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
+            </select>
+          </div>
+          <div className="flex items-end gap-2">
+            <Button size="sm" onClick={handleFiltros}>Aplicar</Button>
+            <Button size="sm" variant="outline" onClick={() => {
+              setFamiliaId(''); setFabricanteId(''); navegar({ q: busqueda })
+            }}>Limpiar</Button>
+          </div>
+        </div>
+      )}
 
       <p className="text-sm text-gray-500">
         {total.toLocaleString('es-CO')} producto{total !== 1 ? 's' : ''}
@@ -130,78 +173,78 @@ export function ListaProductos({ productos, total, familias, fabricantes, impues
               No se encontraron productos
             </td>
           </tr>
-        ) : (
-          productos.map((p) => {
-            const stockTotal = calcularStock(p)
-            const margen     = calcularMargen(p)
-            const stockBajo  = p.stock?.some(s => s.cantidad <= s.cantidad_minima && s.cantidad_minima > 0)
-
-            return (
-              <FilaTabla key={p.id}>
-                <CeldaTabla>
-                  <span className="font-mono text-xs font-medium text-gray-600">{p.codigo}</span>
-                </CeldaTabla>
-                <CeldaTabla>
-                  <div className="flex items-center gap-2">
-                    <div>
-                      <p className="font-medium text-gray-900">{p.descripcion}</p>
-                      <div className="flex gap-1 mt-0.5">
-                        {p.fabricante && (
-                          <span className="text-xs text-gray-400">{(p.fabricante as any).nombre}</span>
-                        )}
-                        {p.tiene_variantes && (
-                          <Badge variant="info">
-                            <Layers className="h-2.5 w-2.5 mr-1" />
-                            Variantes
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
+        ) : productos.map(p => {
+          const stockTotal = calcularStock(p)
+          const margen     = calcularMargen(p)
+          const stockBajo  = p.stock?.some(s => s.cantidad <= s.cantidad_minima && s.cantidad_minima > 0)
+          return (
+            <FilaTabla key={p.id}>
+              <CeldaTabla>
+                <span className="font-mono text-xs font-medium text-gray-600">{p.codigo}</span>
+              </CeldaTabla>
+              <CeldaTabla>
+                <Link href={`/productos/${p.id}`} className="group">
+                  <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{p.descripcion}</p>
+                  <div className="flex gap-1 mt-0.5">
+                    {(p.fabricante as { nombre?: string } | null)?.nombre && (
+                      <span className="text-xs text-gray-400">{(p.fabricante as { nombre: string }).nombre}</span>
+                    )}
+                    {p.tiene_variantes && (
+                      <Badge variant="info"><Layers className="h-2.5 w-2.5 mr-1" />Variantes</Badge>
+                    )}
                   </div>
-                </CeldaTabla>
-                <CeldaTabla>
-                  {p.familia && (
-                    <Badge variant="outline">{(p.familia as any).nombre}</Badge>
-                  )}
-                </CeldaTabla>
-                <CeldaTabla className="text-right font-medium text-gray-900">
-                  {formatCOP(p.precio_venta)}
-                </CeldaTabla>
-                <CeldaTabla className="text-right text-gray-500">
-                  {formatCOP(p.precio_compra)}
-                </CeldaTabla>
-                <CeldaTabla className="text-right">
-                  <span className={margen >= 30 ? 'text-green-600 font-medium' : margen >= 15 ? 'text-yellow-600' : 'text-red-600'}>
-                    {margen}%
+                </Link>
+              </CeldaTabla>
+              <CeldaTabla>
+                {(p.familia as { nombre?: string } | null)?.nombre && (
+                  <Badge variant="outline">{(p.familia as { nombre: string }).nombre}</Badge>
+                )}
+              </CeldaTabla>
+              <CeldaTabla className="text-right font-medium text-gray-900">
+                {formatCOP(p.precio_venta)}
+              </CeldaTabla>
+              <CeldaTabla className="text-right text-gray-500">
+                {formatCOP(p.precio_compra)}
+              </CeldaTabla>
+              <CeldaTabla className="text-right">
+                <span className={margen >= 30 ? 'text-green-600 font-medium' : margen >= 15 ? 'text-yellow-600' : 'text-red-600'}>
+                  {margen}%
+                </span>
+              </CeldaTabla>
+              <CeldaTabla className="text-center">
+                <div className="flex items-center justify-center gap-1">
+                  {stockBajo && <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />}
+                  <span className={stockBajo ? 'text-orange-600 font-medium' : ''}>
+                    {stockTotal.toLocaleString('es-CO')}
                   </span>
-                </CeldaTabla>
-                <CeldaTabla className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    {stockBajo && <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />}
-                    <span className={stockBajo ? 'text-orange-600 font-medium' : ''}>
-                      {stockTotal.toLocaleString('es-CO')}
-                    </span>
-                  </div>
-                </CeldaTabla>
-                <CeldaTabla>
+                </div>
+              </CeldaTabla>
+              <CeldaTabla>
+                <div className="flex items-center gap-1">
+                  <Link
+                    href={`/productos/${p.id}`}
+                    className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    title="Ver detalle"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Link>
                   <button
                     onClick={() => { setEditar(p); setModal(true) }}
                     className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    title="Editar"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
-                </CeldaTabla>
-              </FilaTabla>
-            )
-          })
-        )}
+                </div>
+              </CeldaTabla>
+            </FilaTabla>
+          )
+        })}
       </Tabla>
 
       <Paginacion
-        total={total}
-        limit={limit}
-        offset={offset}
-        onChange={(o) => { setOffset(o); navegar({ q: busqueda, offset: o }) }}
+        total={total} limit={limit} offset={offset}
+        onChange={o => { setOffset(o); navegar({ q: busqueda, familia_id, fabricante_id, offset: o }) }}
       />
 
       <Modal
@@ -210,9 +253,7 @@ export function ListaProductos({ productos, total, familias, fabricantes, impues
         titulo={editar ? 'Editar producto' : 'Nuevo producto'}
         size="xl"
       >
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
-        )}
+        {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
         <FormProducto
           inicial={editar ?? undefined}
           familias={familias}

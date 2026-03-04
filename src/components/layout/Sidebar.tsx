@@ -64,6 +64,7 @@ const menuItems = [
     icon: Package,
     children: [
       { label: 'Artículos', href: '/productos' },
+      { label: 'Stock bajo', href: '/productos/stock-bajo' },
       { label: 'Catálogo', href: '/productos/catalogo' },
       { label: 'Fabricantes', href: '/productos/fabricantes' },
       { label: 'Familias', href: '/productos/familias' },

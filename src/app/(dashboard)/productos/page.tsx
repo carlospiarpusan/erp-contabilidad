@@ -1,25 +1,28 @@
-import { getProductos, getFamilias, getFabricantes, getImpuestos } from '@/lib/db/productos'
+import { getProductos, getFamilias, getFabricantes, getImpuestos, getEstadisticasInventario } from '@/lib/db/productos'
 import { ListaProductos } from '@/components/productos/ListaProductos'
-import { Package } from 'lucide-react'
+import { Package, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; familia_id?: string; offset?: string }>
+  searchParams: Promise<{ q?: string; familia_id?: string; fabricante_id?: string; offset?: string }>
 }
 
 export default async function ProductosPage({ searchParams }: PageProps) {
-  const sp         = await searchParams
-  const busqueda   = sp.q ?? ''
-  const familia_id = sp.familia_id
-  const offset     = parseInt(sp.offset ?? '0')
-  const limit      = 50
+  const sp           = await searchParams
+  const busqueda     = sp.q ?? ''
+  const familia_id   = sp.familia_id
+  const fabricante_id = sp.fabricante_id
+  const offset       = parseInt(sp.offset ?? '0')
+  const limit        = 50
 
-  const [{ productos, total }, familias, fabricantes, impuestos] = await Promise.all([
-    getProductos({ busqueda, familia_id, offset, limit }),
+  const [{ productos, total }, familias, fabricantes, impuestos, stats] = await Promise.all([
+    getProductos({ busqueda, familia_id, fabricante_id, offset, limit }),
     getFamilias(),
     getFabricantes(),
     getImpuestos(),
+    getEstadisticasInventario(),
   ])
 
   return (
@@ -34,6 +37,28 @@ export default async function ProductosPage({ searchParams }: PageProps) {
         </div>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-gray-100 bg-white p-4">
+          <p className="text-xs text-gray-500">Total productos</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total.toLocaleString('es-CO')}</p>
+        </div>
+        <div className="rounded-xl border border-gray-100 bg-white p-4">
+          <p className="text-xs text-gray-500 flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" />Activos</p>
+          <p className="text-2xl font-bold text-green-700 mt-1">{stats.activos.toLocaleString('es-CO')}</p>
+        </div>
+        <Link href="/productos/stock-bajo" className="rounded-xl border border-gray-100 bg-white p-4 hover:shadow-sm transition-shadow block">
+          <p className="text-xs text-gray-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-orange-500" />Stock bajo</p>
+          <p className={`text-2xl font-bold mt-1 ${stats.stockBajo > 0 ? 'text-orange-600' : 'text-gray-900'}`}>
+            {stats.stockBajo.toLocaleString('es-CO')}
+          </p>
+        </Link>
+        <div className="rounded-xl border border-gray-100 bg-white p-4">
+          <p className="text-xs text-gray-500 flex items-center gap-1"><BarChart3 className="h-3 w-3 text-blue-500" />Unidades totales</p>
+          <p className="text-2xl font-bold text-blue-700 mt-1">{stats.unidades.toLocaleString('es-CO')}</p>
+        </div>
+      </div>
+
       <ListaProductos
         productos={productos}
         total={total}
@@ -41,6 +66,8 @@ export default async function ProductosPage({ searchParams }: PageProps) {
         fabricantes={fabricantes}
         impuestos={impuestos}
         busqueda={busqueda}
+        familiaFiltro={familia_id ?? ''}
+        fabricanteFiltro={fabricante_id ?? ''}
         offset={offset}
         limit={limit}
       />
