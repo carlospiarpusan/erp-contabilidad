@@ -32,7 +32,7 @@ export async function getCuentasPUC(params?: { busqueda?: string; nivel?: number
   const supabase = await createClient()
   let q = supabase
     .from('cuentas_puc')
-    .select('id, codigo, descripcion, tipo, nivel, activo', { count: 'exact' })
+    .select('id, codigo, descripcion, tipo, nivel, naturaleza, activa', { count: 'exact' })
     .order('codigo')
   if (params?.nivel)    q = q.eq('nivel', params.nivel)
   if (params?.busqueda) {
