@@ -1,0 +1,50 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getCompras, createCompra } from '@/lib/db/compras'
+import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = req.nextUrl
+    const result = await getCompras({
+      busqueda: searchParams.get('busqueda') ?? undefined,
+      estado:   searchParams.get('estado')   ?? undefined,
+      desde:    searchParams.get('desde')    ?? undefined,
+      hasta:    searchParams.get('hasta')    ?? undefined,
+      limit:    searchParams.has('limit')  ? Number(searchParams.get('limit'))  : undefined,
+      offset:   searchParams.has('offset') ? Number(searchParams.get('offset')) : undefined,
+    })
+    return NextResponse.json(result)
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { proveedor_id, bodega_id, forma_pago_id, fecha, numero_externo, lineas } = body
+
+    if (!proveedor_id)              return NextResponse.json({ error: 'proveedor_id requerido' }, { status: 400 })
+    if (!bodega_id)                 return NextResponse.json({ error: 'bodega_id requerido' },    { status: 400 })
+    if (!numero_externo)            return NextResponse.json({ error: 'numero_externo requerido' },{ status: 400 })
+    if (!lineas || !lineas.length)  return NextResponse.json({ error: 'lineas requeridas' },       { status: 400 })
+
+    const [empresa_id, ejercicio] = await Promise.all([getEmpresaId(), getEjercicioActivo()])
+    if (!ejercicio) return NextResponse.json({ error: 'Sin ejercicio activo' }, { status: 400 })
+
+    const id = await createCompra({
+      empresa_id,
+      ejercicio_id: ejercicio.id,
+      proveedor_id,
+      bodega_id,
+      fecha:         fecha ?? new Date().toISOString().split('T')[0],
+      numero_externo,
+      observaciones: body.observaciones,
+      lineas,
+    })
+
+    return NextResponse.json({ id }, { status: 201 })
+  } catch (e) {
+    return NextResponse.json({ error: String(e) }, { status: 500 })
+  }
+}
