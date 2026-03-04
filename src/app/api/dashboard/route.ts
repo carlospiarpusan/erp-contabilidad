@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
 
     const [kpis, ultimas_facturas, alertas_stock, facturas_vencidas, resumen_mensual] =
       await Promise.all([
-        getKPIs(año),
+        getKPIs(),
         getUltimasFacturas(),
         getAlertasStock(),
         getFacturasVencidas(),

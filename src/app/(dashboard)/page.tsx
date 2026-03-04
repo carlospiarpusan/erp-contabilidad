@@ -1,167 +1,280 @@
-import { KPICard } from '@/components/dashboard/KPICard'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+export const dynamic = 'force-dynamic'
+
+import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { FileText, TrendingUp, ShoppingCart, DollarSign, Percent, AlertTriangle } from 'lucide-react'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { createClient } from '@/lib/supabase/server'
 import {
-  getKPIs,
-  getUltimasFacturas,
-  getAlertasStock,
-  getFacturasVencidas,
-  getResumenMensual,
+  TrendingUp, ShoppingCart, Receipt, DollarSign,
+  ArrowUpRight, ArrowDownRight, AlertTriangle, Clock,
+  Users, Percent,
+} from 'lucide-react'
+import {
+  getKPIsDashboard, getResumenMensual,
+  getUltimasFacturas, getUltimasCompras,
+  getAlertasStock, getFacturasVencidas, getTopClientes,
 } from '@/lib/db/dashboard'
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 
-// Datos de ejemplo cuando Supabase aún no está configurado
-const datosMock = {
-  kpis: { facturas_activas: 682, total_facturado: 842061000, costos_ventas: 464585128, ganancias: 377475872, margen_porcentaje: 44.83 },
-  ultimasFacturas: [
-    { id: '1', numero: 1359, prefijo: 'F', cliente: { razon_social: 'CONSUMIDOR FINAL' }, total: 1040000, estado: 'pagada',   fecha: '2025-12-31' },
-    { id: '2', numero: 1358, prefijo: 'F', cliente: { razon_social: 'Martha Gómez' },      total: 580000,  estado: 'pendiente', fecha: '2025-12-30' },
-    { id: '3', numero: 1357, prefijo: 'F', cliente: { razon_social: 'Clínica Ipiales' },   total: 2150000, estado: 'pagada',   fecha: '2025-12-29' },
-    { id: '4', numero: 1356, prefijo: 'F', cliente: { razon_social: 'CONSUMIDOR FINAL' },  total: 320000,  estado: 'pendiente', fecha: '2025-12-29' },
-    { id: '5', numero: 1355, prefijo: 'F', cliente: { razon_social: 'Adriana Paz' },       total: 890000,  estado: 'pagada',   fecha: '2025-12-28' },
-  ],
-  alertasStock: [],
-  facturasVencidas: [],
-  resumenMensual: [
-    { mes: 1, ventas: 57246000 }, { mes: 2, ventas: 52116000 }, { mes: 3, ventas: 61800000 },
-    { mes: 4, ventas: 48500000 }, { mes: 5, ventas: 70200000 }, { mes: 6, ventas: 65000000 },
-  ],
-}
-
 async function cargarDatos() {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return null
-
-    const [kpis, ultimasFacturas, alertasStock, facturasVencidas, resumenMensual] =
-      await Promise.allSettled([getKPIs(), getUltimasFacturas(), getAlertasStock(), getFacturasVencidas(), getResumenMensual()])
-
-    return {
-      kpis:             kpis.status === 'fulfilled'             ? kpis.value            : null,
-      ultimasFacturas:  ultimasFacturas.status === 'fulfilled'  ? ultimasFacturas.value : [],
-      alertasStock:     alertasStock.status === 'fulfilled'     ? alertasStock.value    : [],
-      facturasVencidas: facturasVencidas.status === 'fulfilled' ? facturasVencidas.value : [],
-      resumenMensual:   resumenMensual.status === 'fulfilled'   ? resumenMensual.value  : [],
-    }
+    const [kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, facturasVencidas, topClientes] =
+      await Promise.all([
+        getKPIsDashboard(),
+        getResumenMensual(),
+        getUltimasFacturas(6),
+        getUltimasCompras(4),
+        getAlertasStock(),
+        getFacturasVencidas(),
+        getTopClientes(),
+      ])
+    return { kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, facturasVencidas, topClientes }
   } catch {
     return null
   }
 }
 
 export default async function DashboardPage() {
-  const datos = await cargarDatos() ?? datosMock
-  const { kpis, ultimasFacturas, alertasStock, facturasVencidas, resumenMensual } = datos
-  const maxVentas = Math.max(...(resumenMensual as any[]).map((m) => m.ventas), 1)
+  const datos = await cargarDatos()
+  if (!datos) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-400">Cargando datos…</p>
+      </div>
+    )
+  }
+
+  const { kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, facturasVencidas, topClientes } = datos
+  const mesActual = new Date().getMonth() // 0-based
+  const resumenFiltrado = resumen.filter(m => m.mes <= mesActual + 1)
+  const maxVal = Math.max(...resumenFiltrado.flatMap(m => [m.ventas, m.compras, m.gastos]), 1)
+
+  const totalAlertas = alertasStock.length + facturasVencidas.length
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Título */}
       <div>
         <h2 className="text-xl font-bold text-gray-900">Resumen General</h2>
-        <p className="text-sm text-gray-500">Ejercicio {new Date().getFullYear()}</p>
+        <p className="text-sm text-gray-500">Ejercicio {new Date().getFullYear()} · {MESES[mesActual]}</p>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <KPICard titulo="Facturas Activas" valor={(kpis?.facturas_activas ?? 0).toLocaleString('es-CO')} icono={FileText}    color="blue"   tendencia={8} />
-        <KPICard titulo="Total Facturado"  valor={formatCOP(kpis?.total_facturado ?? 0)}  subtitulo="Acumulado año"      icono={TrendingUp}  color="green"  tendencia={12} />
-        <KPICard titulo="Costo de Ventas"  valor={formatCOP(kpis?.costos_ventas ?? 0)}    subtitulo="Mercancía vendida"  icono={ShoppingCart} color="orange" />
-        <KPICard titulo="Ganancias Netas"  valor={formatCOP(kpis?.ganancias ?? 0)}        subtitulo="Ventas - Costos"    icono={DollarSign}  color="purple" tendencia={5} />
-        <KPICard titulo="Margen"           valor={`${kpis?.margen_porcentaje ?? 0}%`}     subtitulo="Margen de ganancia" icono={Percent}     color="blue" />
+      {/* ── KPIs fila 1: año ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {[
+          { label: 'Facturado año', value: formatCOP(kpis.facturado_anio), icon: TrendingUp,  color: 'bg-blue-50   text-blue-600',   href: '/ventas/facturas' },
+          { label: 'Ganancia año',  value: formatCOP(kpis.ganancias_anio), icon: DollarSign,  color: 'bg-green-50  text-green-600',  href: '/ventas/facturas' },
+          { label: 'Margen',        value: `${kpis.margen}%`,              icon: Percent,     color: 'bg-purple-50 text-purple-600', href: null },
+          { label: 'Por cobrar',    value: formatCOP(kpis.por_cobrar),     icon: ArrowUpRight, color: 'bg-orange-50 text-orange-600', href: '/ventas/facturas' },
+          { label: 'Por pagar',     value: formatCOP(kpis.por_pagar),      icon: ArrowDownRight, color: 'bg-red-50  text-red-600',   href: '/compras/facturas' },
+        ].map(k => (
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
+            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${k.color} mb-3`}>
+              <k.icon className="h-4 w-4" />
+            </div>
+            <p className="text-xs text-gray-500 mb-0.5">{k.label}</p>
+            {k.href ? (
+              <Link href={k.href} className="font-bold text-gray-900 hover:text-blue-600 text-sm block">{k.value}</Link>
+            ) : (
+              <p className="font-bold text-gray-900 text-sm">{k.value}</p>
+            )}
+          </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Últimas facturas */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Últimas Facturas de Venta</span>
-                <a href="/ventas/facturas" className="text-sm font-normal text-blue-600 hover:underline">Ver todas →</a>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 text-left text-xs text-gray-500">
-                    <th className="pb-3 font-medium">Nº</th>
-                    <th className="pb-3 font-medium">Cliente</th>
-                    <th className="pb-3 font-medium">Fecha</th>
-                    <th className="pb-3 text-right font-medium">Total</th>
-                    <th className="pb-3 text-right font-medium">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {(ultimasFacturas as any[]).map((f) => (
-                    <tr key={f.id} className="hover:bg-gray-50">
-                      <td className="py-3 font-medium text-blue-600">{f.prefijo}{f.numero}</td>
-                      <td className="py-3 text-gray-700">{f.cliente?.razon_social ?? '—'}</td>
-                      <td className="py-3 text-gray-400">{formatFecha(f.fecha)}</td>
-                      <td className="py-3 text-right font-medium">{formatCOP(f.total)}</td>
-                      <td className="py-3 text-right">
-                        <Badge variant={f.estado === 'pagada' ? 'success' : 'warning'}>
-                          {f.estado === 'pagada' ? 'Pagada' : 'Pendiente'}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+      {/* ── KPIs fila 2: este mes ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'Ventas este mes',   value: formatCOP(kpis.ventas_mes),  icon: TrendingUp,  bg: 'bg-blue-600',   href: '/ventas/facturas' },
+          { label: 'Cobrado este mes',  value: formatCOP(kpis.cobrado_mes), icon: DollarSign,  bg: 'bg-green-600',  href: '/ventas/recibos' },
+          { label: 'Compras este mes',  value: formatCOP(kpis.compras_mes), icon: ShoppingCart, bg: 'bg-orange-600', href: '/compras/facturas' },
+          { label: 'Gastos este mes',   value: formatCOP(kpis.gastos_mes),  icon: Receipt,     bg: 'bg-purple-600', href: '/gastos' },
+        ].map(k => (
+          <Link key={k.label} href={k.href}
+            className="rounded-xl bg-white border border-gray-100 p-4 flex items-center gap-3 hover:shadow-sm transition-shadow">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${k.bg} shrink-0`}>
+              <k.icon className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">{k.label}</p>
+              <p className="font-bold text-gray-900">{k.value}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* ── Cuerpo principal ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Gráfica barras mensuales */}
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-4">Ventas vs Compras vs Gastos {new Date().getFullYear()}</h3>
+          <div className="flex items-end gap-2 h-36">
+            {resumenFiltrado.map(m => (
+              <div key={m.mes} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full flex flex-col justify-end gap-0.5" style={{ height: '110px' }}>
+                  {/* Ventas */}
+                  <div
+                    className="w-full rounded-t bg-blue-500 min-h-[2px]"
+                    style={{ height: `${Math.round((m.ventas / maxVal) * 100)}px` }}
+                    title={`Ventas: ${formatCOP(m.ventas)}`}
+                  />
+                </div>
+                <div className="w-full flex gap-0.5">
+                  {/* Compras */}
+                  <div className="flex-1 rounded bg-orange-400" style={{ height: `${Math.max(Math.round((m.compras / maxVal) * 30), 2)}px` }} title={`Compras: ${formatCOP(m.compras)}`} />
+                  {/* Gastos */}
+                  <div className="flex-1 rounded bg-purple-400" style={{ height: `${Math.max(Math.round((m.gastos / maxVal) * 30), 2)}px` }} title={`Gastos: ${formatCOP(m.gastos)}`} />
+                </div>
+                <span className="text-xs text-gray-400">{MESES[m.mes - 1]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-4 text-xs text-gray-500">
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" />Ventas</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-400" />Compras</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-purple-400" />Gastos</span>
+          </div>
         </div>
 
-        {/* Panel lateral */}
+        {/* Alertas + Top clientes */}
         <div className="flex flex-col gap-4">
-          <Card>
-            <CardHeader><CardTitle>Ventas por Mes</CardTitle></CardHeader>
-            <CardContent>
+          {/* Alertas */}
+          <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
+              Alertas
+              {totalAlertas > 0 && (
+                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white font-bold">{totalAlertas}</span>
+              )}
+            </h3>
+            <div className="flex flex-col gap-2 text-sm">
+              {alertasStock.length > 0 && (
+                <Link href="/productos/stock-bajo" className="rounded-lg bg-orange-50 p-3 hover:bg-orange-100 transition-colors">
+                  <p className="font-medium text-orange-800">Stock bajo</p>
+                  <p className="text-xs text-orange-600">{alertasStock.length} producto{alertasStock.length !== 1 ? 's' : ''} bajo mínimo</p>
+                </Link>
+              )}
+              {facturasVencidas.length > 0 && (
+                <Link href="/ventas/facturas" className="rounded-lg bg-red-50 p-3 hover:bg-red-100 transition-colors">
+                  <p className="font-medium text-red-800 flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" /> Facturas vencidas
+                  </p>
+                  <p className="text-xs text-red-600">{facturasVencidas.length} factura{facturasVencidas.length !== 1 ? 's' : ''} sin pagar</p>
+                </Link>
+              )}
+              {kpis.por_pagar > 0 && (
+                <Link href="/compras/facturas" className="rounded-lg bg-yellow-50 p-3 hover:bg-yellow-100 transition-colors">
+                  <p className="font-medium text-yellow-800">Compras pendientes</p>
+                  <p className="text-xs text-yellow-700">{formatCOP(kpis.por_pagar)} por pagar</p>
+                </Link>
+              )}
+              {totalAlertas === 0 && kpis.por_pagar === 0 && (
+                <p className="text-center text-xs text-gray-400 py-3">Sin alertas pendientes ✓</p>
+              )}
+            </div>
+          </div>
+
+          {/* Top clientes */}
+          {topClientes.length > 0 && (
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4 text-blue-500" /> Top clientes este mes
+              </h3>
               <div className="flex flex-col gap-2">
-                {(resumenMensual as any[]).map((m) => (
-                  <div key={m.mes} className="flex flex-col gap-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">{MESES[m.mes - 1]}</span>
-                      <span className="font-medium text-gray-900">{formatCOP(m.ventas)}</span>
-                    </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                      <div className="h-full rounded-full bg-blue-500" style={{ width: `${Math.round((m.ventas / maxVentas) * 100)}%` }} />
-                    </div>
+                {topClientes.map((c, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-700 truncate flex-1 mr-2">{c.razon_social}</span>
+                    <span className="font-mono text-xs font-medium text-blue-700 shrink-0">{formatCOP(c.total)}</span>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          )}
+        </div>
+      </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-orange-500" /> Alertas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-2 text-sm">
-                {(alertasStock as any[]).length > 0 && (
-                  <div className="rounded-lg bg-orange-50 p-3">
-                    <p className="font-medium text-orange-800">Stock bajo</p>
-                    <p className="text-xs text-orange-600">{(alertasStock as any[]).length} productos por debajo del mínimo</p>
-                  </div>
-                )}
-                {(facturasVencidas as any[]).length > 0 && (
-                  <div className="rounded-lg bg-red-50 p-3">
-                    <p className="font-medium text-red-800">Facturas vencidas</p>
-                    <p className="text-xs text-red-600">{(facturasVencidas as any[]).length} facturas sin pagar</p>
-                  </div>
-                )}
-                {(alertasStock as any[]).length === 0 && (facturasVencidas as any[]).length === 0 && (
-                  <p className="text-center text-xs text-gray-400 py-2">Sin alertas pendientes ✓</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+      {/* ── Tablas recientes ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Últimas facturas de venta */}
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-700">Últimas ventas</h3>
+            <Link href="/ventas/facturas" className="text-xs text-blue-600 hover:underline">Ver todas →</Link>
+          </div>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-gray-50">
+              {(ultimasFacturas as Record<string, unknown>[]).map((f) => (
+                <tr key={f.id as string} className="hover:bg-gray-50/50">
+                  <td className="py-2 pr-2">
+                    <Link href={`/ventas/facturas/${f.id}`} className="font-mono text-xs text-blue-600 hover:underline">
+                      {f.prefijo as string}{f.numero as number}
+                    </Link>
+                  </td>
+                  <td className="py-2 text-gray-700 truncate max-w-28">
+                    {(f.cliente as { razon_social?: string } | null)?.razon_social ?? '—'}
+                  </td>
+                  <td className="py-2 text-right font-mono text-xs font-medium text-gray-900">{formatCOP(f.total as number)}</td>
+                  <td className="py-2 pl-2 text-right">
+                    <Badge variant={f.estado === 'pagada' ? 'success' : 'warning'}>
+                      {f.estado === 'pagada' ? 'Pagada' : 'Pendiente'}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+              {ultimasFacturas.length === 0 && (
+                <tr><td colSpan={4} className="py-6 text-center text-xs text-gray-400">Sin facturas aún</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Últimas compras */}
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-gray-700">Últimas compras</h3>
+            <Link href="/compras/facturas" className="text-xs text-blue-600 hover:underline">Ver todas →</Link>
+          </div>
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-gray-50">
+              {(ultimasCompras as Record<string, unknown>[]).map((c) => (
+                <tr key={c.id as string} className="hover:bg-gray-50/50">
+                  <td className="py-2 pr-2">
+                    <Link href={`/compras/facturas/${c.id}`} className="font-mono text-xs text-orange-600 hover:underline">
+                      {c.prefijo as string}{c.numero as number}
+                    </Link>
+                  </td>
+                  <td className="py-2 text-gray-700 truncate max-w-28">
+                    {(c.proveedor as { razon_social?: string } | null)?.razon_social ?? '—'}
+                  </td>
+                  <td className="py-2 text-right font-mono text-xs font-medium text-gray-900">{formatCOP(c.total as number)}</td>
+                  <td className="py-2 pl-2 text-right">
+                    <Badge variant={c.estado === 'pagada' ? 'success' : 'warning'}>
+                      {c.estado === 'pagada' ? 'Pagada' : 'Pendiente'}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+              {ultimasCompras.length === 0 && (
+                <tr><td colSpan={4} className="py-6 text-center text-xs text-gray-400">Sin compras aún</td></tr>
+              )}
+            </tbody>
+          </table>
+          {/* Acceso rápido */}
+          <div className="mt-4 pt-3 border-t border-gray-100 flex gap-2">
+            <Link href="/ventas/facturas/nueva"
+              className="flex-1 text-center rounded-lg bg-blue-600 text-white text-xs py-2 font-medium hover:bg-blue-700 transition-colors">
+              + Nueva venta
+            </Link>
+            <Link href="/compras/facturas/nueva"
+              className="flex-1 text-center rounded-lg bg-orange-600 text-white text-xs py-2 font-medium hover:bg-orange-700 transition-colors">
+              + Nueva compra
+            </Link>
+            <Link href="/gastos/nuevo"
+              className="flex-1 text-center rounded-lg bg-purple-600 text-white text-xs py-2 font-medium hover:bg-purple-700 transition-colors">
+              + Gasto
+            </Link>
+          </div>
         </div>
       </div>
     </div>
