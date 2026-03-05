@@ -130,8 +130,8 @@ export default async function ServiciosPage({ searchParams }: PageProps) {
             ) : servicios.map(s => {
               const cli = (s as any).cliente as { razon_social?: string } | null
               return (
-                <tr key={s.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-gray-600">{s.numero}</td>
+                <tr key={s.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href=`/ventas/servicios/${s.id}`}>
+                  <td className="px-4 py-3 font-mono text-violet-600 font-medium">{s.numero}</td>
                   <td className="px-4 py-3 text-gray-800">{cli?.razon_social ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{s.servicio ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs capitalize">{s.tipo ?? '—'}</td>

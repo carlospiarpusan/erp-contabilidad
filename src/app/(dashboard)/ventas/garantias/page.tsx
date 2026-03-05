@@ -127,8 +127,8 @@ export default async function GarantiasPage({ searchParams }: PageProps) {
               const cli  = (g as any).cliente  as { razon_social?: string } | null
               const prod = (g as any).producto as { descripcion?: string; codigo?: string } | null
               return (
-                <tr key={g.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-gray-600">{g.numero}</td>
+                <tr key={g.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href=`/ventas/garantias/${g.id}`}>
+                  <td className="px-4 py-3 font-mono text-emerald-600 font-medium">{g.numero}</td>
                   <td className="px-4 py-3 text-gray-800">{cli?.razon_social ?? '—'}</td>
                   <td className="px-4 py-3">
                     <p className="text-gray-800">{prod?.descripcion ?? '—'}</p>
