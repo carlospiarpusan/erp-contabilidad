@@ -6,7 +6,7 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; familia_id?: string; fabricante_id?: string; offset?: string }>
+  searchParams: Promise<{ q?: string; familia_id?: string; fabricante_id?: string; offset?: string; inactivos?: string }>
 }
 
 export default async function ProductosPage({ searchParams }: PageProps) {
@@ -16,9 +16,10 @@ export default async function ProductosPage({ searchParams }: PageProps) {
   const fabricante_id = sp.fabricante_id
   const offset       = parseInt(sp.offset ?? '0')
   const limit        = 50
+  const activo       = sp.inactivos === '1' ? false : true
 
   const [{ productos, total }, familias, fabricantes, impuestos, stats] = await Promise.all([
-    getProductos({ busqueda, familia_id, fabricante_id, offset, limit }),
+    getProductos({ busqueda, familia_id, fabricante_id, activo, offset, limit }),
     getFamilias(),
     getFabricantes(),
     getImpuestos(),
@@ -71,6 +72,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
         busqueda={busqueda}
         familiaFiltro={familia_id ?? ''}
         fabricanteFiltro={fabricante_id ?? ''}
+        soloInactivos={activo === false}
         offset={offset}
         limit={limit}
       />

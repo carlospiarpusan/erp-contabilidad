@@ -32,16 +32,19 @@ export function Familias({ familias: init }: Props) {
     e.preventDefault()
     if (!nombre.trim()) { setError('El nombre es requerido'); return }
     setSaving(true); setError('')
-
-    const url    = editando ? `/api/productos/familias/${editando.id}` : '/api/productos/familias'
-    const method = editando ? 'PATCH' : 'POST'
-    const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nombre }) })
-    const data   = await res.json()
-    setSaving(false)
-
-    if (!res.ok) { setError(data.error ?? 'Error'); return }
-    setModal(false)
-    router.refresh()
+    try {
+      const url    = editando ? `/api/productos/familias/${editando.id}` : '/api/productos/familias'
+      const method = editando ? 'PATCH' : 'POST'
+      const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nombre }) })
+      const data   = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Error'); return }
+      setModal(false)
+      router.refresh()
+    } catch {
+      setError('Error de conexión')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function eliminar(f: FamiliaConConteo) {

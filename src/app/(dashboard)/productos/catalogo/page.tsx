@@ -64,7 +64,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
           {productos.map(p => {
             const stocks = (p as any).stock as { cantidad: number; cantidad_minima: number }[] ?? []
             const stockTotal = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
-            const stockBajo  = stocks.some(st => (st.cantidad ?? 0) <= (st.cantidad_minima ?? 0))
+            const stockBajo  = stocks.some(st => st.cantidad_minima > 0 && st.cantidad <= st.cantidad_minima)
 
             return (
               <Link key={p.id} href={`/productos/${p.id}`}

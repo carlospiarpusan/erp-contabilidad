@@ -29,6 +29,7 @@ const schema = z.object({
   fabricante_id:    z.string().optional(),
   impuesto_id:      z.string().optional(),
   unidad_medida:    z.string(),
+  activo:           z.boolean(),
   tiene_variantes:  z.boolean(),
   tiene_vencimiento: z.boolean(),
   variantes: z.array(varianteSchema).optional(),
@@ -65,6 +66,7 @@ export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuar
       fabricante_id:     inicial?.fabricante_id ?? '',
       impuesto_id:       inicial?.impuesto_id ?? '',
       unidad_medida:     inicial?.unidad_medida ?? 'UND',
+      activo:            inicial?.activo ?? true,
       tiene_variantes:   inicial?.tiene_variantes ?? false,
       tiene_vencimiento: inicial?.tiene_vencimiento ?? false,
       variantes:         [],
@@ -184,6 +186,10 @@ export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuar
           Opciones
         </legend>
         <div className="mt-2 flex flex-wrap gap-6">
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input type="checkbox" {...register('activo')} className="h-4 w-4 rounded border-gray-300 accent-green-600" />
+            Producto activo
+          </label>
           <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
             <input type="checkbox" {...register('tiene_variantes')} className="h-4 w-4 rounded border-gray-300 accent-blue-600" />
             Tiene variantes (talla / color)

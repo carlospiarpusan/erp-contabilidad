@@ -33,6 +33,7 @@ interface ListaProductosProps {
   busqueda:        string
   familiaFiltro?:  string
   fabricanteFiltro?: string
+  soloInactivos?:  boolean
   offset:          number
   limit:           number
 }
@@ -40,13 +41,15 @@ interface ListaProductosProps {
 export function ListaProductos({
   productos, total, familias, fabricantes, impuestos,
   busqueda: busqInicial, familiaFiltro: familiaInicial = '',
-  fabricanteFiltro: fabricanteInicial = '', offset: offsetInicial, limit,
+  fabricanteFiltro: fabricanteInicial = '', soloInactivos: soloInactivosInicial = false,
+  offset: offsetInicial, limit,
 }: ListaProductosProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [busqueda, setBusqueda]          = useState(busqInicial)
   const [familia_id, setFamiliaId]       = useState(familiaInicial)
   const [fabricante_id, setFabricanteId] = useState(fabricanteInicial)
+  const [soloInactivos, setSoloInactivos] = useState(soloInactivosInicial)
   const [offset, setOffset]              = useState(offsetInicial)
   const [showFiltros, setFiltros]        = useState(false)
   const [modal, setModal]                = useState(false)
@@ -54,24 +57,25 @@ export function ListaProductos({
   const [cargando, setCargando]          = useState(false)
   const [error, setError]                = useState('')
 
-  function navegar(params: Record<string, string | number>) {
+  function navegar(params: Record<string, string | number | boolean>) {
     const sp = new URLSearchParams()
     if (params.q)             sp.set('q', String(params.q))
     if (params.offset)        sp.set('offset', String(params.offset))
     if (params.familia_id)    sp.set('familia_id', String(params.familia_id))
     if (params.fabricante_id) sp.set('fabricante_id', String(params.fabricante_id))
+    if (params.inactivos)     sp.set('inactivos', '1')
     startTransition(() => router.push(`/productos?${sp.toString()}`))
   }
 
   function handleBuscar(e: React.FormEvent) {
     e.preventDefault()
     setOffset(0)
-    navegar({ q: busqueda, familia_id, fabricante_id })
+    navegar({ q: busqueda, familia_id, fabricante_id, inactivos: soloInactivos })
   }
 
   function handleFiltros() {
     setOffset(0)
-    navegar({ q: busqueda, familia_id, fabricante_id })
+    navegar({ q: busqueda, familia_id, fabricante_id, inactivos: soloInactivos })
   }
 
   async function handleGuardar(datos: Record<string, unknown>) {
@@ -153,10 +157,22 @@ export function ListaProductos({
               {fabricantes.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
             </select>
           </div>
+          <div className="flex flex-col gap-1 justify-center">
+            <label className="text-xs font-medium text-gray-600">Estado</label>
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer h-8">
+              <input
+                type="checkbox"
+                checked={soloInactivos}
+                onChange={e => setSoloInactivos(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 accent-gray-600"
+              />
+              Solo inactivos
+            </label>
+          </div>
           <div className="flex items-end gap-2">
             <Button size="sm" onClick={handleFiltros}>Aplicar</Button>
             <Button size="sm" variant="outline" onClick={() => {
-              setFamiliaId(''); setFabricanteId(''); navegar({ q: busqueda })
+              setFamiliaId(''); setFabricanteId(''); setSoloInactivos(false); navegar({ q: busqueda })
             }}>Limpiar</Button>
           </div>
         </div>
@@ -186,6 +202,9 @@ export function ListaProductos({
                 <Link href={`/productos/${p.id}`} className="group">
                   <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{p.descripcion}</p>
                   <div className="flex gap-1 mt-0.5">
+                    {!p.activo && (
+                      <Badge variant="danger">Inactivo</Badge>
+                    )}
                     {(p.fabricante as { nombre?: string } | null)?.nombre && (
                       <span className="text-xs text-gray-400">{(p.fabricante as { nombre: string }).nombre}</span>
                     )}
@@ -244,7 +263,7 @@ export function ListaProductos({
 
       <Paginacion
         total={total} limit={limit} offset={offset}
-        onChange={o => { setOffset(o); navegar({ q: busqueda, familia_id, fabricante_id, offset: o }) }}
+        onChange={o => { setOffset(o); navegar({ q: busqueda, familia_id, fabricante_id, inactivos: soloInactivos, offset: o }) }}
       />
 
       <Modal
