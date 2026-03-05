@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { ShoppingCart, CheckCircle, XCircle } from 'lucide-react'
+import { ShoppingCart, CheckCircle, XCircle, Printer } from 'lucide-react'
 import Link from 'next/link'
 
 interface Linea {
@@ -92,6 +92,10 @@ export function DetalleOrden({ orden }: Props) {
                 </Button>
               </Link>
             )}
+            <Link href={`/print/orden/${orden.id}`} target="_blank"
+              className="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+              <Printer className="h-4 w-4" /> Imprimir
+            </Link>
           </div>
         </div>
       </div>

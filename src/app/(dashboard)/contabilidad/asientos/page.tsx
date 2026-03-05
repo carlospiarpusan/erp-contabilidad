@@ -3,9 +3,37 @@ export const dynamic = 'force-dynamic'
 import { getAsientos } from '@/lib/db/contabilidad'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { BookOpen } from 'lucide-react'
+import Link from 'next/link'
 
-export default async function AsientosPage() {
-  const { asientos, total } = await getAsientos({ limit: 100 })
+const TIPOS_DOC = [
+  { value: '', label: 'Todos los tipos' },
+  { value: 'factura_venta', label: 'Factura venta' },
+  { value: 'factura_compra', label: 'Factura compra' },
+  { value: 'recibo_caja', label: 'Recibo de caja' },
+  { value: 'recibo_compra', label: 'Recibo compra' },
+  { value: 'nota_credito', label: 'Nota crédito' },
+  { value: 'gasto', label: 'Gasto' },
+  { value: 'manual', label: 'Manual' },
+]
+
+interface PageProps {
+  searchParams: Promise<{ desde?: string; hasta?: string; tipo_doc?: string }>
+}
+
+export default async function AsientosPage({ searchParams }: PageProps) {
+  const sp = await searchParams
+  const hoy  = new Date().toISOString().split('T')[0]
+  const anio = new Date().getFullYear()
+  const desde    = sp.desde    || `${anio}-01-01`
+  const hasta    = sp.hasta    || hoy
+  const tipo_doc = sp.tipo_doc || ''
+
+  const { asientos, total } = await getAsientos({
+    limit: 200,
+    desde,
+    hasta,
+    ...(tipo_doc ? { tipo_doc } : {}),
+  })
 
   return (
     <div className="flex flex-col gap-6">
@@ -18,6 +46,33 @@ export default async function AsientosPage() {
           <p className="text-sm text-gray-500">{total} asiento{total !== 1 ? 's' : ''} registrado{total !== 1 ? 's' : ''}</p>
         </div>
       </div>
+
+      {/* Filtros */}
+      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">Desde</label>
+          <input type="date" name="desde" defaultValue={desde}
+            className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">Hasta</label>
+          <input type="date" name="hasta" defaultValue={hasta}
+            className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">Tipo</label>
+          <select name="tipo_doc" defaultValue={tipo_doc}
+            className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {TIPOS_DOC.map(t => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-end gap-2">
+          <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Aplicar</button>
+          <Link href="/contabilidad/asientos" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Limpiar</Link>
+        </div>
+      </form>
 
       <div className="flex flex-col gap-4">
         {asientos.length === 0 ? (
