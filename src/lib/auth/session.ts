@@ -1,5 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cache } from 'react'
+
+// Cliente con service_role para leer tablas de referencia bloqueadas por RLS
+function adminClient() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 export interface UserSession {
   id: string
@@ -23,8 +32,8 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
 
   if (!data) return null
 
-  // Consulta de rol separada para evitar problemas con joins y RLS
-  const { data: rolData } = await supabase
+  // Leer rol con service_role para evitar bloqueo de RLS en tabla roles
+  const { data: rolData } = await adminClient()
     .from('roles')
     .select('nombre')
     .eq('id', data.rol_id)
