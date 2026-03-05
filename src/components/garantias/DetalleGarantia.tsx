@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ShieldCheck, CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react'
+import { ShieldCheck, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { formatFecha } from '@/utils/cn'
 
 interface Garantia {
@@ -17,17 +17,17 @@ interface Garantia {
 }
 
 const BADGE_ESTADO: Record<string, 'default' | 'outline' | 'success' | 'warning' | 'danger' | 'info'> = {
-  pendiente:  'warning',
+  pendiente: 'warning',
   en_proceso: 'info',
-  resuelta:   'success',
-  rechazada:  'danger',
+  resuelta: 'success',
+  rechazada: 'danger',
 }
 
 const PRIORIDAD_COLOR: Record<string, string> = {
-  baja:   'bg-gray-100 text-gray-600',
+  baja: 'bg-gray-100 text-gray-600',
   normal: 'bg-blue-100 text-blue-700',
-  alta:   'bg-orange-100 text-orange-700',
-  urgente:'bg-red-100 text-red-700',
+  alta: 'bg-orange-100 text-orange-700',
+  urgente: 'bg-red-100 text-red-700',
 }
 
 interface Props { garantia: Garantia }
@@ -35,8 +35,8 @@ interface Props { garantia: Garantia }
 export function DetalleGarantia({ garantia }: Props) {
   const router = useRouter()
   const [accionando, setAccionando] = useState(false)
-  const [notas, setNotas]           = useState(garantia.observaciones ?? '')
-  const [rma, setRma]               = useState(garantia.numero_rma ?? '')
+  const [notas, setNotas] = useState(garantia.observaciones ?? '')
+  const [rma, setRma] = useState(garantia.numero_rma ?? '')
   const [guardandoNotas, setGuardandoNotas] = useState(false)
 
   async function cambiarEstado(estado: string) {
@@ -49,7 +49,7 @@ export function DetalleGarantia({ garantia }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).error)
       router.refresh()
-    } catch (e: any) { alert(e.message) }
+    } catch (e: unknown) { alert(e.message) }
     finally { setAccionando(false) }
   }
 
@@ -62,7 +62,7 @@ export function DetalleGarantia({ garantia }: Props) {
         body: JSON.stringify({ observaciones: notas, numero_rma: rma || null }),
       })
       router.refresh()
-    } catch {}
+    } catch { }
     finally { setGuardandoNotas(false) }
   }
 
@@ -116,7 +116,7 @@ export function DetalleGarantia({ garantia }: Props) {
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Cliente</p>
           <p className="font-semibold text-gray-900">{garantia.cliente?.razon_social ?? '—'}</p>
           {garantia.cliente?.numero_documento && <p className="text-sm text-gray-500 mt-0.5">{garantia.cliente.numero_documento}</p>}
-          {garantia.cliente?.email    && <p className="text-sm text-gray-500">{garantia.cliente.email}</p>}
+          {garantia.cliente?.email && <p className="text-sm text-gray-500">{garantia.cliente.email}</p>}
           {garantia.cliente?.telefono && <p className="text-sm text-gray-500">{garantia.cliente.telefono}</p>}
           {garantia.documento?.id && (
             <p className="text-sm text-gray-400 mt-2">

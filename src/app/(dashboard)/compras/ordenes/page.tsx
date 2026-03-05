@@ -11,17 +11,17 @@ interface PageProps {
 }
 
 const BADGE_ESTADO: Record<string, 'default' | 'outline' | 'success' | 'warning' | 'danger'> = {
-  borrador:  'outline',
-  aprobada:  'warning',
-  recibida:  'success',
+  borrador: 'outline',
+  aprobada: 'warning',
+  recibida: 'success',
   cancelada: 'danger',
 }
 
 export default async function OrdenesCompraPage({ searchParams }: PageProps) {
-  const sp     = await searchParams
+  const sp = await searchParams
   const estado = sp.estado ?? ''
 
-  const [{ ordenes, total }, stats] = await Promise.all([
+  const [{ ordenes }, stats] = await Promise.all([
     getOrdenesCompra({ estado: estado || undefined, limit: 50 }),
     getEstadisticasOrdenes(),
   ])
@@ -46,10 +46,10 @@ export default async function OrdenesCompraPage({ searchParams }: PageProps) {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total',     val: stats.total },
-          { label: 'Borrador',  val: stats.borrador },
+          { label: 'Total', val: stats.total },
+          { label: 'Borrador', val: stats.borrador },
           { label: 'Aprobadas', val: stats.aprobada },
-          { label: 'Valor',     val: formatCOP(stats.valor), color: 'text-orange-700' },
+          { label: 'Valor', val: formatCOP(stats.valor), color: 'text-orange-700' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <p className="text-xs text-gray-500">{k.label}</p>
@@ -61,10 +61,10 @@ export default async function OrdenesCompraPage({ searchParams }: PageProps) {
       {/* Filtros de estado */}
       <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-1 w-fit">
         {[
-          { value: '',          label: 'Todas' },
-          { value: 'borrador',  label: 'Borrador' },
-          { value: 'aprobada',  label: 'Aprobada' },
-          { value: 'recibida',  label: 'Recibida' },
+          { value: '', label: 'Todas' },
+          { value: 'borrador', label: 'Borrador' },
+          { value: 'aprobada', label: 'Aprobada' },
+          { value: 'recibida', label: 'Recibida' },
           { value: 'cancelada', label: 'Cancelada' },
         ].map(e => (
           <Link key={e.value}

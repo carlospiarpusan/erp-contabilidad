@@ -9,18 +9,18 @@ import Link from 'next/link'
 interface PageProps { searchParams: Promise<{ estado?: string }> }
 
 const BADGE: Record<string, 'default' | 'outline' | 'success' | 'warning' | 'danger' | 'info'> = {
-  pendiente:  'warning',
+  pendiente: 'warning',
   en_proceso: 'info',
   despachado: 'default',
-  facturado:  'success',
-  cancelado:  'danger',
+  facturado: 'success',
+  cancelado: 'danger',
 }
 
 export default async function PedidosPage({ searchParams }: PageProps) {
-  const sp     = await searchParams
+  const sp = await searchParams
   const estado = sp.estado ?? ''
 
-  const [{ pedidos, total }, stats] = await Promise.all([
+  const [{ pedidos }, stats] = await Promise.all([
     getPedidos({ estado: estado || undefined, limit: 50 }),
     getEstadisticasPedidos(),
   ])
@@ -44,9 +44,9 @@ export default async function PedidosPage({ searchParams }: PageProps) {
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
-          { label: 'Total',       val: stats.total,      color: '' },
-          { label: 'Pendientes',  val: stats.pendiente,  color: 'text-yellow-700' },
-          { label: 'En proceso',  val: stats.en_proceso, color: 'text-blue-700' },
+          { label: 'Total', val: stats.total, color: '' },
+          { label: 'Pendientes', val: stats.pendiente, color: 'text-yellow-700' },
+          { label: 'En proceso', val: stats.en_proceso, color: 'text-blue-700' },
           { label: 'Despachados', val: stats.despachado, color: 'text-gray-700' },
           { label: 'Valor pend.', val: formatCOP(stats.valor), color: 'text-purple-700' },
         ].map(k => (
@@ -59,12 +59,12 @@ export default async function PedidosPage({ searchParams }: PageProps) {
 
       <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-1 w-fit flex-wrap">
         {[
-          { value: '',           label: 'Todos' },
-          { value: 'pendiente',  label: 'Pendiente' },
+          { value: '', label: 'Todos' },
+          { value: 'pendiente', label: 'Pendiente' },
           { value: 'en_proceso', label: 'En proceso' },
           { value: 'despachado', label: 'Despachado' },
-          { value: 'facturado',  label: 'Facturado' },
-          { value: 'cancelado',  label: 'Cancelado' },
+          { value: 'facturado', label: 'Facturado' },
+          { value: 'cancelado', label: 'Cancelado' },
         ].map(e => (
           <Link key={e.value}
             href={e.value ? `/ventas/pedidos?estado=${e.value}` : '/ventas/pedidos'}

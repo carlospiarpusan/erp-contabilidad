@@ -6,8 +6,7 @@ import type { GrupoCliente } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
-import { Badge } from '@/components/ui/badge'
-import { Plus, Pencil, Trash2, Users, Tag, Percent } from 'lucide-react'
+import { Plus, Pencil, Trash2, Tag, Percent } from 'lucide-react'
 import { formatCOP } from '@/utils/cn'
 
 type GrupoConConteo = GrupoCliente & { clientes: { count: number }[] }
@@ -43,13 +42,13 @@ const FORM_VACIO: FormGrupo = {
 }
 
 export function GruposClientes({ grupos: init }: Props) {
-  const router   = useRouter()
-  const [grupos, setGrupos]       = useState(init)
-  const [modal, setModal]         = useState(false)
-  const [editando, setEditando]   = useState<GrupoConConteo | null>(null)
-  const [form, setForm]           = useState<FormGrupo>(FORM_VACIO)
-  const [saving, setSaving]       = useState(false)
-  const [error, setError]         = useState('')
+  const router = useRouter()
+  const [grupos, setGrupos] = useState(init)
+  const [modal, setModal] = useState(false)
+  const [editando, setEditando] = useState<GrupoConConteo | null>(null)
+  const [form, setForm] = useState<FormGrupo>(FORM_VACIO)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   function abrirCrear() {
     setEditando(null)
@@ -61,11 +60,11 @@ export function GruposClientes({ grupos: init }: Props) {
   function abrirEditar(g: GrupoConConteo) {
     setEditando(g)
     setForm({
-      nombre:               g.nombre,
+      nombre: g.nombre,
       descuento_porcentaje: String(g.descuento_porcentaje ?? 0),
-      limite_credito:       String(g.limite_credito ?? 0),
-      color:                g.color ?? '#3B82F6',
-      descripcion:          g.descripcion ?? '',
+      limite_credito: String(g.limite_credito ?? 0),
+      color: g.color ?? '#3B82F6',
+      descripcion: g.descripcion ?? '',
     })
     setError('')
     setModal(true)
@@ -77,17 +76,17 @@ export function GruposClientes({ grupos: init }: Props) {
     setError('')
 
     const payload = {
-      nombre:               form.nombre,
+      nombre: form.nombre,
       descuento_porcentaje: parseFloat(form.descuento_porcentaje) || 0,
-      limite_credito:       parseFloat(form.limite_credito) || 0,
-      color:                form.color,
-      descripcion:          form.descripcion || null,
+      limite_credito: parseFloat(form.limite_credito) || 0,
+      color: form.color,
+      descripcion: form.descripcion || null,
     }
 
-    const url    = editando ? `/api/clientes/grupos/${editando.id}` : '/api/clientes/grupos'
+    const url = editando ? `/api/clientes/grupos/${editando.id}` : '/api/clientes/grupos'
     const method = editando ? 'PATCH' : 'POST'
 
-    const res  = await fetch(url, {
+    const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),

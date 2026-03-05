@@ -37,7 +37,7 @@ export async function GET() {
         'Content-Disposition': `attachment; filename="inventario-${new Date().toISOString().split('T')[0]}.csv"`,
       },
     })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

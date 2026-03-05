@@ -3,38 +3,38 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+
 import type { Cliente, Producto, Impuesto, Bodega } from '@/types'
 import { formatCOP } from '@/utils/cn'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 
-interface FormaPago  { id: string; descripcion: string; tipo: string; dias_vencimiento: number }
+interface FormaPago { id: string; descripcion: string; tipo: string; dias_vencimiento: number }
 interface Colaborador { id: string; nombre: string }
 
 interface Linea {
-  producto_id:          string
-  descripcion:          string
-  cantidad:             number
-  precio_unitario:      number
+  producto_id: string
+  descripcion: string
+  cantidad: number
+  precio_unitario: number
   descuento_porcentaje: number
-  impuesto_id:          string
-  iva_pct:              number
+  impuesto_id: string
+  iva_pct: number
 }
 
 function calcLinea(l: Linea) {
-  const subtotal  = l.cantidad * l.precio_unitario
+  const subtotal = l.cantidad * l.precio_unitario
   const descuento = subtotal * (l.descuento_porcentaje / 100)
-  const base      = subtotal - descuento
-  const iva       = base * (l.iva_pct / 100)
+  const base = subtotal - descuento
+  const iva = base * (l.iva_pct / 100)
   return { subtotal, descuento, iva, total: base + iva }
 }
 
 interface Props {
-  clientes:     Cliente[]
-  productos:    Producto[]
-  impuestos:    Impuesto[]
-  bodegas:      Bodega[]
-  formasPago:   FormaPago[]
+  clientes: Cliente[]
+  productos: Producto[]
+  impuestos: Impuesto[]
+  bodegas: Bodega[]
+  formasPago: FormaPago[]
   colaboradores: Colaborador[]
 }
 
@@ -44,20 +44,20 @@ export function FormFactura({ clientes, productos, impuestos, bodegas, formasPag
   const router = useRouter()
 
   // Cabecera
-  const [cliente_id, setClienteId]         = useState('')
-  const [bodega_id, setBodegaId]           = useState(bodegas.find(b => b.principal)?.id ?? bodegas[0]?.id ?? '')
-  const [forma_pago_id, setFormaPagoId]    = useState(formasPago[0]?.id ?? '')
+  const [cliente_id, setClienteId] = useState('')
+  const [bodega_id, setBodegaId] = useState(bodegas.find(b => b.principal)?.id ?? bodegas[0]?.id ?? '')
+  const [forma_pago_id, setFormaPagoId] = useState(formasPago[0]?.id ?? '')
   const [colaborador_id, setColaboradorId] = useState('')
-  const [fecha, setFecha]                  = useState(hoy)
+  const [fecha, setFecha] = useState(hoy)
   const [fecha_vencimiento, setVencimiento] = useState('')
-  const [observaciones, setObs]            = useState('')
+  const [observaciones, setObs] = useState('')
 
   // Líneas
   const [lineas, setLineas] = useState<Linea[]>([])
 
   // UI
   const [guardando, setGuardando] = useState(false)
-  const [error, setError]         = useState('')
+  const [error, setError] = useState('')
 
   // Calcula vencimiento al cambiar forma de pago
   function handleFormaPago(id: string) {
@@ -73,29 +73,29 @@ export function FormFactura({ clientes, productos, impuestos, bodegas, formasPag
   }
 
   function agregarLinea() {
-    const p0    = productos[0]
-    const imp0  = impuestos.find(i => i.id === p0?.impuesto_id) ?? impuestos[0]
+    const p0 = productos[0]
+    const imp0 = impuestos.find(i => i.id === p0?.impuesto_id) ?? impuestos[0]
     setLineas(prev => [...prev, {
-      producto_id:          p0?.id ?? '',
-      descripcion:          p0?.descripcion ?? '',
-      cantidad:             1,
-      precio_unitario:      p0?.precio_venta ?? 0,
+      producto_id: p0?.id ?? '',
+      descripcion: p0?.descripcion ?? '',
+      cantidad: 1,
+      precio_unitario: p0?.precio_venta ?? 0,
       descuento_porcentaje: 0,
-      impuesto_id:          imp0?.id ?? '',
-      iva_pct:              imp0?.porcentaje ?? 0,
+      impuesto_id: imp0?.id ?? '',
+      iva_pct: imp0?.porcentaje ?? 0,
     }])
   }
 
   const handleProducto = useCallback((idx: number, producto_id: string) => {
-    const p   = productos.find(x => x.id === producto_id)
+    const p = productos.find(x => x.id === producto_id)
     const imp = impuestos.find(i => i.id === p?.impuesto_id)
     setLineas(prev => prev.map((l, i) => i !== idx ? l : {
       ...l,
       producto_id,
-      descripcion:     p?.descripcion ?? '',
+      descripcion: p?.descripcion ?? '',
       precio_unitario: p?.precio_venta ?? 0,
-      impuesto_id:     imp?.id ?? '',
-      iva_pct:         imp?.porcentaje ?? 0,
+      impuesto_id: imp?.id ?? '',
+      iva_pct: imp?.porcentaje ?? 0,
     }))
   }, [productos, impuestos])
 
@@ -116,15 +116,15 @@ export function FormFactura({ clientes, productos, impuestos, bodegas, formasPag
   }
 
   // Totales
-  const calcs    = lineas.map(calcLinea)
+  const calcs = lineas.map(calcLinea)
   const subtotal = calcs.reduce((s, c) => s + c.subtotal, 0)
   const descuento = calcs.reduce((s, c) => s + c.descuento, 0)
-  const totalIva  = calcs.reduce((s, c) => s + c.iva, 0)
-  const total     = calcs.reduce((s, c) => s + c.total, 0)
+  const totalIva = calcs.reduce((s, c) => s + c.iva, 0)
+  const total = calcs.reduce((s, c) => s + c.total, 0)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!cliente_id)    { setError('Selecciona un cliente'); return }
+    if (!cliente_id) { setError('Selecciona un cliente'); return }
     if (!lineas.length) { setError('Agrega al menos un producto'); return }
     for (const l of lineas) {
       if (!l.producto_id) { setError('Selecciona un producto en todas las líneas'); return }
@@ -139,13 +139,13 @@ export function FormFactura({ clientes, productos, impuestos, bodegas, formasPag
         fecha, fecha_vencimiento: fecha_vencimiento || null,
         observaciones: observaciones || null,
         lineas: lineas.map(l => ({
-          producto_id:          l.producto_id,
-          variante_id:          null,
-          descripcion:          l.descripcion,
-          cantidad:             l.cantidad,
-          precio_unitario:      l.precio_unitario,
+          producto_id: l.producto_id,
+          variante_id: null,
+          descripcion: l.descripcion,
+          cantidad: l.cantidad,
+          precio_unitario: l.precio_unitario,
           descuento_porcentaje: l.descuento_porcentaje,
-          impuesto_id:          l.impuesto_id || null,
+          impuesto_id: l.impuesto_id || null,
         })),
       }
 

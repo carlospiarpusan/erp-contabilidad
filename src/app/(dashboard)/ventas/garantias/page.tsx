@@ -124,8 +124,8 @@ export default async function GarantiasPage({ searchParams }: PageProps) {
                 </td>
               </tr>
             ) : garantias.map(g => {
-              const cli  = (g as any).cliente  as { razon_social?: string } | null
-              const prod = (g as any).producto as { descripcion?: string; codigo?: string } | null
+              const cli  = (g as never).cliente  as { razon_social?: string } | null
+              const prod = (g as never).producto as { descripcion?: string; codigo?: string } | null
               return (
                 <tr key={g.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href=`/ventas/garantias/${g.id}`}>
                   <td className="px-4 py-3 font-mono text-emerald-600 font-medium">{g.numero}</td>

@@ -44,18 +44,24 @@ export async function getTiposGasto() {
 }
 
 export async function createTipoGasto(fields: { descripcion: string; cuenta_id?: string; valor_estimado?: number }) {
+  const payload = { ...fields }
+  if (payload.cuenta_id === '') payload.cuenta_id = null as never
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data: uRow } = await supabase.from('usuarios').select('empresa_id').eq('id', user!.id).single()
   const { data, error } = await supabase.from('tipos_gasto')
-    .insert({ ...fields, empresa_id: uRow!.empresa_id }).select().single()
+    .insert({ ...payload, empresa_id: uRow!.empresa_id }).select().single()
   if (error) throw error
   return data
 }
 
 export async function updateTipoGasto(id: string, fields: Record<string, unknown>) {
+  const payload = { ...fields }
+  if (payload.cuenta_id === '') payload.cuenta_id = null
+
   const supabase = await createClient()
-  const { data, error } = await supabase.from('tipos_gasto').update(fields).eq('id', id).select().single()
+  const { data, error } = await supabase.from('tipos_gasto').update(payload).eq('id', id).select().single()
   if (error) throw error
   return data
 }
@@ -77,10 +83,10 @@ export async function getEstadisticasGastos() {
   const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0]
   const primerMes = new Date(hoy.getFullYear(), 0, 1).toISOString().split('T')[0]
   return {
-    total:      data.length,
+    total: data.length,
     total_monto: data.reduce((s, r) => s + (r.total ?? 0), 0),
-    este_mes:   data.filter(r => r.fecha >= primerDia).reduce((s, r) => s + (r.total ?? 0), 0),
-    este_anio:  data.filter(r => r.fecha >= primerMes).reduce((s, r) => s + (r.total ?? 0), 0),
+    este_mes: data.filter(r => r.fecha >= primerDia).reduce((s, r) => s + (r.total ?? 0), 0),
+    este_anio: data.filter(r => r.fecha >= primerMes).reduce((s, r) => s + (r.total ?? 0), 0),
   }
 }
 
@@ -100,8 +106,8 @@ export async function getGastos(params?: {
     .eq('tipo', 'gasto')
     .order('fecha', { ascending: false })
     .range(offset, offset + limit - 1)
-  if (desde)    q = q.gte('fecha', desde)
-  if (hasta)    q = q.lte('fecha', hasta)
+  if (desde) q = q.gte('fecha', desde)
+  if (hasta) q = q.lte('fecha', hasta)
   if (busqueda) q = q.ilike('observaciones', `%${busqueda}%`)
   const { data, count, error } = await q
   if (error) throw error
@@ -136,15 +142,15 @@ export async function createGasto(params: {
 }) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('crear_gasto', {
-    p_empresa_id:    params.empresa_id,
-    p_ejercicio_id:  params.ejercicio_id,
-    p_acreedor_id:   params.acreedor_id ?? null,
+    p_empresa_id: params.empresa_id,
+    p_ejercicio_id: params.ejercicio_id,
+    p_acreedor_id: params.acreedor_id || null,
     p_tipo_gasto_id: params.tipo_gasto_id,
     p_forma_pago_id: params.forma_pago_id,
-    p_fecha:         params.fecha,
-    p_descripcion:   params.descripcion,
-    p_valor:         params.valor,
-    p_observaciones: params.observaciones ?? null,
+    p_fecha: params.fecha,
+    p_descripcion: params.descripcion,
+    p_valor: params.valor,
+    p_observaciones: params.observaciones || null,
   })
   if (error) throw error
   return data as string

@@ -8,14 +8,9 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import { UserPlus, Shield, UserCheck, UserX } from 'lucide-react'
+import { UserPlus, UserCheck, UserX } from 'lucide-react'
 
-const ROL_COLORES: Record<string, 'default' | 'success' | 'warning' | 'info' | 'danger'> = {
-  admin:       'danger',
-  contador:    'info',
-  vendedor:    'success',
-  solo_lectura:'warning',
-}
+
 
 interface Props {
   usuarios: UsuarioRow[]
@@ -23,7 +18,7 @@ interface Props {
 }
 
 export function ListaUsuarios({ usuarios: init, roles }: Props) {
-  const router   = useRouter()
+  const router = useRouter()
   const [lista, setLista] = useState(init)
   const [modal, setModal] = useState(false)
   const [loading, setLoading] = useState(false)

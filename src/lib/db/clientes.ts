@@ -24,10 +24,10 @@ export async function getClientes(params?: {
     .range(offset, offset + limit - 1)
 
   if (activo !== undefined) query = query.eq('activo', activo)
-  if (grupo_id)             query = query.eq('grupo_id', grupo_id)
-  if (tipo_documento)       query = query.eq('tipo_documento', tipo_documento)
-  if (ciudad)               query = query.ilike('ciudad', `%${ciudad}%`)
-  if (limite_credito)       query = query.gt('limite_credito', 0)
+  if (grupo_id) query = query.eq('grupo_id', grupo_id)
+  if (tipo_documento) query = query.eq('tipo_documento', tipo_documento)
+  if (ciudad) query = query.ilike('ciudad', `%${ciudad}%`)
+  if (limite_credito) query = query.gt('limite_credito', 0)
   if (busqueda) {
     query = query.or(
       `razon_social.ilike.%${busqueda}%,numero_documento.ilike.%${busqueda}%,email.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`
@@ -66,23 +66,26 @@ export async function getEstadisticasClientes() {
     supabase.from('grupos_clientes').select('id, nombre, clientes(count)'),
   ])
 
-  const total   = totalRes.count   ?? 0
+  const total = totalRes.count ?? 0
   const activos = activosRes.count ?? 0
 
   return {
     total,
     activos,
     conCredito: conCreditoRes.count ?? 0,
-    inactivos:  total - activos,
+    inactivos: total - activos,
     grupos: (gruposRes.data ?? []) as { id: string; nombre: string; clientes: { count: number }[] }[],
   }
 }
 
 export async function createCliente(datos: Partial<Cliente>) {
+  const payload = { ...datos }
+  if (payload.grupo_id === '') payload.grupo_id = null as never
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('clientes')
-    .insert(datos)
+    .insert(payload)
     .select()
     .single()
 
@@ -91,10 +94,13 @@ export async function createCliente(datos: Partial<Cliente>) {
 }
 
 export async function updateCliente(id: string, datos: Partial<Cliente>) {
+  const payload = { ...datos }
+  if (payload.grupo_id === '') payload.grupo_id = null as never
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('clientes')
-    .update({ ...datos, updated_at: new Date().toISOString() })
+    .update({ ...payload, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
@@ -197,10 +203,10 @@ export async function getResumenCliente(cliente_id: string) {
       .limit(5),
   ])
 
-  const facturas      = facturasRes.data ?? []
+  const facturas = facturasRes.data ?? []
   const total_facturas = facturasRes.count ?? 0
-  const total_compras  = facturas.reduce((s, f) => s + (f.total ?? 0), 0)
-  const total_cobrado  = (recibosRes.data ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
+  const total_compras = facturas.reduce((s, f) => s + (f.total ?? 0), 0)
+  const total_cobrado = (recibosRes.data ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
   const saldo_pendiente = total_compras - total_cobrado
 
   return {

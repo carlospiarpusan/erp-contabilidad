@@ -3,17 +3,14 @@ export const dynamic = 'force-dynamic'
 import { getInformeBalances } from '@/lib/db/informes'
 import { formatCOP } from '@/utils/cn'
 import { BarChart3 } from 'lucide-react'
-import Link from 'next/link'
 
 interface PageProps {
   searchParams: Promise<{ anio?: string }>
 }
 
-const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-
 export default async function InformeBalancesPage({ searchParams }: PageProps) {
-  const sp    = await searchParams
-  const anio  = sp.anio ? parseInt(sp.anio) : new Date().getFullYear()
+  const sp = await searchParams
+  const anio = sp.anio ? parseInt(sp.anio) : new Date().getFullYear()
   const { meses, totales, por_cobrar } = await getInformeBalances({ anio })
 
   const maxVal = Math.max(...meses.map(m => Math.max(m.ventas, m.compras, m.gastos)), 1)
@@ -46,11 +43,11 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
       {/* KPIs anuales */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
-          { label: 'Ventas año',   val: totales.ventas,   color: 'text-blue-700' },
-          { label: 'Compras año',  val: totales.compras,  color: 'text-orange-700' },
-          { label: 'Gastos año',   val: totales.gastos,   color: 'text-red-700' },
-          { label: 'Cobrado año',  val: totales.cobrado,  color: 'text-green-700' },
-          { label: 'Utilidad',     val: totales.utilidad, color: totales.utilidad >= 0 ? 'text-emerald-700' : 'text-red-700' },
+          { label: 'Ventas año', val: totales.ventas, color: 'text-blue-700' },
+          { label: 'Compras año', val: totales.compras, color: 'text-orange-700' },
+          { label: 'Gastos año', val: totales.gastos, color: 'text-red-700' },
+          { label: 'Cobrado año', val: totales.cobrado, color: 'text-green-700' },
+          { label: 'Utilidad', val: totales.utilidad, color: totales.utilidad >= 0 ? 'text-emerald-700' : 'text-red-700' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <p className="text-xs text-gray-500">{k.label}</p>

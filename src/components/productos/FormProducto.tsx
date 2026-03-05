@@ -1,6 +1,6 @@
 'use client'
 
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
@@ -10,27 +10,27 @@ import type { Producto, Familia, Fabricante, Impuesto } from '@/types'
 import { formatCOP } from '@/utils/cn'
 
 const varianteSchema = z.object({
-  talla:         z.string().optional(),
-  color:         z.string().optional(),
+  talla: z.string().optional(),
+  color: z.string().optional(),
   codigo_barras: z.string().optional(),
-  precio_venta:  z.coerce.number().optional(),
+  precio_venta: z.coerce.number().optional(),
   precio_compra: z.coerce.number().optional(),
 })
 
 const schema = z.object({
-  codigo:           z.string().min(1, 'Requerido'),
-  codigo_barras:    z.string().optional(),
-  descripcion:      z.string().min(2, 'Requerido'),
+  codigo: z.string().min(1, 'Requerido'),
+  codigo_barras: z.string().optional(),
+  descripcion: z.string().min(2, 'Requerido'),
   descripcion_larga: z.string().optional(),
-  precio_venta:     z.coerce.number().min(0),
-  precio_compra:    z.coerce.number().min(0),
-  precio_venta2:    z.coerce.number().optional(),
-  familia_id:       z.string().optional(),
-  fabricante_id:    z.string().optional(),
-  impuesto_id:      z.string().optional(),
-  unidad_medida:    z.string(),
-  activo:           z.boolean(),
-  tiene_variantes:  z.boolean(),
+  precio_venta: z.coerce.number().min(0),
+  precio_compra: z.coerce.number().min(0),
+  precio_venta2: z.coerce.number().optional(),
+  familia_id: z.string().optional(),
+  fabricante_id: z.string().optional(),
+  impuesto_id: z.string().optional(),
+  unidad_medida: z.string(),
+  activo: z.boolean(),
+  tiene_variantes: z.boolean(),
   tiene_vencimiento: z.boolean(),
   variantes: z.array(varianteSchema).optional(),
 })
@@ -51,35 +51,35 @@ const TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '32', '34', '36', '38'
 const COLORES = ['Negro', 'Beige', 'Blanco', 'Rojo', 'Azul', 'Rosado', 'Gris', 'Café']
 
 export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuardar, onCancelar, cargando }: FormProductoProps) {
-  const { register, handleSubmit, watch, control, formState: { errors } } = useForm<FormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(schema) as any,
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
+
+    resolver: zodResolver(schema) as never,
     defaultValues: {
-      codigo:            inicial?.codigo ?? '',
-      codigo_barras:     inicial?.codigo_barras ?? '',
-      descripcion:       inicial?.descripcion ?? '',
+      codigo: inicial?.codigo ?? '',
+      codigo_barras: inicial?.codigo_barras ?? '',
+      descripcion: inicial?.descripcion ?? '',
       descripcion_larga: inicial?.descripcion_larga ?? '',
-      precio_venta:      inicial?.precio_venta ?? 0,
-      precio_compra:     inicial?.precio_compra ?? 0,
-      precio_venta2:     inicial?.precio_venta2 ?? undefined,
-      familia_id:        inicial?.familia_id ?? '',
-      fabricante_id:     inicial?.fabricante_id ?? '',
-      impuesto_id:       inicial?.impuesto_id ?? '',
-      unidad_medida:     inicial?.unidad_medida ?? 'UND',
-      activo:            inicial?.activo ?? true,
-      tiene_variantes:   inicial?.tiene_variantes ?? false,
+      precio_venta: inicial?.precio_venta ?? 0,
+      precio_compra: inicial?.precio_compra ?? 0,
+      precio_venta2: inicial?.precio_venta2 ?? undefined,
+      familia_id: inicial?.familia_id ?? '',
+      fabricante_id: inicial?.fabricante_id ?? '',
+      impuesto_id: inicial?.impuesto_id ?? '',
+      unidad_medida: inicial?.unidad_medida ?? 'UND',
+      activo: inicial?.activo ?? true,
+      tiene_variantes: inicial?.tiene_variantes ?? false,
       tiene_vencimiento: inicial?.tiene_vencimiento ?? false,
-      variantes:         [],
+      variantes: [],
     },
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'variantes' })
 
-  const tieneVariantes = watch('tiene_variantes')
-  const precioVenta    = watch('precio_venta')
-  const precioCompra   = watch('precio_compra')
-  const ganancia       = (Number(precioVenta) - Number(precioCompra))
-  const margen         = precioVenta > 0 ? ((ganancia / Number(precioVenta)) * 100).toFixed(1) : '0'
+  const tieneVariantes = useWatch({ control, name: 'tiene_variantes' })
+  const precioVenta = useWatch({ control, name: 'precio_venta' })
+  const precioCompra = useWatch({ control, name: 'precio_compra' })
+  const ganancia = (Number(precioVenta) - Number(precioCompra))
+  const margen = precioVenta > 0 ? ((ganancia / Number(precioVenta)) * 100).toFixed(1) : '0'
 
   return (
     <form onSubmit={handleSubmit(onGuardar)} className="flex flex-col gap-4">

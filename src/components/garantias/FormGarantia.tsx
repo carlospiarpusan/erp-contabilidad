@@ -5,26 +5,26 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { AlertCircle } from 'lucide-react'
 
-interface Cliente  { id: string; razon_social: string }
+interface Cliente { id: string; razon_social: string }
 interface Producto { id: string; descripcion: string; codigo?: string }
 
 interface Props { clientes: Cliente[]; productos: Producto[] }
 
-const hoy = new Date().toISOString().slice(0, 10)
+
 
 export function FormGarantia({ clientes, productos }: Props) {
   const router = useRouter()
   const [guardando, setGuardando] = useState(false)
-  const [error, setError]         = useState('')
+  const [error, setError] = useState('')
 
   const [form, setForm] = useState({
-    cliente_id:   '',
-    producto_id:  '',
+    cliente_id: '',
+    producto_id: '',
     numero_serie: '',
-    numero_rma:   '',
-    fecha_venta:  '',
-    prioridad:    'normal',
-    observaciones:'',
+    numero_rma: '',
+    fecha_venta: '',
+    prioridad: 'normal',
+    observaciones: '',
   })
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>

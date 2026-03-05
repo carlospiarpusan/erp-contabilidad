@@ -5,18 +5,18 @@ import { UsuarioRow } from '@/lib/db/usuarios'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
-import { User, Lock, Check } from 'lucide-react'
+import { User, Lock } from 'lucide-react'
 
 interface Props { usuario: UsuarioRow }
 
 export function FormPerfil({ usuario }: Props) {
   const supabase = createClient()
-  const [nombre, setNombre]   = useState(usuario.nombre)
+  const [nombre, setNombre] = useState(usuario.nombre)
   const [telefono, setTelefono] = useState(usuario.telefono ?? '')
-  const [newPass, setNewPass]  = useState('')
+  const [newPass, setNewPass] = useState('')
   const [confirmPass, setConfirmPass] = useState('')
   const [msgPerfil, setMsgPerfil] = useState('')
-  const [msgPass, setMsgPass]     = useState('')
+  const [msgPass, setMsgPass] = useState('')
   const [savingP, setSavingP] = useState(false)
   const [savingC, setSavingC] = useState(false)
 

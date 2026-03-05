@@ -18,7 +18,7 @@ export default async function NuevoServicioPage() {
           <p className="text-sm text-gray-500">Registro de reparación o servicio técnico</p>
         </div>
       </div>
-      <FormServicio clientes={clientes as any} />
+      <FormServicio clientes={clientes as never} />
     </div>
   )
 }

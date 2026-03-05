@@ -28,9 +28,9 @@ export async function getCotizaciones(params?: {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (estado)  q = q.eq('estado', estado)
-  if (desde)   q = q.gte('fecha', desde)
-  if (hasta)   q = q.lte('fecha', hasta)
+  if (estado) q = q.eq('estado', estado)
+  if (desde) q = q.gte('fecha', desde)
+  if (hasta) q = q.lte('fecha', hasta)
   if (busqueda) q = q.or(`numero::text.ilike.%${busqueda}%`)
 
   const { data, count, error } = await q
@@ -56,14 +56,14 @@ export async function createCotizacion(params: {
 }) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('crear_cotizacion', {
-    p_empresa_id:    params.empresa_id,
-    p_ejercicio_id:  params.ejercicio_id,
-    p_cliente_id:    params.cliente_id,
-    p_bodega_id:     params.bodega_id,
-    p_fecha:         params.fecha,
-    p_vencimiento:   params.vencimiento,
-    p_observaciones: params.observaciones ?? null,
-    p_lineas:        JSON.stringify(params.lineas),
+    p_empresa_id: params.empresa_id,
+    p_ejercicio_id: params.ejercicio_id,
+    p_cliente_id: params.cliente_id,
+    p_bodega_id: params.bodega_id,
+    p_fecha: params.fecha,
+    p_vencimiento: params.vencimiento,
+    p_observaciones: params.observaciones || null,
+    p_lineas: JSON.stringify(params.lineas.map(l => ({ ...l, impuesto_id: l.impuesto_id || null }))),
   })
   if (error) throw error
   return data as string
@@ -93,11 +93,11 @@ export async function getEstadisticasCotizaciones() {
     .from('documentos').select('estado, total').eq('tipo', 'cotizacion').neq('estado', 'cancelada')
   const rows = data ?? []
   return {
-    total:      rows.length,
-    borrador:   rows.filter(r => r.estado === 'borrador').length,
-    aprobada:   rows.filter(r => r.estado === 'aprobada').length,
+    total: rows.length,
+    borrador: rows.filter(r => r.estado === 'borrador').length,
+    aprobada: rows.filter(r => r.estado === 'aprobada').length,
     convertida: rows.filter(r => r.estado === 'convertida').length,
-    valor:      rows.filter(r => r.estado === 'aprobada').reduce((s, r) => s + (r.total ?? 0), 0),
+    valor: rows.filter(r => r.estado === 'aprobada').reduce((s, r) => s + (r.total ?? 0), 0),
   }
 }
 
@@ -123,9 +123,10 @@ export async function getOrdenesCompra(params?: {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (estado)  q = q.eq('estado', estado)
-  if (desde)   q = q.gte('fecha', desde)
-  if (hasta)   q = q.lte('fecha', hasta)
+  if (estado) q = q.eq('estado', estado)
+  if (desde) q = q.gte('fecha', desde)
+  if (hasta) q = q.lte('fecha', hasta)
+  if (busqueda) q = q.or(`numero::text.ilike.%${busqueda}%`)
 
   const { data, count, error } = await q
   if (error) throw error
@@ -150,14 +151,14 @@ export async function createOrdenCompra(params: {
 }) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('crear_orden_compra', {
-    p_empresa_id:    params.empresa_id,
-    p_ejercicio_id:  params.ejercicio_id,
-    p_proveedor_id:  params.proveedor_id,
-    p_bodega_id:     params.bodega_id,
-    p_fecha:         params.fecha,
-    p_vencimiento:   params.vencimiento,
-    p_observaciones: params.observaciones ?? null,
-    p_lineas:        JSON.stringify(params.lineas),
+    p_empresa_id: params.empresa_id,
+    p_ejercicio_id: params.ejercicio_id,
+    p_proveedor_id: params.proveedor_id,
+    p_bodega_id: params.bodega_id,
+    p_fecha: params.fecha,
+    p_vencimiento: params.vencimiento,
+    p_observaciones: params.observaciones || null,
+    p_lineas: JSON.stringify(params.lineas.map(l => ({ ...l, impuesto_id: l.impuesto_id || null }))),
   })
   if (error) throw error
   return data as string
@@ -187,10 +188,10 @@ export async function getEstadisticasOrdenes() {
     .from('documentos').select('estado, total').eq('tipo', 'orden_compra').neq('estado', 'cancelada')
   const rows = data ?? []
   return {
-    total:      rows.length,
-    borrador:   rows.filter(r => r.estado === 'borrador').length,
-    aprobada:   rows.filter(r => r.estado === 'aprobada').length,
-    recibida:   rows.filter(r => r.estado === 'recibida').length,
-    valor:      rows.reduce((s, r) => s + (r.total ?? 0), 0),
+    total: rows.length,
+    borrador: rows.filter(r => r.estado === 'borrador').length,
+    aprobada: rows.filter(r => r.estado === 'aprobada').length,
+    recibida: rows.filter(r => r.estado === 'recibida').length,
+    valor: rows.reduce((s, r) => s + (r.total ?? 0), 0),
   }
 }

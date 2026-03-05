@@ -13,18 +13,18 @@ interface Props { bodegas: Bodega[] }
 
 export function FormBodegas({ bodegas: inicial }: Props) {
   const router = useRouter()
-  const [bodegas, setBodegas]     = useState(inicial)
-  const [editando, setEditando]   = useState<string | null>(null)
-  const [adding, setAdding]       = useState(false)
-  const [saving, setSaving]       = useState(false)
-  const [nuevo, setNuevo]         = useState({ codigo: '', nombre: '', principal: false })
-  const [edit, setEdit]           = useState<Omit<Bodega, 'id'>>({ codigo: '', nombre: '', principal: false, activa: true })
+  const [bodegas] = useState(inicial)
+  const [editando, setEditando] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [nuevo, setNuevo] = useState({ codigo: '', nombre: '', principal: false })
+  const [edit, setEdit] = useState<Omit<Bodega, 'id'>>({ codigo: '', nombre: '', principal: false, activa: true })
 
   async function guardarNuevo() {
     if (!nuevo.nombre.trim()) return
     setSaving(true)
     try {
-      const res  = await fetch('/api/configuracion/bodegas', {
+      const res = await fetch('/api/configuracion/bodegas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevo),
@@ -33,7 +33,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
       setAdding(false)
       setNuevo({ codigo: '', nombre: '', principal: false })
       router.refresh()
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e.message)
     } finally {
       setSaving(false)
@@ -56,7 +56,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
       if (!res.ok) throw new Error((await res.json()).error)
       setEditando(null)
       router.refresh()
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e.message)
     } finally {
       setSaving(false)

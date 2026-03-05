@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       offset:       parseInt(searchParams.get('offset') ?? '0'),
     })
     return NextResponse.json(result)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

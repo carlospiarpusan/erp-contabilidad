@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Wrench, ChevronRight, CheckCircle, XCircle, Package } from 'lucide-react'
+import { Wrench, ChevronRight, CheckCircle, XCircle } from 'lucide-react'
 import { formatFecha } from '@/utils/cn'
 
 interface Servicio {
@@ -17,21 +17,21 @@ interface Servicio {
 }
 
 const BADGE_ESTADO: Record<string, 'default' | 'outline' | 'success' | 'warning' | 'danger' | 'info'> = {
-  recibida:    'outline',
+  recibida: 'outline',
   diagnostico: 'warning',
-  en_proceso:  'info',
-  listo:       'default',
-  entregado:   'success',
-  cancelado:   'danger',
+  en_proceso: 'info',
+  listo: 'default',
+  entregado: 'success',
+  cancelado: 'danger',
 }
 
 const FLUJO = ['recibida', 'diagnostico', 'en_proceso', 'listo', 'entregado']
 
 const PRIORIDAD_COLOR: Record<string, string> = {
-  baja:   'bg-gray-100 text-gray-600',
+  baja: 'bg-gray-100 text-gray-600',
   normal: 'bg-blue-100 text-blue-700',
-  alta:   'bg-orange-100 text-orange-700',
-  urgente:'bg-red-100 text-red-700',
+  alta: 'bg-orange-100 text-orange-700',
+  urgente: 'bg-red-100 text-red-700',
 }
 
 interface Props { servicio: Servicio }
@@ -39,11 +39,11 @@ interface Props { servicio: Servicio }
 export function DetalleServicio({ servicio }: Props) {
   const router = useRouter()
   const [accionando, setAccionando] = useState(false)
-  const [guardando, setGuardando]   = useState(false)
-  const [notas, setNotas]           = useState({
-    diagnostico:  servicio.diagnostico  ?? '',
-    solucion:     servicio.solucion     ?? '',
-    observaciones:servicio.observaciones ?? '',
+  const [guardando, setGuardando] = useState(false)
+  const [notas, setNotas] = useState({
+    diagnostico: servicio.diagnostico ?? '',
+    solucion: servicio.solucion ?? '',
+    observaciones: servicio.observaciones ?? '',
   })
 
   const activo = !['entregado', 'cancelado'].includes(servicio.estado)
@@ -61,7 +61,7 @@ export function DetalleServicio({ servicio }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).error)
       router.refresh()
-    } catch (e: any) { alert(e.message) }
+    } catch (e: unknown) { alert(e.message) }
     finally { setAccionando(false) }
   }
 
@@ -75,7 +75,7 @@ export function DetalleServicio({ servicio }: Props) {
         body: JSON.stringify({ estado: 'cancelado' }),
       })
       router.refresh()
-    } catch (e: any) { alert(e.message) }
+    } catch (e: unknown) { alert(e.message) }
     finally { setAccionando(false) }
   }
 
@@ -88,7 +88,7 @@ export function DetalleServicio({ servicio }: Props) {
         body: JSON.stringify(notas),
       })
       router.refresh()
-    } catch {}
+    } catch { }
     finally { setGuardando(false) }
   }
 
@@ -141,13 +141,12 @@ export function DetalleServicio({ servicio }: Props) {
         <div className="flex items-center gap-1 mt-4 overflow-x-auto">
           {FLUJO.map((paso, i) => {
             const completado = i <= idxActual
-            const actual     = paso === servicio.estado
+            const actual = paso === servicio.estado
             return (
               <div key={paso} className="flex items-center gap-1 shrink-0">
-                <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${
-                  actual      ? 'bg-violet-600 text-white' :
-                  completado  ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-400'
-                }`}>
+                <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${actual ? 'bg-violet-600 text-white' :
+                    completado ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-400'
+                  }`}>
                   {completado && !actual && <CheckCircle className="h-3 w-3" />}
                   {LABELS[paso]}
                 </div>
@@ -164,7 +163,7 @@ export function DetalleServicio({ servicio }: Props) {
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Cliente</p>
           <p className="font-semibold text-gray-900">{servicio.cliente?.razon_social ?? '—'}</p>
           {servicio.cliente?.numero_documento && <p className="text-sm text-gray-500 mt-0.5">{servicio.cliente.numero_documento}</p>}
-          {servicio.cliente?.email    && <p className="text-sm text-gray-500">{servicio.cliente.email}</p>}
+          {servicio.cliente?.email && <p className="text-sm text-gray-500">{servicio.cliente.email}</p>}
           {servicio.cliente?.telefono && <p className="text-sm text-gray-500">{servicio.cliente.telefono}</p>}
         </div>
 

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP } from '@/utils/cn'
 import {
   TrendingUp, ShoppingCart, Receipt, DollarSign,
   ArrowUpRight, ArrowDownRight, AlertTriangle, Clock,
@@ -14,7 +14,7 @@ import {
   getAlertasStock, getFacturasVencidas, getTopClientes,
 } from '@/lib/db/dashboard'
 
-const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 async function cargarDatos() {
   try {
@@ -62,11 +62,11 @@ export default async function DashboardPage() {
       {/* ── KPIs fila 1: año ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Facturado año', value: formatCOP(kpis.facturado_anio), icon: TrendingUp,  color: 'bg-blue-50   text-blue-600',   href: '/ventas/facturas' },
-          { label: 'Ganancia año',  value: formatCOP(kpis.ganancias_anio), icon: DollarSign,  color: 'bg-green-50  text-green-600',  href: '/ventas/facturas' },
-          { label: 'Margen',        value: `${kpis.margen}%`,              icon: Percent,     color: 'bg-purple-50 text-purple-600', href: null },
-          { label: 'Por cobrar',    value: formatCOP(kpis.por_cobrar),     icon: ArrowUpRight, color: 'bg-orange-50 text-orange-600', href: '/ventas/facturas' },
-          { label: 'Por pagar',     value: formatCOP(kpis.por_pagar),      icon: ArrowDownRight, color: 'bg-red-50  text-red-600',   href: '/compras/facturas' },
+          { label: 'Facturado año', value: formatCOP(kpis.facturado_anio), icon: TrendingUp, color: 'bg-blue-50   text-blue-600', href: '/ventas/facturas' },
+          { label: 'Ganancia año', value: formatCOP(kpis.ganancias_anio), icon: DollarSign, color: 'bg-green-50  text-green-600', href: '/ventas/facturas' },
+          { label: 'Margen', value: `${kpis.margen}%`, icon: Percent, color: 'bg-purple-50 text-purple-600', href: null },
+          { label: 'Por cobrar', value: formatCOP(kpis.por_cobrar), icon: ArrowUpRight, color: 'bg-orange-50 text-orange-600', href: '/ventas/facturas' },
+          { label: 'Por pagar', value: formatCOP(kpis.por_pagar), icon: ArrowDownRight, color: 'bg-red-50  text-red-600', href: '/compras/facturas' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${k.color} mb-3`}>
@@ -85,10 +85,10 @@ export default async function DashboardPage() {
       {/* ── KPIs fila 2: este mes ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Ventas este mes',   value: formatCOP(kpis.ventas_mes),  icon: TrendingUp,  bg: 'bg-blue-600',   href: '/ventas/facturas' },
-          { label: 'Cobrado este mes',  value: formatCOP(kpis.cobrado_mes), icon: DollarSign,  bg: 'bg-green-600',  href: '/ventas/recibos' },
-          { label: 'Compras este mes',  value: formatCOP(kpis.compras_mes), icon: ShoppingCart, bg: 'bg-orange-600', href: '/compras/facturas' },
-          { label: 'Gastos este mes',   value: formatCOP(kpis.gastos_mes),  icon: Receipt,     bg: 'bg-purple-600', href: '/gastos' },
+          { label: 'Ventas este mes', value: formatCOP(kpis.ventas_mes), icon: TrendingUp, bg: 'bg-blue-600', href: '/ventas/facturas' },
+          { label: 'Cobrado este mes', value: formatCOP(kpis.cobrado_mes), icon: DollarSign, bg: 'bg-green-600', href: '/ventas/recibos' },
+          { label: 'Compras este mes', value: formatCOP(kpis.compras_mes), icon: ShoppingCart, bg: 'bg-orange-600', href: '/compras/facturas' },
+          { label: 'Gastos este mes', value: formatCOP(kpis.gastos_mes), icon: Receipt, bg: 'bg-purple-600', href: '/gastos' },
         ].map(k => (
           <Link key={k.label} href={k.href}
             className="rounded-xl bg-white border border-gray-100 p-4 flex items-center gap-3 hover:shadow-sm transition-shadow">

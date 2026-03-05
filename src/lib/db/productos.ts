@@ -28,7 +28,7 @@ export async function getProductos(params?: {
     .range(offset, offset + limit - 1)
 
   if (activo !== undefined) query = query.eq('activo', activo)
-  if (familia_id)    query = query.eq('familia_id', familia_id)
+  if (familia_id) query = query.eq('familia_id', familia_id)
   if (fabricante_id) query = query.eq('fabricante_id', fabricante_id)
   if (busqueda) {
     query = query.or(
@@ -78,14 +78,14 @@ export async function getEstadisticasInventario() {
   ])
 
   const stockData = stockRes.data ?? []
-  const stockBajo   = stockData.filter(s => s.cantidad_minima > 0 && s.cantidad <= s.cantidad_minima).length
-  const valorTotal  = stockData.reduce((sum, s) => sum + (s.cantidad ?? 0), 0)
+  const stockBajo = stockData.filter(s => s.cantidad_minima > 0 && s.cantidad <= s.cantidad_minima).length
+  const valorTotal = stockData.reduce((sum, s) => sum + (s.cantidad ?? 0), 0)
 
   return {
-    total:     totalRes.count  ?? 0,
-    activos:   activosRes.count ?? 0,
+    total: totalRes.count ?? 0,
+    activos: activosRes.count ?? 0,
     stockBajo,
-    unidades:  Math.round(valorTotal),
+    unidades: Math.round(valorTotal),
   }
 }
 
@@ -103,10 +103,15 @@ export async function getMovimientosProducto(producto_id: string, limit = 15) {
 }
 
 export async function createProducto(datos: Partial<Producto>) {
+  const payload = { ...datos }
+  if (payload.familia_id === '') payload.familia_id = null as never
+  if (payload.fabricante_id === '') payload.fabricante_id = null as never
+  if (payload.impuesto_id === '') payload.impuesto_id = null as never
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('productos')
-    .insert(datos)
+    .insert(payload)
     .select()
     .single()
 
@@ -115,10 +120,15 @@ export async function createProducto(datos: Partial<Producto>) {
 }
 
 export async function updateProducto(id: string, datos: Partial<Producto>) {
+  const payload = { ...datos }
+  if (payload.familia_id === '') payload.familia_id = null as never
+  if (payload.fabricante_id === '') payload.fabricante_id = null as never
+  if (payload.impuesto_id === '') payload.impuesto_id = null as never
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('productos')
-    .update({ ...datos, updated_at: new Date().toISOString() })
+    .update({ ...payload, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
@@ -136,7 +146,7 @@ export async function ajustarStock(params: {
   cantidad: number
   notas?: string
 }) {
-  const supabase   = await createClient()
+  const supabase = await createClient()
   const { producto_id, bodega_id, tipo, cantidad, notas } = params
   const delta = tipo === 'ajuste_negativo' || tipo === 'salida_venta' ? -Math.abs(cantidad) : Math.abs(cantidad)
 
@@ -144,10 +154,10 @@ export async function ajustarStock(params: {
   const { error: stockError } = await supabase.rpc('actualizar_stock', {
     p_producto_id: producto_id,
     p_variante_id: null,
-    p_bodega_id:   bodega_id,
-    p_delta:       delta,
-    p_tipo:        tipo,
-    p_doc_id:      null,
+    p_bodega_id: bodega_id,
+    p_delta: delta,
+    p_tipo: tipo,
+    p_doc_id: null,
   })
 
   if (stockError) {

@@ -13,7 +13,7 @@ export async function GET() {
       .order('nombre')
     if (error) throw error
     return NextResponse.json(data ?? [])
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       .single()
     if (error) throw error
     return NextResponse.json({ id: data.id })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest) {
     const { error } = await supabase.from('bodegas').update(updates).eq('id', id)
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

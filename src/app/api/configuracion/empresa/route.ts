@@ -11,7 +11,7 @@ export async function GET() {
       .single()
     if (error) throw error
     return NextResponse.json(data)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
@@ -36,7 +36,7 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

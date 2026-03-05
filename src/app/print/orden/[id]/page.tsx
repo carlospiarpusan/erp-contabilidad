@@ -26,7 +26,7 @@ export default async function PrintOrdenPage({ params }: PageProps) {
 
   if (!orden) notFound()
 
-  const lineas = ((orden as any).lineas ?? []) as {
+  const lineas = ((orden as never).lineas ?? []) as {
     id: string; descripcion?: string | null; cantidad: number
     precio_unitario: number; descuento_porcentaje: number
     subtotal: number; total_iva: number; total: number
@@ -34,12 +34,12 @@ export default async function PrintOrdenPage({ params }: PageProps) {
     impuesto?: { porcentaje: number } | null
   }[]
 
-  const proveedor = (orden as any).proveedor as {
+  const proveedor = (orden as never).proveedor as {
     razon_social?: string; numero_documento?: string
     tipo_documento?: string; email?: string; telefono?: string; direccion?: string
   } | null
 
-  const bodega = (orden as any).bodega as { nombre?: string } | null
+  const bodega = (orden as never).bodega as { nombre?: string } | null
 
   const ESTADO_LABEL: Record<string, string> = {
     borrador: 'Borrador', aprobada: 'Aprobada',
@@ -73,14 +73,14 @@ export default async function PrintOrdenPage({ params }: PageProps) {
           <div className="text-right">
             <div className="border-2 border-gray-800 px-4 py-2 rounded">
               <p className="text-xs font-medium text-gray-500 uppercase">Orden de Compra</p>
-              <p className="text-2xl font-bold text-gray-900 font-mono">{(orden as any).prefijo}{(orden as any).numero}</p>
+              <p className="text-2xl font-bold text-gray-900 font-mono">{(orden as never).prefijo}{(orden as never).numero}</p>
             </div>
-            <p className="text-sm text-gray-600 mt-2">Fecha: <strong>{formatFecha((orden as any).fecha)}</strong></p>
-            {(orden as any).fecha_vencimiento && (
-              <p className="text-sm text-gray-600">Entrega: <strong>{formatFecha((orden as any).fecha_vencimiento)}</strong></p>
+            <p className="text-sm text-gray-600 mt-2">Fecha: <strong>{formatFecha((orden as never).fecha)}</strong></p>
+            {(orden as never).fecha_vencimiento && (
+              <p className="text-sm text-gray-600">Entrega: <strong>{formatFecha((orden as never).fecha_vencimiento)}</strong></p>
             )}
             <p className="text-xs text-gray-400 mt-1">
-              Estado: {ESTADO_LABEL[(orden as any).estado] ?? (orden as any).estado}
+              Estado: {ESTADO_LABEL[(orden as never).estado] ?? (orden as never).estado}
             </p>
             {bodega?.nombre && <p className="text-xs text-gray-400">Bodega: {bodega.nombre}</p>}
           </div>
@@ -132,29 +132,29 @@ export default async function PrintOrdenPage({ params }: PageProps) {
           <div className="w-64">
             <div className="flex justify-between text-sm py-1 border-b border-gray-100">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-mono">{formatCOP((orden as any).subtotal)}</span>
+              <span className="font-mono">{formatCOP((orden as never).subtotal)}</span>
             </div>
-            {(orden as any).total_descuento > 0 && (
+            {(orden as never).total_descuento > 0 && (
               <div className="flex justify-between text-sm py-1 border-b border-gray-100">
                 <span className="text-gray-600">Descuento</span>
-                <span className="font-mono text-red-600">-{formatCOP((orden as any).total_descuento)}</span>
+                <span className="font-mono text-red-600">-{formatCOP((orden as never).total_descuento)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm py-1 border-b border-gray-100">
               <span className="text-gray-600">IVA</span>
-              <span className="font-mono">{formatCOP((orden as any).total_iva)}</span>
+              <span className="font-mono">{formatCOP((orden as never).total_iva)}</span>
             </div>
             <div className="flex justify-between text-base font-bold py-2 border-t-2 border-gray-800 mt-1">
               <span>TOTAL</span>
-              <span className="font-mono">{formatCOP((orden as any).total)}</span>
+              <span className="font-mono">{formatCOP((orden as never).total)}</span>
             </div>
           </div>
         </div>
 
-        {(orden as any).observaciones && (
+        {(orden as never).observaciones && (
           <div className="mb-6 text-sm">
             <p className="font-semibold text-gray-700 mb-1">Observaciones:</p>
-            <p className="text-gray-500 italic">{(orden as any).observaciones}</p>
+            <p className="text-gray-500 italic">{(orden as never).observaciones}</p>
           </div>
         )}
 

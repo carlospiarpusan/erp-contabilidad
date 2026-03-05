@@ -39,10 +39,13 @@ export async function getUsuarioActual() {
 }
 
 export async function updateUsuario(id: string, values: Partial<UsuarioRow>) {
+  const payload = { ...values }
+  if (payload.rol_id === '') payload.rol_id = null
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('usuarios')
-    .update(values)
+    .update(payload)
     .eq('id', id)
     .select()
     .single()

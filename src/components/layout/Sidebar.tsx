@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/utils/cn'
 import {
   LayoutDashboard,
-  FileText,
+
   Users,
   Package,
   ShoppingCart,
@@ -15,7 +15,7 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
-  Wrench,
+
   TrendingUp,
   Building2,
 } from 'lucide-react'
@@ -46,7 +46,7 @@ const menuItems = [
     icon: Users,
     children: [
       { label: 'Todos los clientes', href: '/clientes' },
-      { label: 'Grupos',             href: '/clientes/grupos' },
+      { label: 'Grupos', href: '/clientes/grupos' },
     ],
   },
   {

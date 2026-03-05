@@ -19,8 +19,8 @@ export async function getAsientos(params?: {
     .order('numero', { ascending: false })
     .range(offset, offset + limit - 1)
   if (tipo_doc) q = q.eq('tipo_doc', tipo_doc)
-  if (desde)    q = q.gte('fecha', desde)
-  if (hasta)    q = q.lte('fecha', hasta)
+  if (desde) q = q.gte('fecha', desde)
+  if (hasta) q = q.lte('fecha', hasta)
   const { data, count, error } = await q
   if (error) throw error
   return { asientos: data ?? [], total: count ?? 0 }
@@ -34,7 +34,7 @@ export async function getCuentasPUC(params?: { busqueda?: string; nivel?: number
     .from('cuentas_puc')
     .select('id, codigo, descripcion, tipo, nivel, naturaleza, activa', { count: 'exact' })
     .order('codigo')
-  if (params?.nivel)    q = q.eq('nivel', params.nivel)
+  if (params?.nivel) q = q.eq('nivel', params.nivel)
   if (params?.busqueda) {
     q = q.or(`codigo.ilike.%${params.busqueda}%,descripcion.ilike.%${params.busqueda}%`)
   }
@@ -118,18 +118,24 @@ export async function getFormasPagoAll() {
 export async function createFormaPago(fields: {
   descripcion: string; tipo: string; dias_vencimiento?: number; cuenta_id?: string
 }) {
+  const payload = { ...fields }
+  if (payload.cuenta_id === '') payload.cuenta_id = null as never
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { data: uRow } = await supabase.from('usuarios').select('empresa_id').eq('id', user!.id).single()
   const { data, error } = await supabase.from('formas_pago')
-    .insert({ ...fields, empresa_id: uRow!.empresa_id, activo: true }).select().single()
+    .insert({ ...payload, empresa_id: uRow!.empresa_id, activo: true }).select().single()
   if (error) throw error
   return data
 }
 
 export async function updateFormaPago(id: string, fields: Record<string, unknown>) {
+  const payload = { ...fields }
+  if (payload.cuenta_id === '') payload.cuenta_id = null
+
   const supabase = await createClient()
-  const { data, error } = await supabase.from('formas_pago').update(fields).eq('id', id).select().single()
+  const { data, error } = await supabase.from('formas_pago').update(payload).eq('id', id).select().single()
   if (error) throw error
   return data
 }

@@ -26,7 +26,7 @@ export default async function PrintCotizacionPage({ params }: PageProps) {
 
   if (!cotizacion) notFound()
 
-  const lineas = ((cotizacion as any).lineas ?? []) as {
+  const lineas = ((cotizacion as never).lineas ?? []) as {
     id: string; descripcion?: string | null; cantidad: number
     precio_unitario: number; descuento_porcentaje: number
     subtotal: number; total_iva: number; total: number
@@ -34,7 +34,7 @@ export default async function PrintCotizacionPage({ params }: PageProps) {
     impuesto?: { porcentaje: number } | null
   }[]
 
-  const cliente = (cotizacion as any).cliente as {
+  const cliente = (cotizacion as never).cliente as {
     razon_social?: string; numero_documento?: string
     tipo_documento?: string; email?: string; telefono?: string; direccion?: string
   } | null
@@ -66,13 +66,13 @@ export default async function PrintCotizacionPage({ params }: PageProps) {
           <div className="text-right">
             <div className="border-2 border-gray-800 px-4 py-2 rounded">
               <p className="text-xs font-medium text-gray-500 uppercase">Cotización</p>
-              <p className="text-2xl font-bold text-gray-900 font-mono">{(cotizacion as any).prefijo}{(cotizacion as any).numero}</p>
+              <p className="text-2xl font-bold text-gray-900 font-mono">{(cotizacion as never).prefijo}{(cotizacion as never).numero}</p>
             </div>
-            <p className="text-sm text-gray-600 mt-2">Fecha: <strong>{formatFecha((cotizacion as any).fecha)}</strong></p>
-            {(cotizacion as any).fecha_vencimiento && (
-              <p className="text-sm text-gray-600">Válida hasta: <strong>{formatFecha((cotizacion as any).fecha_vencimiento)}</strong></p>
+            <p className="text-sm text-gray-600 mt-2">Fecha: <strong>{formatFecha((cotizacion as never).fecha)}</strong></p>
+            {(cotizacion as never).fecha_vencimiento && (
+              <p className="text-sm text-gray-600">Válida hasta: <strong>{formatFecha((cotizacion as never).fecha_vencimiento)}</strong></p>
             )}
-            <p className="text-xs text-gray-400 mt-1 capitalize">Estado: {(cotizacion as any).estado}</p>
+            <p className="text-xs text-gray-400 mt-1 capitalize">Estado: {(cotizacion as never).estado}</p>
           </div>
         </div>
 
@@ -121,29 +121,29 @@ export default async function PrintCotizacionPage({ params }: PageProps) {
           <div className="w-64">
             <div className="flex justify-between text-sm py-1 border-b border-gray-100">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-mono">{formatCOP((cotizacion as any).subtotal)}</span>
+              <span className="font-mono">{formatCOP((cotizacion as never).subtotal)}</span>
             </div>
-            {(cotizacion as any).total_descuento > 0 && (
+            {(cotizacion as never).total_descuento > 0 && (
               <div className="flex justify-between text-sm py-1 border-b border-gray-100">
                 <span className="text-gray-600">Descuento</span>
-                <span className="font-mono text-red-600">-{formatCOP((cotizacion as any).total_descuento)}</span>
+                <span className="font-mono text-red-600">-{formatCOP((cotizacion as never).total_descuento)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm py-1 border-b border-gray-100">
               <span className="text-gray-600">IVA</span>
-              <span className="font-mono">{formatCOP((cotizacion as any).total_iva)}</span>
+              <span className="font-mono">{formatCOP((cotizacion as never).total_iva)}</span>
             </div>
             <div className="flex justify-between text-base font-bold py-2 border-t-2 border-gray-800 mt-1">
               <span>TOTAL</span>
-              <span className="font-mono">{formatCOP((cotizacion as any).total)}</span>
+              <span className="font-mono">{formatCOP((cotizacion as never).total)}</span>
             </div>
           </div>
         </div>
 
-        {(cotizacion as any).observaciones && (
+        {(cotizacion as never).observaciones && (
           <div className="mb-6 text-sm">
             <p className="font-semibold text-gray-700 mb-1">Observaciones:</p>
-            <p className="text-gray-500 italic">{(cotizacion as any).observaciones}</p>
+            <p className="text-gray-500 italic">{(cotizacion as never).observaciones}</p>
           </div>
         )}
 

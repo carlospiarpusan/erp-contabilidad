@@ -166,13 +166,13 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <Layers className="h-4 w-4 text-purple-500" /> Variantes
           </h3>
-          {!((producto as any).producto_variantes ?? []).length ? (
+          {!((producto as never).producto_variantes ?? []).length ? (
             <p className="text-sm text-gray-400">
               {producto.tiene_variantes ? 'Sin variantes registradas' : 'Producto sin variantes'}
             </p>
           ) : (
             <div className="flex flex-col gap-1">
-              {((producto as any).producto_variantes ?? []).map((v: any) => (
+              {((producto as never).producto_variantes ?? []).map((v: never) => (
                 <div key={v.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-1.5 text-sm">
                   <span className="text-gray-700">{[v.talla, v.color].filter(Boolean).join(' / ') || v.sku}</span>
                   {v.precio_venta && <span className="text-gray-500 font-mono">{formatCOP(v.precio_venta)}</span>}

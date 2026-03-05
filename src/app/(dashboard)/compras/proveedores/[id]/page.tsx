@@ -4,7 +4,7 @@ import { getProveedorById, getResumenProveedor } from '@/lib/db/compras'
 import { notFound } from 'next/navigation'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import {
-  Truck, Phone, Mail, MapPin, Building2, User,
+  Phone, Mail, MapPin, Building2, User,
   TrendingDown, ShoppingCart, CreditCard, FileText, CheckCircle2, Clock
 } from 'lucide-react'
 import Link from 'next/link'
@@ -15,9 +15,9 @@ interface Props {
 
 const ESTADO_BADGE: Record<string, string> = {
   pendiente: 'bg-yellow-100 text-yellow-700',
-  pagada:    'bg-green-100 text-green-700',
+  pagada: 'bg-green-100 text-green-700',
   cancelada: 'bg-red-100 text-red-700',
-  parcial:   'bg-blue-100 text-blue-700',
+  parcial: 'bg-blue-100 text-blue-700',
 }
 
 export default async function DetalleProveedorPage({ params }: Props) {
@@ -31,9 +31,9 @@ export default async function DetalleProveedorPage({ params }: Props) {
   if (!proveedor) notFound()
 
   const kpis = [
-    { label: 'Total facturas',   valor: String(resumen?.total_facturas ?? 0),   icon: ShoppingCart,  color: 'bg-orange-50 text-orange-700' },
-    { label: 'Total comprado',   valor: formatCOP(resumen?.total_compras ?? 0),  icon: TrendingDown,  color: 'bg-red-50 text-red-700'       },
-    { label: 'Saldo pendiente',  valor: formatCOP(resumen?.saldo_pendiente ?? 0), icon: CreditCard,   color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-amber-50 text-amber-700' : 'bg-gray-50 text-gray-500' },
+    { label: 'Total facturas', valor: String(resumen?.total_facturas ?? 0), icon: ShoppingCart, color: 'bg-orange-50 text-orange-700' },
+    { label: 'Total comprado', valor: formatCOP(resumen?.total_compras ?? 0), icon: TrendingDown, color: 'bg-red-50 text-red-700' },
+    { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0), icon: CreditCard, color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-amber-50 text-amber-700' : 'bg-gray-50 text-gray-500' },
   ]
 
   return (

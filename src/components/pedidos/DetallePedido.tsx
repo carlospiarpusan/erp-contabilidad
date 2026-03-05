@@ -58,7 +58,7 @@ export function DetallePedido({ pedido, formasPago }: Props) {
       } else {
         router.refresh()
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e.message)
     } finally {
       setAccionando(false)

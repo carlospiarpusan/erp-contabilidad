@@ -14,18 +14,18 @@ interface Linea {
 }
 
 function calcLinea(l: Linea) {
-  const sub  = l.cantidad * l.precio_unitario
-  const dct  = sub * (l.descuento_porcentaje / 100)
+  const sub = l.cantidad * l.precio_unitario
+  const dct = sub * (l.descuento_porcentaje / 100)
   const base = sub - dct
-  const iva  = base * (l.iva_pct / 100)
+  const iva = base * (l.iva_pct / 100)
   return { sub, dct, iva, total: base + iva }
 }
 
 interface Props {
-  clientes:  Cliente[]
+  clientes: Cliente[]
   productos: Producto[]
   impuestos: Impuesto[]
-  bodegas:   Bodega[]
+  bodegas: Bodega[]
 }
 
 const hoy = new Date().toISOString().slice(0, 10)
@@ -34,16 +34,16 @@ const en15 = new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10)
 export function FormPedido({ clientes, productos, impuestos, bodegas }: Props) {
   const router = useRouter()
   const [cliente_id, setClienteId] = useState('')
-  const [bodega_id, setBodegaId]   = useState(bodegas.find(b => b.principal)?.id ?? bodegas[0]?.id ?? '')
-  const [fecha, setFecha]          = useState(hoy)
-  const [vencimiento, setVenc]     = useState(en15)
-  const [observaciones, setObs]    = useState('')
-  const [lineas, setLineas]        = useState<Linea[]>([])
-  const [guardando, setGuardando]  = useState(false)
-  const [error, setError]          = useState('')
+  const [bodega_id, setBodegaId] = useState(bodegas.find(b => b.principal)?.id ?? bodegas[0]?.id ?? '')
+  const [fecha, setFecha] = useState(hoy)
+  const [vencimiento, setVenc] = useState(en15)
+  const [observaciones, setObs] = useState('')
+  const [lineas, setLineas] = useState<Linea[]>([])
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
 
   function agregarLinea() {
-    const p0   = productos[0]
+    const p0 = productos[0]
     const imp0 = impuestos.find(i => i.id === p0?.impuesto_id) ?? impuestos[0]
     setLineas(prev => [...prev, {
       producto_id: p0?.id ?? '', descripcion: p0?.descripcion ?? '',
@@ -53,7 +53,7 @@ export function FormPedido({ clientes, productos, impuestos, bodegas }: Props) {
   }
 
   const handleProducto = useCallback((idx: number, producto_id: string) => {
-    const p   = productos.find(x => x.id === producto_id)
+    const p = productos.find(x => x.id === producto_id)
     const imp = impuestos.find(i => i.id === p?.impuesto_id)
     setLineas(prev => prev.map((l, i) => i !== idx ? l : {
       ...l, producto_id, descripcion: p?.descripcion ?? '',
@@ -71,15 +71,15 @@ export function FormPedido({ clientes, productos, impuestos, bodegas }: Props) {
     }))
   }
 
-  const calcs    = lineas.map(calcLinea)
-  const subtotal  = calcs.reduce((s, c) => s + c.sub,   0)
-  const descuento = calcs.reduce((s, c) => s + c.dct,   0)
-  const totalIva  = calcs.reduce((s, c) => s + c.iva,   0)
-  const total     = calcs.reduce((s, c) => s + c.total, 0)
+  const calcs = lineas.map(calcLinea)
+  const subtotal = calcs.reduce((s, c) => s + c.sub, 0)
+  const descuento = calcs.reduce((s, c) => s + c.dct, 0)
+  const totalIva = calcs.reduce((s, c) => s + c.iva, 0)
+  const total = calcs.reduce((s, c) => s + c.total, 0)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!cliente_id)    { setError('Selecciona un cliente'); return }
+    if (!cliente_id) { setError('Selecciona un cliente'); return }
     if (!lineas.length) { setError('Agrega al menos un producto'); return }
     setGuardando(true); setError('')
     try {
@@ -158,7 +158,7 @@ export function FormPedido({ clientes, productos, impuestos, bodegas }: Props) {
         </div>
 
         {lineas.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-8">No hay productos. Haz clic en "Agregar línea".</p>
+          <p className="text-center text-sm text-gray-400 py-8">No hay productos. Haz clic en &quot;Agregar línea&quot;.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

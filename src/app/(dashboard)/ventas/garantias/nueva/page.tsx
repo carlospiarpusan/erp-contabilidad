@@ -1,13 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-import { createClient } from '@/lib/supabase/server'
 import { getClientes } from '@/lib/db/clientes'
 import { getProductos } from '@/lib/db/productos'
 import { FormGarantia } from '@/components/garantias/FormGarantia'
 import { ShieldCheck } from 'lucide-react'
 
 export default async function NuevaGarantiaPage() {
-  const supabase = await createClient()
   const [{ clientes }, { productos }] = await Promise.all([
     getClientes({ activo: true, limit: 500 }),
     getProductos({ activo: true, limit: 500 }),
@@ -24,7 +22,7 @@ export default async function NuevaGarantiaPage() {
           <p className="text-sm text-gray-500">Registrar reclamación o devolución de cliente</p>
         </div>
       </div>
-      <FormGarantia clientes={clientes as any} productos={productos as any} />
+      <FormGarantia clientes={clientes as never} productos={productos as never} />
     </div>
   )
 }

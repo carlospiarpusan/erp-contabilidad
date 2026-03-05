@@ -24,7 +24,7 @@ export default async function RemisionPage({ params }: PageProps) {
           <ChevronLeft className="h-4 w-4" /> Remisiones
         </Link>
       </div>
-      <DetalleRemision remision={remision as any} formasPago={formasPago as any} />
+      <DetalleRemision remision={remision as never} formasPago={formasPago as never} />
     </div>
   )
 }

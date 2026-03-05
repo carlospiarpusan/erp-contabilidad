@@ -13,7 +13,7 @@ export async function GET(_: NextRequest, { params }: Params) {
       .eq('id', id).single()
     if (error) throw error
     return NextResponse.json(data)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const { error } = await supabase.from('servicios_tecnicos').update(updates).eq('id', id)
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

@@ -25,8 +25,8 @@ export async function getPedidos(params?: {
     .range(offset, offset + limit - 1)
 
   if (estado) q = q.eq('estado', estado)
-  if (desde)  q = q.gte('fecha', desde)
-  if (hasta)  q = q.lte('fecha', hasta)
+  if (desde) q = q.gte('fecha', desde)
+  if (hasta) q = q.lte('fecha', hasta)
 
   const { data, count, error } = await q
   if (error) throw error
@@ -51,14 +51,14 @@ export async function createPedido(params: {
 }) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('crear_pedido', {
-    p_empresa_id:    params.empresa_id,
-    p_ejercicio_id:  params.ejercicio_id,
-    p_cliente_id:    params.cliente_id,
-    p_bodega_id:     params.bodega_id,
-    p_fecha:         params.fecha,
-    p_vencimiento:   params.vencimiento,
-    p_observaciones: params.observaciones ?? null,
-    p_lineas:        JSON.stringify(params.lineas),
+    p_empresa_id: params.empresa_id,
+    p_ejercicio_id: params.ejercicio_id,
+    p_cliente_id: params.cliente_id,
+    p_bodega_id: params.bodega_id,
+    p_fecha: params.fecha,
+    p_vencimiento: params.vencimiento,
+    p_observaciones: params.observaciones || null,
+    p_lineas: JSON.stringify(params.lineas.map(l => ({ ...l, impuesto_id: l.impuesto_id || null }))),
   })
   if (error) throw error
   return data as string
@@ -79,10 +79,10 @@ export async function getEstadisticasPedidos() {
     .from('documentos').select('estado, total').eq('tipo', 'pedido').neq('estado', 'cancelado')
   const rows = data ?? []
   return {
-    total:     rows.length,
+    total: rows.length,
     pendiente: rows.filter(r => r.estado === 'pendiente').length,
     en_proceso: rows.filter(r => r.estado === 'en_proceso').length,
     despachado: rows.filter(r => r.estado === 'despachado').length,
-    valor:     rows.filter(r => r.estado === 'pendiente').reduce((s, r) => s + (r.total ?? 0), 0),
+    valor: rows.filter(r => r.estado === 'pendiente').reduce((s, r) => s + (r.total ?? 0), 0),
   }
 }

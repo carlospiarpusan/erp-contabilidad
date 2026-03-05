@@ -79,7 +79,7 @@ export function ListaCotizaciones({ cotizaciones, total, estadoFiltro: estadoIni
                 <td className="px-4 py-3 font-mono font-medium text-gray-700">{c.prefijo}{c.numero}</td>
                 <td className="px-4 py-3 text-gray-600">{formatFecha(c.fecha)}</td>
                 <td className="px-4 py-3 text-gray-500 text-xs">{c.fecha_vencimiento ? formatFecha(c.fecha_vencimiento) : '—'}</td>
-                <td className="px-4 py-3 text-gray-900">{(c.cliente as any)?.razon_social ?? '—'}</td>
+                <td className="px-4 py-3 text-gray-900">{(c.cliente as never)?.razon_social ?? '—'}</td>
                 <td className="px-4 py-3 text-center">
                   <Badge variant={BADGE_ESTADO[c.estado] ?? 'outline'}>{c.estado}</Badge>
                 </td>

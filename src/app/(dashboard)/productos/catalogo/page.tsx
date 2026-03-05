@@ -62,7 +62,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {productos.map(p => {
-            const stocks = (p as any).stock as { cantidad: number; cantidad_minima: number }[] ?? []
+            const stocks = (p as never).stock as { cantidad: number; cantidad_minima: number }[] ?? []
             const stockTotal = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
             const stockBajo  = stocks.some(st => st.cantidad_minima > 0 && st.cantidad <= st.cantidad_minima)
 
@@ -76,15 +76,15 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
                   </span>
                 </div>
                 <div className="p-3 flex flex-col gap-1 flex-1">
-                  <p className="text-xs font-mono text-gray-400">{(p as any).codigo}</p>
+                  <p className="text-xs font-mono text-gray-400">{(p as never).codigo}</p>
                   <p className="text-sm font-medium text-gray-900 leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors">
                     {p.descripcion}
                   </p>
-                  {(p as any).familia && (
-                    <p className="text-xs text-gray-400">{((p as any).familia as { nombre?: string })?.nombre}</p>
+                  {(p as never).familia && (
+                    <p className="text-xs text-gray-400">{((p as never).familia as { nombre?: string })?.nombre}</p>
                   )}
                   <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
-                    <span className="text-sm font-bold font-mono text-gray-900">{formatCOP((p as any).precio_venta ?? 0)}</span>
+                    <span className="text-sm font-bold font-mono text-gray-900">{formatCOP((p as never).precio_venta ?? 0)}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                       stockBajo
                         ? 'bg-red-100 text-red-700'

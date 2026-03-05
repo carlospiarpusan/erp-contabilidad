@@ -96,10 +96,10 @@ export async function getResumenProveedor(proveedor_id: string) {
       .eq('tipo', 'factura_compra').eq('proveedor_id', proveedor_id)
       .order('fecha', { ascending: false }).limit(5),
   ])
-  const facturas       = facturasRes.data ?? []
+  const facturas = facturasRes.data ?? []
   const total_facturas = facturasRes.count ?? 0
-  const total_compras  = facturas.reduce((s, f) => s + (f.total ?? 0), 0)
-  const total_pagado   = (recibosRes.data ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
+  const total_compras = facturas.reduce((s, f) => s + (f.total ?? 0), 0)
+  const total_pagado = (recibosRes.data ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
   const saldo_pendiente = Math.max(0, total_compras - total_pagado)
   return { total_facturas, total_compras, total_pagado, saldo_pendiente, ultimas_facturas: ultimasRes.data ?? [] }
 }
@@ -118,22 +118,22 @@ export async function getEstadisticasCompras() {
   const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0]
 
   return {
-    total:         data.length,
-    total_monto:   data.reduce((s, r) => s + (r.total ?? 0), 0),
-    pendiente:     data.filter(r => r.estado === 'pendiente').reduce((s, r) => s + (r.total ?? 0), 0),
-    pagada:        data.filter(r => r.estado === 'pagada').reduce((s, r) => s + (r.total ?? 0), 0),
-    este_mes:      data.filter(r => r.fecha >= primerDia).reduce((s, r) => s + (r.total ?? 0), 0),
+    total: data.length,
+    total_monto: data.reduce((s, r) => s + (r.total ?? 0), 0),
+    pendiente: data.filter(r => r.estado === 'pendiente').reduce((s, r) => s + (r.total ?? 0), 0),
+    pagada: data.filter(r => r.estado === 'pagada').reduce((s, r) => s + (r.total ?? 0), 0),
+    este_mes: data.filter(r => r.fecha >= primerDia).reduce((s, r) => s + (r.total ?? 0), 0),
   }
 }
 
 export async function getCompras(params?: {
-  busqueda?:     string
-  estado?:       string
-  desde?:        string
-  hasta?:        string
+  busqueda?: string
+  estado?: string
+  desde?: string
+  hasta?: string
   proveedor_id?: string
-  limit?:        number
-  offset?:       number
+  limit?: number
+  offset?: number
 }) {
   const supabase = await createClient()
   const { busqueda, estado, desde, hasta, proveedor_id, limit = 100, offset = 0 } = params ?? {}
@@ -150,11 +150,11 @@ export async function getCompras(params?: {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (estado)       q = q.eq('estado', estado)
-  if (desde)        q = q.gte('fecha', desde)
-  if (hasta)        q = q.lte('fecha', hasta)
+  if (estado) q = q.eq('estado', estado)
+  if (desde) q = q.gte('fecha', desde)
+  if (hasta) q = q.lte('fecha', hasta)
   if (proveedor_id) q = q.eq('proveedor_id', proveedor_id)
-  if (busqueda)     q = q.ilike('numero_externo', `%${busqueda}%`)
+  if (busqueda) q = q.ilike('numero_externo', `%${busqueda}%`)
 
   const { data, count, error } = await q
   if (error) throw error
@@ -205,14 +205,18 @@ export async function createCompra(params: {
 }) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('crear_factura_compra', {
-    p_empresa_id:    params.empresa_id,
-    p_ejercicio_id:  params.ejercicio_id,
-    p_proveedor_id:  params.proveedor_id,
-    p_bodega_id:     params.bodega_id,
-    p_fecha:         params.fecha,
+    p_empresa_id: params.empresa_id,
+    p_ejercicio_id: params.ejercicio_id,
+    p_proveedor_id: params.proveedor_id,
+    p_bodega_id: params.bodega_id,
+    p_fecha: params.fecha,
     p_numero_externo: params.numero_externo,
-    p_observaciones: params.observaciones ?? null,
-    p_lineas:        params.lineas,
+    p_observaciones: params.observaciones || null,
+    p_lineas: params.lineas.map(l => ({
+      ...l,
+      variante_id: l.variante_id || null,
+      impuesto_id: l.impuesto_id || null
+    })),
   })
   if (error) throw error
   return data as string
@@ -239,13 +243,13 @@ export async function pagarCompra(params: {
 }) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('crear_pago_compra', {
-    p_empresa_id:    params.empresa_id,
-    p_documento_id:  params.documento_id,
+    p_empresa_id: params.empresa_id,
+    p_documento_id: params.documento_id,
     p_forma_pago_id: params.forma_pago_id,
-    p_ejercicio_id:  params.ejercicio_id,
-    p_valor:         params.valor,
-    p_fecha:         params.fecha,
-    p_observaciones: params.observaciones ?? null,
+    p_ejercicio_id: params.ejercicio_id,
+    p_valor: params.valor,
+    p_fecha: params.fecha,
+    p_observaciones: params.observaciones || null,
   })
   if (error) throw error
   return data as string

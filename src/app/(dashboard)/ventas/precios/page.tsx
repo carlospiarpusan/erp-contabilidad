@@ -32,10 +32,10 @@ export default async function ListaPreciosPage() {
       </div>
 
       <GestorPrecios
-        precios={(precios ?? []) as any}
+        precios={(precios ?? []) as never}
         productos={productos.map(p => ({ id: p.id, codigo: p.codigo, descripcion: p.descripcion }))}
         clientes={clientes.map(c => ({ id: c.id, razon_social: c.razon_social }))}
-        grupos={grupos.map((g: any) => ({ id: g.id, nombre: g.nombre }))}
+        grupos={grupos.map((g: never) => ({ id: g.id, nombre: g.nombre }))}
       />
     </div>
   )

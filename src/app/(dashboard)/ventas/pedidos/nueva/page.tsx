@@ -26,10 +26,10 @@ export default async function NuevoPedidoPage() {
       </div>
 
       <FormPedido
-        clientes={clientes as any}
-        productos={productos as any}
-        impuestos={impuestos as any}
-        bodegas={bodegas as any}
+        clientes={clientes as never}
+        productos={productos as never}
+        impuestos={impuestos as never}
+        bodegas={bodegas as never}
       />
     </div>
   )

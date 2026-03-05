@@ -48,7 +48,7 @@ export function DetalleOrden({ orden }: Props) {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error')
       router.refresh()
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e.message)
     } finally {
       setAccionando(false)

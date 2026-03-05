@@ -24,7 +24,7 @@ export default async function PedidoPage({ params }: PageProps) {
           <ChevronLeft className="h-4 w-4" /> Pedidos
         </Link>
       </div>
-      <DetallePedido pedido={pedido as any} formasPago={formasPago as any} />
+      <DetallePedido pedido={pedido as never} formasPago={formasPago as never} />
     </div>
   )
 }
