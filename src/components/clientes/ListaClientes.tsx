@@ -95,8 +95,24 @@ export function ListaClientes({
 
   async function handleEliminar(id: string, nombre: string) {
     if (!confirm(`¿Estás seguro de eliminar al cliente "${nombre}"?\nSi tiene facturas asociadas, solo se desactivará.`)) return
-    await fetch(`/api/clientes/${id}`, { method: 'DELETE' })
-    router.refresh()
+
+    setCargando(true)
+    try {
+      const res = await fetch(`/api/clientes/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Error al eliminar')
+      }
+
+      // Forzar actualización de la ruta
+      startTransition(() => {
+        router.refresh()
+      })
+    } catch (e: any) {
+      alert(e.message || 'Error al eliminar cliente')
+    } finally {
+      setCargando(false)
+    }
   }
 
   return (
@@ -229,8 +245,9 @@ export function ListaClientes({
                 </button>
                 <button
                   onClick={() => handleEliminar(c.id, c.razon_social)}
-                  className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
-                  title="Desactivar"
+                  disabled={cargando}
+                  className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Eliminar o Desactivar"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
