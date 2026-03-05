@@ -64,7 +64,10 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
       {/* Usuarios */}
       <GestionUsuariosEmpresa
         empresa_id={id}
-        usuarios={usuarios ?? []}
+        usuarios={(usuarios ?? []).map(u => ({
+          ...u,
+          roles: (Array.isArray(u.roles) ? u.roles[0] : u.roles) ?? null,
+        }))}
         roles={roles ?? []}
       />
     </div>

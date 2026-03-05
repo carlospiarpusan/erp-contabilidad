@@ -56,8 +56,8 @@ export default async function SuperadminUsuariosPage() {
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {(usuarios ?? []).map(u => {
-              const rol = (u.roles as { nombre: string } | null)?.nombre ?? ''
-              const empresa = (u.empresas as { nombre: string } | null)?.nombre ?? '—'
+              const rol = ((Array.isArray(u.roles) ? u.roles[0] : u.roles) as { nombre: string } | null)?.nombre ?? ''
+              const empresa = ((Array.isArray(u.empresas) ? u.empresas[0] : u.empresas) as { nombre: string } | null)?.nombre ?? '—'
               return (
                 <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{u.nombre}</td>

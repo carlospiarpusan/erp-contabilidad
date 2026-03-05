@@ -42,7 +42,7 @@ export default async function ClientesPage({ searchParams }: PageProps) {
     const mapa: Record<string, { razon_social: string; total: number; count: number }> = {}
     for (const d of data ?? []) {
       const cid = d.cliente_id as string
-      const cli = d.clientes as { id: string; razon_social: string } | null
+      const cli = (Array.isArray(d.clientes) ? d.clientes[0] : d.clientes) as { id: string; razon_social: string } | null
       if (!cid || !cli) continue
       if (!mapa[cid]) mapa[cid] = { razon_social: cli.razon_social, total: 0, count: 0 }
       mapa[cid].total += d.total ?? 0
@@ -65,7 +65,7 @@ export default async function ClientesPage({ searchParams }: PageProps) {
     const mapa: Record<string, { razon_social: string; telefono: string | null; total: number; count: number }> = {}
     for (const d of data ?? []) {
       const cid = d.cliente_id as string
-      const cli = d.clientes as { id: string; razon_social: string; telefono: string | null } | null
+      const cli = (Array.isArray(d.clientes) ? d.clientes[0] : d.clientes) as { id: string; razon_social: string; telefono: string | null } | null
       if (!cid || !cli) continue
       if (!mapa[cid]) mapa[cid] = { razon_social: cli.razon_social, telefono: cli.telefono ?? null, total: 0, count: 0 }
       mapa[cid].total += d.total ?? 0

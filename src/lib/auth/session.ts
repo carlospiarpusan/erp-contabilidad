@@ -23,8 +23,8 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
 
   if (!data) return null
 
-  const rol = (data.roles as { nombre: string } | null)?.nombre as UserSession['rol'] ?? 'solo_lectura'
-  const empresa_nombre = (data.empresas as { nombre: string } | null)?.nombre ?? undefined
+  const rol = ((Array.isArray(data.roles) ? data.roles[0] : data.roles) as { nombre: string } | null)?.nombre as UserSession['rol'] ?? 'solo_lectura'
+  const empresa_nombre = ((Array.isArray(data.empresas) ? data.empresas[0] : data.empresas) as { nombre: string } | null)?.nombre ?? undefined
 
   return {
     id: data.id,
@@ -37,7 +37,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
 })
 
 export function puedeAcceder(rol: UserSession['rol'], modulo: keyof typeof PERMISOS_MODULO) {
-  return PERMISOS_MODULO[modulo].includes(rol)
+  return (PERMISOS_MODULO[modulo] as readonly string[]).includes(rol)
 }
 
 export const PERMISOS_MODULO = {

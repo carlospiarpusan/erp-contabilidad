@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    const rol = (perfil?.roles as { nombre: string } | null)?.nombre
+    const rol = ((Array.isArray(perfil?.roles) ? perfil?.roles[0] : perfil?.roles) as { nombre: string } | null)?.nombre
     if (rol !== 'superadmin') {
       return NextResponse.redirect(new URL('/', request.url))
     }
