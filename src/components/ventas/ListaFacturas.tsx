@@ -52,9 +52,11 @@ interface Props {
   estadoFiltro:  string
   offset:        number
   limit:         number
+  cliente_id?:   string
+  clienteNombre?: string
 }
 
-export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFiltro: estadoInicial, offset: offsetInicial, limit }: Props) {
+export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFiltro: estadoInicial, offset: offsetInicial, limit, cliente_id, clienteNombre }: Props) {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [busqueda, setBusqueda]    = useState(busqInicial)
@@ -67,6 +69,7 @@ export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFi
     if (params.q)      sp.set('q', String(params.q))
     if (params.estado) sp.set('estado', String(params.estado))
     if (params.offset) sp.set('offset', String(params.offset))
+    if (cliente_id)    sp.set('cliente_id', cliente_id)
     startTransition(() => router.push(`/ventas/facturas?${sp.toString()}`))
   }
 
@@ -77,6 +80,13 @@ export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFi
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Banner filtro cliente */}
+      {cliente_id && (
+        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm text-blue-700">
+          <span>Mostrando facturas de: <strong>{clienteNombre ?? 'cliente seleccionado'}</strong></span>
+          <Link href="/ventas/facturas" className="text-xs text-blue-500 hover:underline">Ver todas</Link>
+        </div>
+      )}
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <form onSubmit={handleBuscar} className="flex flex-1 items-center gap-2">

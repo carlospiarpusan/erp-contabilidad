@@ -28,15 +28,16 @@ export async function getEstadisticasVentas() {
 // ── Listado ───────────────────────────────────────────────────
 
 export async function getFacturas(params?: {
-  busqueda?: string
-  estado?:   string
-  desde?:    string
-  hasta?:    string
-  limit?:    number
-  offset?:   number
+  busqueda?:   string
+  estado?:     string
+  desde?:      string
+  hasta?:      string
+  cliente_id?: string
+  limit?:      number
+  offset?:     number
 }) {
   const supabase = await createClient()
-  const { busqueda, estado, desde, hasta, limit = 50, offset = 0 } = params ?? {}
+  const { busqueda, estado, desde, hasta, cliente_id, limit = 50, offset = 0 } = params ?? {}
 
   let q = supabase
     .from('documentos')
@@ -51,10 +52,11 @@ export async function getFacturas(params?: {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (estado)    q = q.eq('estado', estado)
-  if (desde)     q = q.gte('fecha', desde)
-  if (hasta)     q = q.lte('fecha', hasta)
-  if (busqueda)  q = q.or(
+  if (estado)     q = q.eq('estado', estado)
+  if (desde)      q = q.gte('fecha', desde)
+  if (hasta)      q = q.lte('fecha', hasta)
+  if (cliente_id) q = q.eq('cliente_id', cliente_id)
+  if (busqueda)   q = q.or(
     `observaciones.ilike.%${busqueda}%`
   )
 

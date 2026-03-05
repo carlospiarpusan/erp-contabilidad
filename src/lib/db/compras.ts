@@ -127,15 +127,16 @@ export async function getEstadisticasCompras() {
 }
 
 export async function getCompras(params?: {
-  busqueda?: string
-  estado?: string
-  desde?: string
-  hasta?: string
-  limit?: number
-  offset?: number
+  busqueda?:     string
+  estado?:       string
+  desde?:        string
+  hasta?:        string
+  proveedor_id?: string
+  limit?:        number
+  offset?:       number
 }) {
   const supabase = await createClient()
-  const { busqueda, estado, desde, hasta, limit = 100, offset = 0 } = params ?? {}
+  const { busqueda, estado, desde, hasta, proveedor_id, limit = 100, offset = 0 } = params ?? {}
 
   let q = supabase
     .from('documentos')
@@ -149,10 +150,11 @@ export async function getCompras(params?: {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
-  if (estado)  q = q.eq('estado', estado)
-  if (desde)   q = q.gte('fecha', desde)
-  if (hasta)   q = q.lte('fecha', hasta)
-  if (busqueda) q = q.ilike('numero_externo', `%${busqueda}%`)
+  if (estado)       q = q.eq('estado', estado)
+  if (desde)        q = q.gte('fecha', desde)
+  if (hasta)        q = q.lte('fecha', hasta)
+  if (proveedor_id) q = q.eq('proveedor_id', proveedor_id)
+  if (busqueda)     q = q.ilike('numero_externo', `%${busqueda}%`)
 
   const { data, count, error } = await q
   if (error) throw error

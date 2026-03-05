@@ -19,7 +19,7 @@ interface Compra {
   bodega?: { nombre: string } | null
 }
 
-interface Props { compras: Compra[]; total: number }
+interface Props { compras: Compra[]; total: number; proveedor_id?: string; proveedorNombre?: string }
 
 const BADGE: Record<string, 'success' | 'danger' | 'warning' | 'outline'> = {
   pendiente: 'warning', pagada: 'success', cancelada: 'danger',
@@ -27,7 +27,7 @@ const BADGE: Record<string, 'success' | 'danger' | 'warning' | 'outline'> = {
 
 const ESTADOS = ['todos', 'pendiente', 'pagada', 'cancelada']
 
-export function ListaCompras({ compras: inicial, total }: Props) {
+export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorNombre }: Props) {
   const [estado, setEstado] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
 
@@ -41,6 +41,13 @@ export function ListaCompras({ compras: inicial, total }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Banner filtro proveedor */}
+      {proveedor_id && (
+        <div className="flex items-center justify-between rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm text-orange-700">
+          <span>Mostrando compras de: <strong>{proveedorNombre ?? 'proveedor seleccionado'}</strong></span>
+          <Link href="/compras/facturas" className="text-xs text-orange-500 hover:underline">Ver todas</Link>
+        </div>
+      )}
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <input

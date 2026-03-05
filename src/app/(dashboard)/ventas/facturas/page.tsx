@@ -1,12 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import { getFacturas, getEstadisticasVentas } from '@/lib/db/ventas'
+import { getClienteById } from '@/lib/db/clientes'
 import { ListaFacturas } from '@/components/ventas/ListaFacturas'
 import { TrendingUp, Clock, CheckCircle, Calendar } from 'lucide-react'
 import { formatCOP } from '@/utils/cn'
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; estado?: string; offset?: string }>
+  searchParams: Promise<{ q?: string; estado?: string; offset?: string; cliente_id?: string }>
 }
 
 export default async function FacturasPage({ searchParams }: PageProps) {
@@ -14,14 +15,16 @@ export default async function FacturasPage({ searchParams }: PageProps) {
   const offset = parseInt(sp.offset ?? '0')
   const limit  = 50
 
-  const [{ facturas, total }, stats] = await Promise.all([
+  const [{ facturas, total }, stats, cliente] = await Promise.all([
     getFacturas({
-      busqueda: sp.q ?? undefined,
-      estado:   sp.estado ?? undefined,
+      busqueda:   sp.q ?? undefined,
+      estado:     sp.estado ?? undefined,
+      cliente_id: sp.cliente_id ?? undefined,
       offset,
       limit,
     }),
     getEstadisticasVentas(),
+    sp.cliente_id ? getClienteById(sp.cliente_id).catch(() => null) : Promise.resolve(null),
   ])
 
   return (
@@ -63,6 +66,8 @@ export default async function FacturasPage({ searchParams }: PageProps) {
         estadoFiltro={sp.estado ?? ''}
         offset={offset}
         limit={limit}
+        cliente_id={sp.cliente_id}
+        clienteNombre={cliente?.razon_social}
       />
     </div>
   )

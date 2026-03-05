@@ -1,14 +1,20 @@
 export const dynamic = 'force-dynamic'
 
-import { getCompras, getEstadisticasCompras } from '@/lib/db/compras'
+import { getCompras, getEstadisticasCompras, getProveedorById } from '@/lib/db/compras'
 import { ListaCompras } from '@/components/compras/ListaCompras'
 import { formatCOP } from '@/utils/cn'
 import { ShoppingCart, Clock, CheckCircle, TrendingDown } from 'lucide-react'
 
-export default async function ComprasPage() {
-  const [{ compras, total }, stats] = await Promise.all([
-    getCompras({ limit: 100 }),
+interface PageProps {
+  searchParams: Promise<{ proveedor_id?: string }>
+}
+
+export default async function ComprasPage({ searchParams }: PageProps) {
+  const sp = await searchParams
+  const [{ compras, total }, stats, proveedor] = await Promise.all([
+    getCompras({ limit: 100, proveedor_id: sp.proveedor_id ?? undefined }),
     getEstadisticasCompras(),
+    sp.proveedor_id ? getProveedorById(sp.proveedor_id).catch(() => null) : Promise.resolve(null),
   ])
 
   const kpis = [
@@ -45,7 +51,12 @@ export default async function ComprasPage() {
         ))}
       </div>
 
-      <ListaCompras compras={compras as unknown as Parameters<typeof ListaCompras>[0]['compras']} total={total} />
+      <ListaCompras
+        compras={compras as unknown as Parameters<typeof ListaCompras>[0]['compras']}
+        total={total}
+        proveedor_id={sp.proveedor_id}
+        proveedorNombre={(proveedor as { razon_social?: string } | null)?.razon_social}
+      />
     </div>
   )
 }
