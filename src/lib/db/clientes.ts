@@ -91,11 +91,11 @@ export async function createCliente(datos: Partial<Cliente>) {
     let finalVal = val
     if (typeof val === 'string') {
       finalVal = val.trim()
-      if (finalVal === '') finalVal = null
+      if (finalVal === '') finalVal = null as any
     }
     return [key, finalVal]
   })
-  const payload = Object.fromEntries(entries)
+  const payload = Object.fromEntries(entries) as any
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -106,7 +106,7 @@ export async function createCliente(datos: Partial<Cliente>) {
 
   if (error) {
     console.error('Insert error details:', error)
-    throw new Error(`Error BD (${error.code}): ${error.message} | Payload: ${JSON.stringify(payload)}`)
+    throw new Error(`Error BD (${error.code}): ${error.message}`)
   }
   return data as Cliente
 }
@@ -116,9 +116,9 @@ export async function updateCliente(id: string, datos: Partial<Cliente>) {
   const { id: _, empresa_id: __, ...rest } = datos
   const entries = Object.entries(rest).map(([key, val]) => [
     key,
-    val === '' ? null : val
+    val === '' ? null as any : val
   ])
-  const payload = Object.fromEntries(entries)
+  const payload = Object.fromEntries(entries) as any
 
   const supabase = await createClient()
   const { data, error } = await supabase
