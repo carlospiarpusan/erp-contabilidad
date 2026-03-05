@@ -5,35 +5,44 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
+import { AlertCircle } from 'lucide-react'
 import type { Cliente, GrupoCliente } from '@/types'
 
 const schema = z.object({
-  razon_social:           z.string().min(2, 'Requerido'),
-  nombre_contacto:        z.string().optional(),
-  tipo_documento:         z.string(),
-  numero_documento:       z.string().optional(),
-  dv:                     z.string().optional(),
-  responsabilidad_fiscal: z.string(),
-  aplica_retencion:       z.boolean(),
-  grupo_id:               z.string().optional(),
-  email:                  z.string().email('Email inválido').optional().or(z.literal('')),
-  telefono:               z.string().optional(),
-  whatsapp:               z.string().optional(),
-  direccion:              z.string().optional(),
-  ciudad:                 z.string(),
-  departamento:           z.string(),
-  observaciones:          z.string().optional(),
+  razon_social: z.string().min(2, 'La razón social o nombre completo es obligatorio'),
+  nombre_contacto: z.string().optional(),
+  tipo_documento: z.string().min(1, 'Seleccione el tipo de documento'),
+  numero_documento: z.string().min(3, 'El número de documento es obligatorio (mín. 3 caracteres)'),
+  dv: z.string().optional(),
+  responsabilidad_fiscal: z.string().min(1, 'Seleccione la responsabilidad fiscal'),
+  aplica_retencion: z.boolean(),
+  grupo_id: z.string().optional().nullable(),
+  email: z.string().email('Ingrese un correo electrónico válido').optional().or(z.literal('')),
+  telefono: z.string().optional(),
+  whatsapp: z.string().optional(),
+  direccion: z.string().optional(),
+  ciudad: z.string().min(1, 'La ciudad es obligatoria'),
+  departamento: z.string().min(1, 'El departamento es obligatorio'),
+  observaciones: z.string().optional(),
 })
 
 type FormData = z.infer<typeof schema>
 
-const tiposDocumento = ['NIT', 'CC', 'CE', 'Pasaporte', 'PEP']
+const tiposDocumento = [
+  { value: 'NIT', label: 'NIT' },
+  { value: 'CC', label: 'Cédula de Ciudadanía' },
+  { value: 'CE', label: 'Cédula de Extranjería' },
+  { value: 'Pasaporte', label: 'Pasaporte' },
+  { value: 'PEP', label: 'PEP' },
+]
+
 const responsabilidades = [
-  { valor: 'R-99-PN', label: 'No responsable de IVA' },
-  { valor: 'O-13',    label: 'Gran contribuyente' },
-  { valor: 'O-15',    label: 'Autorretenedor' },
-  { valor: 'O-23',    label: 'Régimen simple' },
-  { valor: 'O-47',    label: 'Régimen ordinario' },
+  { value: 'R-99-PN', label: 'No responsable de IVA' },
+  { value: 'O-13', label: 'Gran contribuyente' },
+  { value: 'O-15', label: 'Autorretenedor' },
+  { value: 'O-23', label: 'Régimen simple' },
+  { value: 'O-47', label: 'Régimen ordinario' },
 ]
 
 interface FormClienteProps {
@@ -48,147 +57,169 @@ export function FormCliente({ inicial, grupos, onGuardar, onCancelar, cargando }
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      razon_social:           inicial?.razon_social ?? '',
-      nombre_contacto:        inicial?.nombre_contacto ?? '',
-      tipo_documento:         inicial?.tipo_documento ?? 'NIT',
-      numero_documento:       inicial?.numero_documento ?? '',
-      dv:                     inicial?.dv ?? '',
+      razon_social: inicial?.razon_social ?? '',
+      nombre_contacto: inicial?.nombre_contacto ?? '',
+      tipo_documento: inicial?.tipo_documento ?? 'NIT',
+      numero_documento: inicial?.numero_documento ?? '',
+      dv: inicial?.dv ?? '',
       responsabilidad_fiscal: inicial?.responsabilidad_fiscal ?? 'R-99-PN',
-      aplica_retencion:       inicial?.aplica_retencion ?? false,
-      grupo_id:               inicial?.grupo_id ?? '',
-      email:                  inicial?.email ?? '',
-      telefono:               inicial?.telefono ?? '',
-      whatsapp:               inicial?.whatsapp ?? '',
-      direccion:              inicial?.direccion ?? '',
-      ciudad:                 inicial?.ciudad ?? 'Ipiales',
-      departamento:           inicial?.departamento ?? 'Nariño',
-      observaciones:          inicial?.observaciones ?? '',
+      aplica_retencion: inicial?.aplica_retencion ?? false,
+      grupo_id: inicial?.grupo_id ?? '',
+      email: inicial?.email ?? '',
+      telefono: inicial?.telefono ?? '',
+      whatsapp: inicial?.whatsapp ?? '',
+      direccion: inicial?.direccion ?? '',
+      ciudad: inicial?.ciudad ?? 'Ipiales',
+      departamento: inicial?.departamento ?? 'Nariño',
+      observaciones: inicial?.observaciones ?? '',
     },
   })
 
+  // Limpiamos los datos antes de enviar para asegurar que los UUIDs vacíos sean null
+  const onSubmit = (datos: FormData) => {
+    const cleaned = { ...datos }
+    if (cleaned.grupo_id === '') cleaned.grupo_id = null
+    onGuardar(cleaned)
+  }
+
+  const hasErrors = Object.keys(errors).length > 0
+
   return (
-    <form onSubmit={handleSubmit(onGuardar)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 overflow-y-auto px-1">
+      {hasErrors && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+          <AlertCircle className="h-4 w-4" />
+          <span>Por favor corrija los campos marcados como obligatorios.</span>
+        </div>
+      )}
+
       {/* Datos de identificación */}
-      <fieldset className="rounded-lg border border-gray-200 p-4">
-        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Identificación
-        </legend>
-        <div className="mt-2 grid grid-cols-2 gap-4">
-          <div className="col-span-2">
+      <section className="space-y-4">
+        <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-100 pb-2">
+          1. Identificación del Cliente
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
             <Input
-              label="Razón Social / Nombre *"
+              label="Razón Social o Nombre Completo *"
               {...register('razon_social')}
               error={errors.razon_social?.message}
-              placeholder="Ej: Maria Gómez o Comercializadora XYZ"
+              placeholder="Ej: Juan Pérez o Inversiones ABC S.A.S"
+              required
             />
+          </div>
+          <Select
+            label="Tipo de documento *"
+            {...register('tipo_documento')}
+            error={errors.tipo_documento?.message}
+            options={tiposDocumento}
+            required
+          />
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Input
+                label="Número de documento *"
+                {...register('numero_documento')}
+                error={errors.numero_documento?.message}
+                placeholder="1085123456"
+                required
+              />
+            </div>
+            <div className="w-16">
+              <Input
+                label="DV"
+                {...register('dv')}
+                placeholder="0"
+                maxLength={1}
+              />
+            </div>
           </div>
           <Input
             label="Persona de contacto"
             {...register('nombre_contacto')}
-            placeholder="Nombre del contacto"
+            placeholder="Nombre de quién atiende"
           />
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Tipo de documento</label>
-            <select
-              {...register('tipo_documento')}
-              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {tiposDocumento.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-          <Input
-            label="Número de documento"
-            {...register('numero_documento')}
-            placeholder="123456789"
-          />
-          <Input
-            label="DV (dígito verificación)"
-            {...register('dv')}
-            placeholder="0-9"
-            maxLength={1}
+          <Select
+            label="Responsabilidad fiscal *"
+            {...register('responsabilidad_fiscal')}
+            error={errors.responsabilidad_fiscal?.message}
+            options={responsabilidades}
+            required
           />
         </div>
-      </fieldset>
+      </section>
 
-      {/* Datos fiscales */}
-      <fieldset className="rounded-lg border border-gray-200 p-4">
-        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Información Fiscal
-        </legend>
-        <div className="mt-2 grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Responsabilidad fiscal</label>
-            <select
-              {...register('responsabilidad_fiscal')}
-              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {responsabilidades.map(r => (
-                <option key={r.valor} value={r.valor}>{r.label}</option>
-              ))}
-            </select>
+      {/* Ubicación y Grupo */}
+      <section className="space-y-4">
+        <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-100 pb-2">
+          2. Ubicación y Clasificación
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Departamento *"
+            {...register('departamento')}
+            error={errors.departamento?.message}
+            required
+          />
+          <Input
+            label="Ciudad *"
+            {...register('ciudad')}
+            error={errors.ciudad?.message}
+            required
+          />
+          <div className="sm:col-span-2">
+            <Input label="Dirección exacta" {...register('direccion')} placeholder="Calle 20 # 5-10 Barrio Centro" />
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Grupo de cliente</label>
-            <select
-              {...register('grupo_id')}
-              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Sin grupo</option>
-              {grupos.map(g => (
-                <option key={g.id} value={g.id}>{g.nombre}</option>
-              ))}
-            </select>
-          </div>
-          <div className="col-span-2 flex items-center gap-2">
+          <Select
+            label="Grupo de cliente"
+            {...register('grupo_id')}
+            error={errors.grupo_id?.message}
+            options={grupos.map(g => ({ value: g.id, label: g.nombre }))}
+          />
+          <div className="sm:col-span-2 flex items-center gap-3 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
             <input
               type="checkbox"
               id="retencion"
               {...register('aplica_retencion')}
-              className="h-4 w-4 rounded border-gray-300 accent-blue-600"
+              className="h-5 w-5 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
             />
-            <label htmlFor="retencion" className="text-sm text-gray-700">
-              Aplica retención en la fuente
+            <label htmlFor="retencion" className="text-sm font-medium text-blue-900 leading-none cursor-pointer">
+              ¿A este cliente se le debe aplicar retención en la fuente?
             </label>
           </div>
         </div>
-      </fieldset>
+      </section>
 
-      {/* Contacto */}
-      <fieldset className="rounded-lg border border-gray-200 p-4">
-        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Contacto y Ubicación
-        </legend>
-        <div className="mt-2 grid grid-cols-2 gap-4">
+      {/* Canales de contacto */}
+      <section className="space-y-4">
+        <h3 className="text-sm font-semibold text-gray-900 border-b border-gray-100 pb-2">
+          3. Canales de Comunicación
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Input
             label="Email"
             type="email"
             {...register('email')}
             error={errors.email?.message}
-            placeholder="cliente@ejemplo.com"
+            placeholder="correo@ejemplo.com"
           />
-          <Input label="Teléfono" {...register('telefono')} placeholder="3001234567" />
-          <Input label="WhatsApp" {...register('whatsapp')} placeholder="3001234567" />
-          <Input label="Ciudad" {...register('ciudad')} placeholder="Ipiales" />
-          <div className="col-span-2">
-            <Input label="Dirección" {...register('direccion')} placeholder="Calle 10 # 5-20" />
-          </div>
-          <div className="col-span-2">
-            <Input
-              label="Observaciones"
-              {...register('observaciones')}
-              placeholder="Notas adicionales..."
-            />
-          </div>
+          <Input label="Teléfono" {...register('telefono')} placeholder="310..." />
+          <Input label="WhatsApp" {...register('whatsapp')} placeholder="310..." />
         </div>
-      </fieldset>
+        <Input
+          label="Observaciones adicionales"
+          {...register('observaciones')}
+          placeholder="Ej: Horarios de entrega, condiciones especiales, etc."
+        />
+      </section>
 
-      {/* Acciones */}
-      <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+      {/* Botones de acción */}
+      <div className="sticky bottom-0 bg-white dark:bg-gray-900 py-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 mt-4">
         <Button type="button" variant="outline" onClick={onCancelar} disabled={cargando}>
           Cancelar
         </Button>
-        <Button type="submit" variant="success" disabled={cargando}>
-          {cargando ? 'Guardando...' : inicial?.id ? 'Actualizar cliente' : 'Crear cliente'}
+        <Button type="submit" variant="success" disabled={cargando} className="min-w-[140px]">
+          {cargando ? 'Guardando...' : inicial?.id ? 'Actualizar Cliente' : 'Guardar Cliente'}
         </Button>
       </div>
     </form>
