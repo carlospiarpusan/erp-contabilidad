@@ -172,6 +172,46 @@ export async function deleteGrupo(id: string) {
   if (error) throw error
 }
 
+// ── Stats por cliente ─────────────────────────────────────────
+
+export async function getResumenCliente(cliente_id: string) {
+  const supabase = await createClient()
+
+  const [facturasRes, recibosRes, ultimasRes] = await Promise.all([
+    supabase
+      .from('documentos')
+      .select('id, total, estado', { count: 'exact' })
+      .eq('tipo', 'factura_venta')
+      .eq('cliente_id', cliente_id),
+    supabase
+      .from('recibos')
+      .select('valor')
+      .eq('tipo', 'venta')
+      .eq('cliente_id', cliente_id),
+    supabase
+      .from('documentos')
+      .select('id, numero, prefijo, total, fecha, estado')
+      .eq('tipo', 'factura_venta')
+      .eq('cliente_id', cliente_id)
+      .order('fecha', { ascending: false })
+      .limit(5),
+  ])
+
+  const facturas      = facturasRes.data ?? []
+  const total_facturas = facturasRes.count ?? 0
+  const total_compras  = facturas.reduce((s, f) => s + (f.total ?? 0), 0)
+  const total_cobrado  = (recibosRes.data ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
+  const saldo_pendiente = total_compras - total_cobrado
+
+  return {
+    total_facturas,
+    total_compras,
+    total_cobrado,
+    saldo_pendiente: Math.max(0, saldo_pendiente),
+    ultimas_facturas: ultimasRes.data ?? [],
+  }
+}
+
 // ── Deudores ──────────────────────────────────────────────────
 
 export async function getClienteDeudores(limit = 10) {

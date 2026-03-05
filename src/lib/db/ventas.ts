@@ -148,11 +148,13 @@ export async function cancelarFactura(id: string) {
 
 export async function getRecibos(params?: {
   documento_id?: string
+  desde?:        string
+  hasta?:        string
   limit?:        number
   offset?:       number
 }) {
   const supabase = await createClient()
-  const { documento_id, limit = 50, offset = 0 } = params ?? {}
+  const { documento_id, desde, hasta, limit = 50, offset = 0 } = params ?? {}
 
   let q = supabase
     .from('recibos')
@@ -162,10 +164,12 @@ export async function getRecibos(params?: {
       forma_pago:formas_pago(descripcion)
     `, { count: 'exact' })
     .eq('tipo', 'venta')
-    .order('created_at', { ascending: false })
+    .order('fecha', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (documento_id) q = q.eq('documento_id', documento_id)
+  if (desde)        q = q.gte('fecha', desde)
+  if (hasta)        q = q.lte('fecha', hasta)
 
   const { data, error, count } = await q
   if (error) throw error

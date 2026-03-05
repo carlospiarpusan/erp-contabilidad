@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { getClienteById, getGruposClientes } from '@/lib/db/clientes'
+import { getClienteById, getGruposClientes, getResumenCliente } from '@/lib/db/clientes'
 import { DetalleCliente } from '@/components/clientes/DetalleCliente'
 import { notFound } from 'next/navigation'
 
@@ -11,12 +11,13 @@ interface Props {
 export default async function ClienteDetallePage({ params }: Props) {
   const { id } = await params
 
-  const [cliente, grupos] = await Promise.all([
+  const [cliente, grupos, resumen] = await Promise.all([
     getClienteById(id).catch(() => null),
     getGruposClientes(),
+    getResumenCliente(id).catch(() => null),
   ])
 
   if (!cliente) notFound()
 
-  return <DetalleCliente cliente={cliente} grupos={grupos} />
+  return <DetalleCliente cliente={cliente} grupos={grupos} resumen={resumen} />
 }

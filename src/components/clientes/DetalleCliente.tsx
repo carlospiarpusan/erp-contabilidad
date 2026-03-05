@@ -15,9 +15,18 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
+interface Resumen {
+  total_facturas:   number
+  total_compras:    number
+  total_cobrado:    number
+  saldo_pendiente:  number
+  ultimas_facturas: { id: string; numero: number; prefijo?: string; total: number; fecha: string; estado: string }[]
+}
+
 interface Props {
   cliente: Cliente
-  grupos: GrupoCliente[]
+  grupos:  GrupoCliente[]
+  resumen?: Resumen | null
 }
 
 function CreditoSemaforo({ limite, dias }: { limite?: number; dias?: number }) {
@@ -35,7 +44,7 @@ function CreditoSemaforo({ limite, dias }: { limite?: number; dias?: number }) {
   )
 }
 
-export function DetalleCliente({ cliente: init, grupos }: Props) {
+export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
   const router = useRouter()
   const [cliente, setCliente] = useState(init)
   const [modal, setModal]     = useState(false)
@@ -94,12 +103,12 @@ export function DetalleCliente({ cliente: init, grupos }: Props) {
         </Button>
       </div>
 
-      {/* KPIs — preparados para Phase 6 */}
+      {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total facturas',     valor: '0',      icon: ShoppingCart, color: 'bg-blue-50 text-blue-700' },
-          { label: 'Total compras',      valor: '$0',     icon: TrendingUp,   color: 'bg-green-50 text-green-700' },
-          { label: 'Saldo pendiente',    valor: '$0',     icon: CreditCard,   color: 'bg-orange-50 text-orange-700' },
+          { label: 'Total facturas',  valor: String(resumen?.total_facturas ?? 0),          icon: ShoppingCart, color: 'bg-blue-50 text-blue-700' },
+          { label: 'Total facturado', valor: formatCOP(resumen?.total_compras ?? 0),         icon: TrendingUp,   color: 'bg-green-50 text-green-700' },
+          { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0),       icon: CreditCard,   color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-200 bg-white p-4">
             <div className={`mb-2 inline-flex rounded-lg p-2 ${k.color}`}>
@@ -222,11 +231,51 @@ export function DetalleCliente({ cliente: init, grupos }: Props) {
         </div>
       )}
 
-      {/* Facturas — placeholder hasta Fase 6 */}
-      <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
-        <ShoppingCart className="mx-auto h-8 w-8 text-gray-300 mb-2" />
-        <p className="text-sm font-medium text-gray-400">Historial de facturas</p>
-        <p className="text-xs text-gray-400">Disponible en Fase 6 — Módulo de Ventas</p>
+      {/* Últimas facturas */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4 text-gray-400" /> Últimas facturas
+          </p>
+          <Link href={`/ventas/facturas?cliente_id=${cliente.id}`} className="text-xs text-blue-600 hover:underline">
+            Ver todas →
+          </Link>
+        </div>
+        {(resumen?.ultimas_facturas ?? []).length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">Sin facturas registradas</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-xs text-gray-400 border-b border-gray-100">
+                <th className="pb-2 text-left font-medium">N°</th>
+                <th className="pb-2 text-left font-medium">Fecha</th>
+                <th className="pb-2 text-left font-medium">Estado</th>
+                <th className="pb-2 text-right font-medium">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {(resumen?.ultimas_facturas ?? []).map(f => (
+                <tr key={f.id}>
+                  <td className="py-1.5">
+                    <Link href={`/ventas/facturas/${f.id}`} className="font-mono text-blue-600 hover:underline text-xs">
+                      {f.prefijo}{f.numero}
+                    </Link>
+                  </td>
+                  <td className="py-1.5 text-gray-500 text-xs">{f.fecha}</td>
+                  <td className="py-1.5">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      f.estado === 'pagada'    ? 'bg-green-100 text-green-700' :
+                      f.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
+                      f.estado === 'parcial'   ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>{f.estado}</span>
+                  </td>
+                  <td className="py-1.5 text-right font-mono font-medium text-gray-800">{formatCOP(f.total)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Modal editar */}
