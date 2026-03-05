@@ -158,7 +158,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                 </td>
               </tr>
             ) : filtrados.map(p => (
-              <tr key={p.id} className="hover:bg-gray-50/50">
+              <tr key={p.id} className="hover:bg-gray-50/50 cursor-pointer" onClick={() => router.push(`/compras/proveedores/${p.id}`)}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
@@ -175,14 +175,14 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                   {p.email && <div className="text-xs text-gray-400">{p.email}</div>}
                 </td>
                 <td className="px-4 py-3 text-gray-600">{p.ciudad ?? '—'}</td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                   <button onClick={() => toggleActivo(p)} title={p.activo ? 'Desactivar' : 'Activar'}>
                     {p.activo
                       ? <ToggleRight className="h-5 w-5 text-green-500 mx-auto" />
                       : <ToggleLeft className="h-5 w-5 text-gray-300 mx-auto" />}
                   </button>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
                   <Button size="sm" variant="ghost" onClick={() => abrirEditar(p)}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>

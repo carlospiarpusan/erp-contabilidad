@@ -186,28 +186,42 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
           <CreditoSemaforo limite={cliente.limite_credito} dias={cliente.dias_credito} />
           {(cliente.limite_credito ?? 0) > 0 && (
             <dl className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Límite de crédito</span>
-                <span className="font-semibold text-gray-900">{formatCOP(cliente.limite_credito ?? 0)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Días de crédito</span>
-                <span className="font-semibold text-gray-900">{cliente.dias_credito ?? 30} días</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Crédito disponible</span>
-                <span className="font-semibold text-green-600">{formatCOP(cliente.limite_credito ?? 0)}</span>
-              </div>
-              {/* Barra de crédito usado */}
-              <div>
-                <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  <span>0% usado</span>
-                  <span>{formatCOP(cliente.limite_credito ?? 0)} límite</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-gray-100">
-                  <div className="h-2 rounded-full bg-green-400" style={{ width: '0%' }} />
-                </div>
-              </div>
+              {(() => {
+                const limite   = cliente.limite_credito ?? 0
+                const usado    = resumen?.saldo_pendiente ?? 0
+                const disponible = Math.max(0, limite - usado)
+                const pct      = limite > 0 ? Math.min(100, Math.round(usado / limite * 100)) : 0
+                const barColor = pct >= 90 ? 'bg-red-500' : pct >= 60 ? 'bg-orange-400' : 'bg-green-400'
+                return (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Límite de crédito</span>
+                      <span className="font-semibold text-gray-900">{formatCOP(limite)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Días de crédito</span>
+                      <span className="font-semibold text-gray-900">{cliente.dias_credito ?? 30} días</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Crédito usado</span>
+                      <span className={`font-semibold ${usado > 0 ? 'text-orange-600' : 'text-gray-500'}`}>{formatCOP(usado)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Crédito disponible</span>
+                      <span className="font-semibold text-green-600">{formatCOP(disponible)}</span>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>{pct}% usado</span>
+                        <span>{formatCOP(limite)} límite</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-gray-100">
+                        <div className={`h-2 rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  </>
+                )
+              })()}
             </dl>
           )}
 

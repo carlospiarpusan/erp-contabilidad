@@ -84,6 +84,26 @@ export async function deleteProveedor(id: string) {
   if (error) throw error
 }
 
+export async function getResumenProveedor(proveedor_id: string) {
+  const supabase = await createClient()
+  const [facturasRes, recibosRes, ultimasRes] = await Promise.all([
+    supabase.from('documentos').select('id, total, estado', { count: 'exact' })
+      .eq('tipo', 'factura_compra').eq('proveedor_id', proveedor_id),
+    supabase.from('recibos').select('valor')
+      .eq('tipo', 'compra').eq('proveedor_id', proveedor_id),
+    supabase.from('documentos')
+      .select('id, numero, prefijo, total, fecha, estado')
+      .eq('tipo', 'factura_compra').eq('proveedor_id', proveedor_id)
+      .order('fecha', { ascending: false }).limit(5),
+  ])
+  const facturas       = facturasRes.data ?? []
+  const total_facturas = facturasRes.count ?? 0
+  const total_compras  = facturas.reduce((s, f) => s + (f.total ?? 0), 0)
+  const total_pagado   = (recibosRes.data ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
+  const saldo_pendiente = Math.max(0, total_compras - total_pagado)
+  return { total_facturas, total_compras, total_pagado, saldo_pendiente, ultimas_facturas: ultimasRes.data ?? [] }
+}
+
 // ── Facturas Compra ──────────────────────────────────────────────────────────
 
 export async function getEstadisticasCompras() {
