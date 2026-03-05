@@ -97,6 +97,9 @@ const menuItems = [
     children: [
       { label: 'Balances', href: '/informes/balances' },
       { label: 'Facturas', href: '/informes/facturas' },
+      { label: 'Pedidos', href: '/informes/pedidos' },
+      { label: 'Cotizaciones', href: '/informes/cotizaciones' },
+      { label: 'Remisiones', href: '/informes/remisiones' },
       { label: 'Artículos', href: '/informes/articulos' },
       { label: 'Clientes', href: '/informes/clientes' },
       { label: 'Recibos', href: '/informes/recibos' },

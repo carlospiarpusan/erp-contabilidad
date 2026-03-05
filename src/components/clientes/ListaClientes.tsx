@@ -104,10 +104,7 @@ export function ListaClientes({
         throw new Error(data.error || 'Error al eliminar')
       }
 
-      // Forzar actualización de la ruta
-      startTransition(() => {
-        router.refresh()
-      })
+      router.refresh()
     } catch (e: any) {
       alert(e.message || 'Error al eliminar cliente')
     } finally {
