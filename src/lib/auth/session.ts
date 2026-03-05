@@ -1,13 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cache } from 'react'
 
-// Cliente con service_role para leer tablas de referencia bloqueadas por RLS
-function adminClient() {
-  return createAdminClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+// Mapa estático de rol_id → nombre (UUIDs fijos definidos en la DB)
+const ROL_POR_ID: Record<string, UserSession['rol']> = {
+  '10000000-0000-0000-0000-000000000001': 'admin',
+  '10000000-0000-0000-0000-000000000002': 'vendedor',
+  '10000000-0000-0000-0000-000000000003': 'contador',
+  '10000000-0000-0000-0000-000000000004': 'solo_lectura',
+  '10000000-0000-0000-0000-000000000005': 'superadmin',
 }
 
 export interface UserSession {
@@ -32,14 +32,8 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
 
   if (!data) return null
 
-  // Leer rol con service_role para evitar bloqueo de RLS en tabla roles
-  const { data: rolData } = await adminClient()
-    .from('roles')
-    .select('nombre')
-    .eq('id', data.rol_id)
-    .single()
-
-  const rol = (rolData?.nombre ?? 'solo_lectura') as UserSession['rol']
+  // Resolver rol desde mapa estático — evita query a tabla roles (bloqueada por RLS)
+  const rol = ROL_POR_ID[data.rol_id] ?? 'solo_lectura'
   const empresa_nombre = ((Array.isArray(data.empresas) ? data.empresas[0] : data.empresas) as { nombre: string } | null)?.nombre ?? undefined
 
   return {
