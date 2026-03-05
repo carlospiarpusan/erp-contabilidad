@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { cleanUUIDs } from '@/lib/utils/db'
 
 export interface UsuarioRow {
   id: string
@@ -39,8 +40,7 @@ export async function getUsuarioActual() {
 }
 
 export async function updateUsuario(id: string, values: Partial<UsuarioRow>) {
-  const payload = { ...values }
-  if (payload.rol_id === '') payload.rol_id = null
+  const payload = cleanUUIDs({ ...values }, ['rol_id'])
 
   const supabase = await createClient()
   const { data, error } = await supabase

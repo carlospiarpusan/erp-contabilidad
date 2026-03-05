@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Producto, Familia, Fabricante } from '@/types'
+import { cleanUUIDs } from '@/lib/utils/db'
 
 // ── Productos ────────────────────────────────────────────────
 
@@ -103,10 +104,7 @@ export async function getMovimientosProducto(producto_id: string, limit = 15) {
 }
 
 export async function createProducto(datos: Partial<Producto>) {
-  const payload = { ...datos }
-  if (payload.familia_id === '') payload.familia_id = null as never
-  if (payload.fabricante_id === '') payload.fabricante_id = null as never
-  if (payload.impuesto_id === '') payload.impuesto_id = null as never
+  const payload = cleanUUIDs({ ...datos }, ['familia_id', 'fabricante_id', 'impuesto_id', 'cuenta_venta_id', 'cuenta_compra_id', 'cuenta_inventario_id'])
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -120,10 +118,7 @@ export async function createProducto(datos: Partial<Producto>) {
 }
 
 export async function updateProducto(id: string, datos: Partial<Producto>) {
-  const payload = { ...datos }
-  if (payload.familia_id === '') payload.familia_id = null as never
-  if (payload.fabricante_id === '') payload.fabricante_id = null as never
-  if (payload.impuesto_id === '') payload.impuesto_id = null as never
+  const payload = cleanUUIDs({ ...datos }, ['familia_id', 'fabricante_id', 'impuesto_id', 'cuenta_venta_id', 'cuenta_compra_id', 'cuenta_inventario_id'])
 
   const supabase = await createClient()
   const { data, error } = await supabase

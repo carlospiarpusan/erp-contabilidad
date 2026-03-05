@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { cleanUUIDs } from '@/lib/utils/db'
 
 // ── Asientos ─────────────────────────────────────────────────────────────────
 
@@ -118,8 +119,7 @@ export async function getFormasPagoAll() {
 export async function createFormaPago(fields: {
   descripcion: string; tipo: string; dias_vencimiento?: number; cuenta_id?: string
 }) {
-  const payload = { ...fields }
-  if (payload.cuenta_id === '') payload.cuenta_id = null as never
+  const payload = cleanUUIDs({ ...fields }, ['cuenta_id'])
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -131,8 +131,7 @@ export async function createFormaPago(fields: {
 }
 
 export async function updateFormaPago(id: string, fields: Record<string, unknown>) {
-  const payload = { ...fields }
-  if (payload.cuenta_id === '') payload.cuenta_id = null
+  const payload = cleanUUIDs({ ...fields }, ['cuenta_id'])
 
   const supabase = await createClient()
   const { data, error } = await supabase.from('formas_pago').update(payload).eq('id', id).select().single()

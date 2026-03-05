@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Cliente, GrupoCliente } from '@/types'
+import { cleanUUIDs } from '@/lib/utils/db'
 
 export async function getClientes(params?: {
   busqueda?: string
@@ -79,8 +80,7 @@ export async function getEstadisticasClientes() {
 }
 
 export async function createCliente(datos: Partial<Cliente>) {
-  const payload = { ...datos }
-  if (payload.grupo_id === '') payload.grupo_id = null as never
+  const payload = cleanUUIDs({ ...datos }, ['grupo_id', 'colaborador_id'])
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -94,8 +94,7 @@ export async function createCliente(datos: Partial<Cliente>) {
 }
 
 export async function updateCliente(id: string, datos: Partial<Cliente>) {
-  const payload = { ...datos }
-  if (payload.grupo_id === '') payload.grupo_id = null as never
+  const payload = cleanUUIDs({ ...datos }, ['grupo_id', 'colaborador_id'])
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -205,8 +204,8 @@ export async function getResumenCliente(cliente_id: string) {
 
   const facturas = facturasRes.data ?? []
   const total_facturas = facturasRes.count ?? 0
-  const total_compras = facturas.reduce((s, f) => s + (f.total ?? 0), 0)
-  const total_cobrado = (recibosRes.data ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
+  const total_compras = facturas.reduce((s: number, f: any) => s + (f.total ?? 0), 0)
+  const total_cobrado = (recibosRes.data ?? []).reduce((s: number, r: any) => s + (r.valor ?? 0), 0)
   const saldo_pendiente = total_compras - total_cobrado
 
   return {

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { cleanUUIDs } from '@/lib/utils/db'
 
 // ── Acreedores ───────────────────────────────────────────────────────────────
 
@@ -44,8 +45,7 @@ export async function getTiposGasto() {
 }
 
 export async function createTipoGasto(fields: { descripcion: string; cuenta_id?: string; valor_estimado?: number }) {
-  const payload = { ...fields }
-  if (payload.cuenta_id === '') payload.cuenta_id = null as never
+  const payload = cleanUUIDs({ ...fields }, ['cuenta_id'])
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -57,8 +57,7 @@ export async function createTipoGasto(fields: { descripcion: string; cuenta_id?:
 }
 
 export async function updateTipoGasto(id: string, fields: Record<string, unknown>) {
-  const payload = { ...fields }
-  if (payload.cuenta_id === '') payload.cuenta_id = null
+  const payload = cleanUUIDs({ ...fields }, ['cuenta_id'])
 
   const supabase = await createClient()
   const { data, error } = await supabase.from('tipos_gasto').update(payload).eq('id', id).select().single()
