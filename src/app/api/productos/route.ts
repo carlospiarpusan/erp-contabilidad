@@ -21,9 +21,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const producto = await createProducto(body)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { variantes, ...rest } = body
+    const datos = {
+      ...rest,
+      familia_id:    rest.familia_id    || null,
+      fabricante_id: rest.fabricante_id || null,
+      impuesto_id:   rest.impuesto_id   || null,
+      precio_venta2: rest.precio_venta2 > 0 ? rest.precio_venta2 : null,
+    }
+    const producto = await createProducto(datos)
     return NextResponse.json(producto, { status: 201 })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

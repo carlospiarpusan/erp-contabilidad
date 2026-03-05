@@ -64,7 +64,7 @@ export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuar
       familia_id:        inicial?.familia_id ?? '',
       fabricante_id:     inicial?.fabricante_id ?? '',
       impuesto_id:       inicial?.impuesto_id ?? '',
-      unidad_medida:     'UND',
+      unidad_medida:     inicial?.unidad_medida ?? 'UND',
       tiene_variantes:   inicial?.tiene_variantes ?? false,
       tiene_vencimiento: inicial?.tiene_vencimiento ?? false,
       variantes:         [],
