@@ -82,7 +82,20 @@ export async function getEstadisticasClientes() {
 
 export async function createCliente(datos: Partial<Cliente>) {
   const empresa_id = await getEmpresaId()
-  const payload = cleanUUIDs({ ...datos, empresa_id })
+
+  // Ultra-Agresivo: quitar 'id' si existe, trim de strings, vacios a null
+  const cleanData = { ...datos }
+  delete (cleanData as any).id
+
+  const entries = Object.entries({ ...cleanData, empresa_id }).map(([key, val]) => {
+    let finalVal = val
+    if (typeof val === 'string') {
+      finalVal = val.trim()
+      if (finalVal === '') finalVal = null
+    }
+    return [key, finalVal]
+  })
+  const payload = Object.fromEntries(entries)
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -91,14 +104,21 @@ export async function createCliente(datos: Partial<Cliente>) {
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error('Insert error details:', error)
+    throw new Error(`Error BD (${error.code}): ${error.message} | Payload: ${JSON.stringify(payload)}`)
+  }
   return data as Cliente
 }
 
 export async function updateCliente(id: string, datos: Partial<Cliente>) {
-  // Remove id from payload if present, and clean other UUID fields
-  const { id: _, ...rest } = datos
-  const payload = cleanUUIDs(rest)
+  // Remove id from payload, and clean all empty strings
+  const { id: _, empresa_id: __, ...rest } = datos
+  const entries = Object.entries(rest).map(([key, val]) => [
+    key,
+    val === '' ? null : val
+  ])
+  const payload = Object.fromEntries(entries)
 
   const supabase = await createClient()
   const { data, error } = await supabase
