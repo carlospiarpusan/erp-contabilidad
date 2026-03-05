@@ -59,7 +59,7 @@ export async function getProductoById(id: string) {
       fabricante:fabricantes(id, nombre),
       impuesto:impuestos(id, codigo, porcentaje),
       stock(*, bodega:bodegas(id, nombre)),
-      variantes:producto_variantes(*)
+      producto_variantes(*)
     `)
     .eq('id', id)
     .single()
