@@ -41,19 +41,19 @@ export function BusquedaGlobal() {
       fetch(`/api/productos?q=${encodeURIComponent(q)}&limit=5`).then(r => r.json()).catch(() => ({ productos: [] })),
     ])
     const res: Resultado[] = [
-      ...(rc.clientes ?? []).map((c: { id: string; nombre: string; nit?: string; tipo_doc?: string }) => ({
+      ...(rc.clientes ?? []).map((c: { id: string; razon_social?: string; numero_documento?: string; tipo_documento?: string }) => ({
         tipo: 'cliente' as const,
         id: c.id,
-        nombre: c.nombre,
-        detalle: c.nit ?? c.tipo_doc ?? 'Cliente',
-        href: `/clientes?id=${c.id}`,
+        nombre: c.razon_social ?? 'Cliente',
+        detalle: c.numero_documento ? `${c.tipo_documento ?? 'Doc'}: ${c.numero_documento}` : 'Cliente',
+        href: `/clientes/${c.id}`,
       })),
-      ...(rp.productos ?? []).map((p: { id: string; nombre: string; referencia?: string }) => ({
+      ...(rp.productos ?? []).map((p: { id: string; descripcion?: string; codigo?: string }) => ({
         tipo: 'producto' as const,
         id: p.id,
-        nombre: p.nombre,
-        detalle: p.referencia ?? 'Producto',
-        href: `/productos?id=${p.id}`,
+        nombre: p.descripcion ?? 'Producto',
+        detalle: p.codigo ?? 'Producto',
+        href: `/productos/${p.id}`,
       })),
     ]
     setResults(res)
