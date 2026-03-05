@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
@@ -38,27 +37,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Proteger rutas /superadmin — solo superadmin puede acceder
-  if (pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin')) {
-    const { data: perfil } = await supabase
-      .from('usuarios')
-      .select('rol_id')
-      .eq('id', user.id)
-      .single()
-
-    // Leer roles con service_role — RLS bloquea la tabla roles para usuarios normales
-    const adminSupa = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
-    const { data: rolData } = perfil?.rol_id
-      ? await adminSupa.from('roles').select('nombre').eq('id', perfil.rol_id).single()
-      : { data: null }
-
-    if (rolData?.nombre !== 'superadmin') {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
-  }
+  // Protección de rutas superadmin: la verificación de rol se hace en cada
+  // página/API (getSession + redirect). El middleware solo gestiona auth básica.
 
   return supabaseResponse
 }
