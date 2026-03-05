@@ -1,0 +1,54 @@
+import { createClient } from '@/lib/supabase/server'
+import { cache } from 'react'
+
+export interface UserSession {
+  id: string
+  email: string
+  nombre: string
+  rol: 'superadmin' | 'admin' | 'contador' | 'vendedor' | 'solo_lectura'
+  empresa_id: string
+  empresa_nombre?: string
+}
+
+export const getSession = cache(async (): Promise<UserSession | null> => {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data } = await supabase
+    .from('usuarios')
+    .select('id, nombre, empresa_id, rol_id, roles(nombre), empresas(nombre)')
+    .eq('id', user.id)
+    .single()
+
+  if (!data) return null
+
+  const rol = (data.roles as { nombre: string } | null)?.nombre as UserSession['rol'] ?? 'solo_lectura'
+  const empresa_nombre = (data.empresas as { nombre: string } | null)?.nombre ?? undefined
+
+  return {
+    id: data.id,
+    email: user.email ?? '',
+    nombre: data.nombre,
+    rol,
+    empresa_id: data.empresa_id,
+    empresa_nombre,
+  }
+})
+
+export function puedeAcceder(rol: UserSession['rol'], modulo: keyof typeof PERMISOS_MODULO) {
+  return PERMISOS_MODULO[modulo].includes(rol)
+}
+
+export const PERMISOS_MODULO = {
+  dashboard:    ['superadmin', 'admin', 'contador', 'vendedor', 'solo_lectura'],
+  ventas:       ['superadmin', 'admin', 'contador', 'vendedor', 'solo_lectura'],
+  clientes:     ['superadmin', 'admin', 'contador', 'vendedor', 'solo_lectura'],
+  productos:    ['superadmin', 'admin', 'contador', 'vendedor', 'solo_lectura'],
+  compras:      ['superadmin', 'admin', 'contador'],
+  gastos:       ['superadmin', 'admin', 'contador'],
+  contabilidad: ['superadmin', 'admin', 'contador'],
+  informes:     ['superadmin', 'admin', 'contador', 'vendedor'],
+  configuracion:['superadmin', 'admin'],
+  superadmin:   ['superadmin'],
+} as const satisfies Record<string, UserSession['rol'][]>

@@ -49,7 +49,8 @@ export async function getFacturas(params?: {
       forma_pago:formas_pago(id, descripcion)
     `, { count: 'exact' })
     .eq('tipo', 'factura_venta')
-    .order('created_at', { ascending: false })
+    .order('fecha', { ascending: false })
+    .order('numero', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (estado) q = q.eq('estado', estado)

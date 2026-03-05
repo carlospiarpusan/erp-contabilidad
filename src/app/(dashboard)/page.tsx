@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth/session'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { formatCOP } from '@/utils/cn'
@@ -35,6 +37,9 @@ async function cargarDatos() {
 }
 
 export default async function DashboardPage() {
+  const session = await getSession()
+  if (session?.rol === 'superadmin') redirect('/superadmin')
+
   const datos = await cargarDatos()
   if (!datos) {
     return (

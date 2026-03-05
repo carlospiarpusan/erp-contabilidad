@@ -150,7 +150,8 @@ export async function getCompras(params?: {
       bodega:bodega_id(nombre)
     `, { count: 'exact' })
     .eq('tipo', 'factura_compra')
-    .order('created_at', { ascending: false })
+    .order('fecha', { ascending: false })
+    .order('numero', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (estado) q = q.eq('estado', estado)

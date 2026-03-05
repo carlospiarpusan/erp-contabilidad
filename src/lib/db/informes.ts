@@ -147,14 +147,15 @@ export async function getInformeBalances(params?: { anio?: number }) {
       rows.filter(r => r.fecha?.startsWith(pad)).reduce((s, r) => s + (r.total ?? 0), 0)
     const vMes = vRows.filter(r => r.fecha?.startsWith(pad))
     const facturado = vMes.reduce((s, r) => s + (r.total ?? 0), 0)
-    const costos    = vMes.reduce((s, r) => s + (r.total_costo ?? 0), 0)
+    const comprasMes = sumF(cRows)
+    const gastosMes  = sumF(gRows)
     return {
       mes, nombre: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][i],
       ventas:   facturado,
-      compras:  sumF(cRows),
-      gastos:   sumF(gRows),
+      compras:  comprasMes,
+      gastos:   gastosMes,
       cobrado:  rRows.filter(r => r.fecha?.startsWith(pad)).reduce((s, r) => s + (r.valor ?? 0), 0),
-      utilidad: facturado - costos,
+      utilidad: facturado - comprasMes - gastosMes,
     }
   })
 
