@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     await ajustarStock({ producto_id, bodega_id, tipo, cantidad: Number(cantidad), notas })
     return NextResponse.json({ ok: true })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

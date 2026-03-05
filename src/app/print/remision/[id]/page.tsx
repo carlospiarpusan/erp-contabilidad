@@ -26,7 +26,7 @@ export default async function PrintRemisionPage({ params }: PageProps) {
 
   if (!remision) notFound()
 
-  const lineas = ((remision as never).lineas ?? []) as {
+  const lineas = ((remision as any).lineas ?? []) as {
     id: string; descripcion?: string | null; cantidad: number
     precio_unitario: number; descuento_porcentaje: number
     subtotal: number; total_iva: number; total: number
@@ -34,12 +34,12 @@ export default async function PrintRemisionPage({ params }: PageProps) {
     impuesto?: { porcentaje: number } | null
   }[]
 
-  const cliente = (remision as never).cliente as {
+  const cliente = (remision as any).cliente as {
     razon_social?: string; numero_documento?: string
     tipo_documento?: string; email?: string; telefono?: string; direccion?: string
   } | null
 
-  const bodega = (remision as never).bodega as { nombre?: string } | null
+  const bodega = (remision as any).bodega as { nombre?: string } | null
 
   return (
     <div className="min-h-screen bg-white">
@@ -70,11 +70,11 @@ export default async function PrintRemisionPage({ params }: PageProps) {
           <div className="text-right">
             <div className="border-2 border-gray-800 px-4 py-2 rounded">
               <p className="text-xs font-medium text-gray-500 uppercase">Remisión</p>
-              <p className="text-2xl font-bold text-gray-900 font-mono">{(remision as never).prefijo}{(remision as never).numero}</p>
+              <p className="text-2xl font-bold text-gray-900 font-mono">{(remision as any).prefijo}{(remision as any).numero}</p>
             </div>
-            <p className="text-sm text-gray-600 mt-2">Fecha: <strong>{formatFecha((remision as never).fecha)}</strong></p>
-            {(remision as never).fecha_vencimiento && (
-              <p className="text-sm text-gray-600">Entrega: <strong>{formatFecha((remision as never).fecha_vencimiento)}</strong></p>
+            <p className="text-sm text-gray-600 mt-2">Fecha: <strong>{formatFecha((remision as any).fecha)}</strong></p>
+            {(remision as any).fecha_vencimiento && (
+              <p className="text-sm text-gray-600">Entrega: <strong>{formatFecha((remision as any).fecha_vencimiento)}</strong></p>
             )}
             {bodega?.nombre && (
               <p className="text-xs text-gray-400 mt-1">Bodega: {bodega.nombre}</p>
@@ -127,30 +127,30 @@ export default async function PrintRemisionPage({ params }: PageProps) {
           <div className="w-64">
             <div className="flex justify-between text-sm py-1 border-b border-gray-100">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-mono">{formatCOP((remision as never).subtotal)}</span>
+              <span className="font-mono">{formatCOP((remision as any).subtotal)}</span>
             </div>
-            {(remision as never).total_descuento > 0 && (
+            {(remision as any).total_descuento > 0 && (
               <div className="flex justify-between text-sm py-1 border-b border-gray-100">
                 <span className="text-gray-600">Descuento</span>
-                <span className="font-mono text-red-600">-{formatCOP((remision as never).total_descuento)}</span>
+                <span className="font-mono text-red-600">-{formatCOP((remision as any).total_descuento)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm py-1 border-b border-gray-100">
               <span className="text-gray-600">IVA</span>
-              <span className="font-mono">{formatCOP((remision as never).total_iva)}</span>
+              <span className="font-mono">{formatCOP((remision as any).total_iva)}</span>
             </div>
             <div className="flex justify-between text-base font-bold py-2 border-t-2 border-gray-800 mt-1">
               <span>TOTAL</span>
-              <span className="font-mono">{formatCOP((remision as never).total)}</span>
+              <span className="font-mono">{formatCOP((remision as any).total)}</span>
             </div>
           </div>
         </div>
 
         {/* Observaciones */}
-        {(remision as never).observaciones && (
+        {(remision as any).observaciones && (
           <div className="mb-6 text-sm">
             <p className="font-semibold text-gray-700 mb-1">Observaciones:</p>
-            <p className="text-gray-500 italic">{(remision as never).observaciones}</p>
+            <p className="text-gray-500 italic">{(remision as any).observaciones}</p>
           </div>
         )}
 

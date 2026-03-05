@@ -41,7 +41,7 @@ export function FormRecibo({ documentoId, totalFactura, totalPagado, formasPago,
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error')
       onDone()
-    } catch (e: unknown) {
+    } catch (e: any) {
       setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setSaving(false)

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     const { data, count, error } = await q
     if (error) throw error
     return NextResponse.json({ garantias: data ?? [], total: count ?? 0 })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       .select('id').single()
     if (error) throw error
     return NextResponse.json({ id: data.id }, { status: 201 })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
@@ -71,7 +71,7 @@ export async function PATCH(req: NextRequest) {
     const { error } = await supabase.from('garantias').update(updates).eq('id', id)
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

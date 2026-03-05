@@ -43,7 +43,7 @@ export function FormServicio({ clientes }: Props) {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Error al crear')
       router.push('/ventas/servicios')
-    } catch (e: unknown) {
+    } catch (e: any) {
       setError(e instanceof Error ? e.message : 'Error')
       setGuardando(false)
     }

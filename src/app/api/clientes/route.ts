@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
       offset:   parseInt(searchParams.get('offset') ?? '0'),
     })
     return NextResponse.json(result)
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const cliente = await createCliente(body)
     return NextResponse.json(cliente, { status: 201 })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

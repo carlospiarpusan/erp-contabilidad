@@ -61,7 +61,7 @@ export function DetalleServicio({ servicio }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).error)
       router.refresh()
-    } catch (e: unknown) { alert(e.message) }
+    } catch (e: any) { alert(e.message) }
     finally { setAccionando(false) }
   }
 
@@ -75,7 +75,7 @@ export function DetalleServicio({ servicio }: Props) {
         body: JSON.stringify({ estado: 'cancelado' }),
       })
       router.refresh()
-    } catch (e: unknown) { alert(e.message) }
+    } catch (e: any) { alert(e.message) }
     finally { setAccionando(false) }
   }
 

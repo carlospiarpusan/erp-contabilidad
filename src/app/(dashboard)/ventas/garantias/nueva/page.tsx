@@ -22,7 +22,7 @@ export default async function NuevaGarantiaPage() {
           <p className="text-sm text-gray-500">Registrar reclamación o devolución de cliente</p>
         </div>
       </div>
-      <FormGarantia clientes={clientes as never} productos={productos as never} />
+      <FormGarantia clientes={clientes as any} productos={productos as any} />
     </div>
   )
 }

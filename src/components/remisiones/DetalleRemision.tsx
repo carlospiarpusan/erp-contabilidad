@@ -58,7 +58,7 @@ export function DetalleRemision({ remision, formasPago }: Props) {
       } else {
         router.refresh()
       }
-    } catch (e: unknown) {
+    } catch (e: any) {
       alert(e.message)
     } finally {
       setAccionando(false)

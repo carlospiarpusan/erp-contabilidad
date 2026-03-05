@@ -33,7 +33,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
       setAdding(false)
       setNuevo({ codigo: '', nombre: '', principal: false })
       router.refresh()
-    } catch (e: unknown) {
+    } catch (e: any) {
       alert(e.message)
     } finally {
       setSaving(false)
@@ -56,7 +56,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
       if (!res.ok) throw new Error((await res.json()).error)
       setEditando(null)
       router.refresh()
-    } catch (e: unknown) {
+    } catch (e: any) {
       alert(e.message)
     } finally {
       setSaving(false)

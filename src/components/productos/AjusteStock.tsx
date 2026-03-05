@@ -43,7 +43,7 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
       })
       if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? 'Error') }
       onDone()
-    } catch (e: unknown) {
+    } catch (e: any) {
       setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setSaving(false)

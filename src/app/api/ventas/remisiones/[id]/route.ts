@@ -10,7 +10,7 @@ export async function GET(_: NextRequest, { params }: Params) {
     const { id } = await params
     const data = await getRemisionById(id)
     return NextResponse.json(data)
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
@@ -41,20 +41,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       if (!rem) return NextResponse.json({ error: 'Remisión no encontrada' }, { status: 404 })
       if (!forma_pago_id) return NextResponse.json({ error: 'forma_pago_id requerido' }, { status: 400 })
 
-      const lineas = (rem as never).lineas ?? []
+      const lineas = (rem as any).lineas ?? []
       const [empresa_id, ejercicio_id] = await Promise.all([getEmpresaId(), getEjercicioActivo()])
-      const cliente = (rem as never).cliente as { id?: string } | null
+      const cliente = (rem as any).cliente as { id?: string } | null
 
       const facturaId = await createFactura({
         empresa_id, ejercicio_id,
-        cliente_id: cliente?.id ?? (rem as never).cliente_id,
-        bodega_id:  (rem as never).bodega_id,
+        cliente_id: cliente?.id ?? (rem as any).cliente_id,
+        bodega_id:  (rem as any).bodega_id,
         forma_pago_id,
         colaborador_id: null,
         fecha: new Date().toISOString().split('T')[0],
         fecha_vencimiento: vencimiento ?? new Date().toISOString().split('T')[0],
-        observaciones: (rem as never).observaciones ?? null,
-        lineas: lineas.map((l: never) => ({
+        observaciones: (rem as any).observaciones ?? null,
+        lineas: lineas.map((l: any) => ({
           producto_id: l.producto_id,
           variante_id: null,
           impuesto_id: l.impuesto_id ?? null,
@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

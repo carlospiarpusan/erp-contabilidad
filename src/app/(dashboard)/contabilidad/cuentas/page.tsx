@@ -93,12 +93,12 @@ export default async function CuentasPage({ searchParams }: PageProps) {
                   </span>
                 </td>
                 <td className="px-4 py-2 text-center">
-                  <span className={`text-xs font-medium ${(c as never).naturaleza === 'debito' ? 'text-blue-600' : 'text-red-600'}`}>
-                    {(c as never).naturaleza === 'debito' ? 'Débito' : 'Crédito'}
+                  <span className={`text-xs font-medium ${(c as any).naturaleza === 'debito' ? 'text-blue-600' : 'text-red-600'}`}>
+                    {(c as any).naturaleza === 'debito' ? 'Débito' : 'Crédito'}
                   </span>
                 </td>
                 <td className="px-4 py-2 text-center">
-                  <span className={`inline-flex h-2 w-2 rounded-full ${(c as never).activa !== false ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  <span className={`inline-flex h-2 w-2 rounded-full ${(c as any).activa !== false ? 'bg-green-500' : 'bg-gray-300'}`} />
                 </td>
               </tr>
             ))}

@@ -11,7 +11,7 @@ export async function GET() {
       .order('nombre')
     if (error) throw error
     return NextResponse.json(data ?? [])
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       .single()
     if (error) throw error
     return NextResponse.json(data, { status: 201 })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

@@ -53,7 +53,7 @@ const COLORES = ['Negro', 'Beige', 'Blanco', 'Rojo', 'Azul', 'Rosado', 'Gris', '
 export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuardar, onCancelar, cargando }: FormProductoProps) {
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
 
-    resolver: zodResolver(schema) as never,
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       codigo: inicial?.codigo ?? '',
       codigo_barras: inicial?.codigo_barras ?? '',

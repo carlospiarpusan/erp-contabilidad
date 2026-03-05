@@ -25,7 +25,7 @@ export default async function ServicioPage({ params }: PageProps) {
           <ChevronLeft className="h-4 w-4" /> Servicio Técnico
         </Link>
       </div>
-      <DetalleServicio servicio={data as never} />
+      <DetalleServicio servicio={data as any} />
     </div>
   )
 }

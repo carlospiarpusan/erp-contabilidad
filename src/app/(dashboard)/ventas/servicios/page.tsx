@@ -128,7 +128,7 @@ export default async function ServiciosPage({ searchParams }: PageProps) {
                 </td>
               </tr>
             ) : servicios.map(s => {
-              const cli = (s as never).cliente as { razon_social?: string } | null
+              const cli = (s as any).cliente as { razon_social?: string } | null
               return (
                 <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => window.location.href=`/ventas/servicios/${s.id}`}>
                   <td className="px-4 py-3 font-mono text-violet-600 font-medium">{s.numero}</td>

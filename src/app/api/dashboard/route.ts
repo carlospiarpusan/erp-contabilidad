@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       facturas_vencidas,
       resumen_mensual,
     })
-  } catch (e: unknown) {
+  } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }

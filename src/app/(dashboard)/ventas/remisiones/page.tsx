@@ -123,8 +123,8 @@ export default async function RemisionesPage({ searchParams }: PageProps) {
                 </td>
               </tr>
             ) : remisiones.map(r => {
-              const cliente = (r as never).cliente as { razon_social?: string } | null
-              const bodega  = (r as never).bodega  as { nombre?: string } | null
+              const cliente = (r as any).cliente as { razon_social?: string } | null
+              const bodega  = (r as any).bodega  as { nombre?: string } | null
               return (
                 <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="px-4 py-3">

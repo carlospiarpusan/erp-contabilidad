@@ -25,7 +25,7 @@ export default async function GarantiaPage({ params }: PageProps) {
           <ChevronLeft className="h-4 w-4" /> Garantías
         </Link>
       </div>
-      <DetalleGarantia garantia={data as never} />
+      <DetalleGarantia garantia={data as any} />
     </div>
   )
 }

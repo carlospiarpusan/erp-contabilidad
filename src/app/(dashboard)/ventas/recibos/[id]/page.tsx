@@ -14,8 +14,8 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
 
   if (!recibo) notFound()
 
-  const doc     = (recibo as never).documento as { id?: string; numero?: number; prefijo?: string; total?: number; fecha?: string; cliente?: { razon_social?: string; numero_documento?: string; tipo_documento?: string; email?: string; telefono?: string } | null } | null
-  const fp      = (recibo as never).forma_pago as { descripcion?: string } | null
+  const doc     = (recibo as any).documento as { id?: string; numero?: number; prefijo?: string; total?: number; fecha?: string; cliente?: { razon_social?: string; numero_documento?: string; tipo_documento?: string; email?: string; telefono?: string } | null } | null
+  const fp      = (recibo as any).forma_pago as { descripcion?: string } | null
   const cliente = doc?.cliente ?? null
 
   return (
@@ -32,13 +32,13 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900">Recibo N° {(recibo as never).numero}</h1>
+              <h1 className="text-xl font-bold text-gray-900">Recibo N° {(recibo as any).numero}</h1>
               <span className="rounded-full bg-green-100 px-3 py-0.5 text-xs font-medium text-green-700">Registrado</span>
             </div>
-            <p className="text-sm text-gray-500 mt-0.5">Fecha: {formatFecha((recibo as never).fecha)}</p>
+            <p className="text-sm text-gray-500 mt-0.5">Fecha: {formatFecha((recibo as any).fecha)}</p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold font-mono text-green-700">{formatCOP((recibo as never).valor)}</p>
+            <p className="text-2xl font-bold font-mono text-green-700">{formatCOP((recibo as any).valor)}</p>
             <p className="text-sm text-gray-500 mt-0.5">{fp?.descripcion ?? '—'}</p>
           </div>
         </div>
@@ -93,16 +93,16 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
           </div>
           <div className="flex justify-between py-1 border-b border-gray-50">
             <dt className="text-gray-500">Valor recibido</dt>
-            <dd className="font-mono font-bold text-green-700 text-base">{formatCOP((recibo as never).valor)}</dd>
+            <dd className="font-mono font-bold text-green-700 text-base">{formatCOP((recibo as any).valor)}</dd>
           </div>
           <div className="flex justify-between py-1 border-b border-gray-50">
             <dt className="text-gray-500">Fecha de pago</dt>
-            <dd className="text-gray-900">{formatFecha((recibo as never).fecha)}</dd>
+            <dd className="text-gray-900">{formatFecha((recibo as any).fecha)}</dd>
           </div>
-          {(recibo as never).observaciones && (
+          {(recibo as any).observaciones && (
             <div className="flex justify-between py-1">
               <dt className="text-gray-500">Observaciones</dt>
-              <dd className="text-gray-700 text-right max-w-xs">{(recibo as never).observaciones}</dd>
+              <dd className="text-gray-700 text-right max-w-xs">{(recibo as any).observaciones}</dd>
             </div>
           )}
         </dl>
