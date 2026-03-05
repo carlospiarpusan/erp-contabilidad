@@ -60,7 +60,7 @@ export function ListaTiposGasto({ tipos: inicial }: Props) {
       <div className="mb-4 flex justify-end">
         <Button size="sm" onClick={abrirNuevo}><Plus className="h-4 w-4 mr-1" /> Nuevo tipo</Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>
@@ -74,7 +74,7 @@ export function ListaTiposGasto({ tipos: inicial }: Props) {
             {tipos.length === 0 ? (
               <tr><td colSpan={4} className="px-4 py-12 text-center text-gray-400">No hay tipos de gasto</td></tr>
             ) : tipos.map(t => (
-              <tr key={t.id} className="hover:bg-gray-50/50">
+              <tr key={t.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50">
                 <td className="px-4 py-3 font-medium text-gray-900">{t.descripcion}</td>
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">
                   {(t.cuenta as CuentaPUC | null)?.codigo ?? '—'} {(t.cuenta as CuentaPUC | null)?.descripcion ?? ''}

@@ -62,7 +62,7 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
         <label className="text-sm font-medium text-gray-700 mb-2 block">Tipo de movimiento</label>
         <div className="flex flex-col gap-2">
           {TIPOS.map(t => (
-            <label key={t.value} className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${tipo === t.value ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+            <label key={t.value} className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${tipo === t.value ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950'}`}>
               <input
                 type="radio"
                 name="tipo"

@@ -55,28 +55,28 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6">
       {/* Título */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Resumen General</h2>
-        <p className="text-sm text-gray-500">Ejercicio {new Date().getFullYear()} · {MESES[mesActual]}</p>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Resumen General</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Ejercicio {new Date().getFullYear()} · {MESES[mesActual]}</p>
       </div>
 
       {/* ── KPIs fila 1: año ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Facturado año', value: formatCOP(kpis.facturado_anio), icon: TrendingUp, color: 'bg-blue-50   text-blue-600', href: '/ventas/facturas' },
-          { label: 'Ganancia año', value: formatCOP(kpis.ganancias_anio), icon: DollarSign, color: 'bg-green-50  text-green-600', href: '/ventas/facturas' },
-          { label: 'Margen', value: `${kpis.margen}%`, icon: Percent, color: 'bg-purple-50 text-purple-600', href: null },
-          { label: 'Por cobrar', value: formatCOP(kpis.por_cobrar), icon: ArrowUpRight, color: 'bg-orange-50 text-orange-600', href: '/ventas/facturas' },
-          { label: 'Por pagar', value: formatCOP(kpis.por_pagar), icon: ArrowDownRight, color: 'bg-red-50  text-red-600', href: '/compras/facturas' },
+          { label: 'Facturado año', value: formatCOP(kpis.facturado_anio), icon: TrendingUp, color: 'bg-blue-50   text-blue-600 dark:bg-blue-900/30 dark:text-blue-400', href: '/ventas/facturas' },
+          { label: 'Ganancia año', value: formatCOP(kpis.ganancias_anio), icon: DollarSign, color: 'bg-green-50  text-green-600 dark:bg-green-900/30 dark:text-green-400', href: '/ventas/facturas' },
+          { label: 'Margen', value: `${kpis.margen}%`, icon: Percent, color: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400', href: null },
+          { label: 'Por cobrar', value: formatCOP(kpis.por_cobrar), icon: ArrowUpRight, color: 'bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400', href: '/ventas/facturas' },
+          { label: 'Por pagar', value: formatCOP(kpis.por_pagar), icon: ArrowDownRight, color: 'bg-red-50  text-red-600 dark:bg-red-900/30 dark:text-red-400', href: '/compras/facturas' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${k.color} mb-3`}>
               <k.icon className="h-4 w-4" />
             </div>
-            <p className="text-xs text-gray-500 mb-0.5">{k.label}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{k.label}</p>
             {k.href ? (
-              <Link href={k.href} className="font-bold text-gray-900 hover:text-blue-600 text-sm block">{k.value}</Link>
+              <Link href={k.href} className="font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 text-sm block">{k.value}</Link>
             ) : (
-              <p className="font-bold text-gray-900 text-sm">{k.value}</p>
+              <p className="font-bold text-gray-900 dark:text-white text-sm">{k.value}</p>
             )}
           </div>
         ))}
@@ -96,8 +96,8 @@ export default async function DashboardPage() {
               <k.icon className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">{k.label}</p>
-              <p className="font-bold text-gray-900">{k.value}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{k.label}</p>
+              <p className="font-bold text-gray-900 dark:text-white">{k.value}</p>
             </div>
           </Link>
         ))}
@@ -107,8 +107,8 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Gráfica barras mensuales */}
-        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Ventas vs Compras vs Gastos {new Date().getFullYear()}</h3>
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Ventas vs Compras vs Gastos {new Date().getFullYear()}</h3>
           <div className="flex items-end gap-2 h-36">
             {resumenFiltrado.map(m => (
               <div key={m.mes} className="flex-1 flex flex-col items-center gap-1">
@@ -140,8 +140,8 @@ export default async function DashboardPage() {
         {/* Alertas + Top clientes */}
         <div className="flex flex-col gap-4">
           {/* Alertas */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 shadow-sm">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-orange-500" />
               Alertas
               {totalAlertas > 0 && (
@@ -150,23 +150,23 @@ export default async function DashboardPage() {
             </h3>
             <div className="flex flex-col gap-2 text-sm">
               {alertasStock.length > 0 && (
-                <Link href="/productos/stock-bajo" className="rounded-lg bg-orange-50 p-3 hover:bg-orange-100 transition-colors">
-                  <p className="font-medium text-orange-800">Stock bajo</p>
-                  <p className="text-xs text-orange-600">{alertasStock.length} producto{alertasStock.length !== 1 ? 's' : ''} bajo mínimo</p>
+                <Link href="/productos/stock-bajo" className="rounded-lg bg-orange-50 p-3 hover:bg-orange-100 transition-colors dark:bg-orange-900/20 dark:hover:bg-orange-900/30">
+                  <p className="font-medium text-orange-800 dark:text-orange-400">Stock bajo</p>
+                  <p className="text-xs text-orange-600 dark:text-orange-500">{alertasStock.length} producto{alertasStock.length !== 1 ? 's' : ''} bajo mínimo</p>
                 </Link>
               )}
               {facturasVencidas.length > 0 && (
-                <Link href="/ventas/facturas" className="rounded-lg bg-red-50 p-3 hover:bg-red-100 transition-colors">
-                  <p className="font-medium text-red-800 flex items-center gap-1">
+                <Link href="/ventas/facturas" className="rounded-lg bg-red-50 p-3 hover:bg-red-100 transition-colors dark:bg-red-900/20 dark:hover:bg-red-900/30">
+                  <p className="font-medium text-red-800 dark:text-red-400 flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" /> Facturas vencidas
                   </p>
-                  <p className="text-xs text-red-600">{facturasVencidas.length} factura{facturasVencidas.length !== 1 ? 's' : ''} sin pagar</p>
+                  <p className="text-xs text-red-600 dark:text-red-500">{facturasVencidas.length} factura{facturasVencidas.length !== 1 ? 's' : ''} sin pagar</p>
                 </Link>
               )}
               {kpis.por_pagar > 0 && (
-                <Link href="/compras/facturas" className="rounded-lg bg-yellow-50 p-3 hover:bg-yellow-100 transition-colors">
-                  <p className="font-medium text-yellow-800">Compras pendientes</p>
-                  <p className="text-xs text-yellow-700">{formatCOP(kpis.por_pagar)} por pagar</p>
+                <Link href="/compras/facturas" className="rounded-lg bg-yellow-50 p-3 hover:bg-yellow-100 transition-colors dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30">
+                  <p className="font-medium text-yellow-800 dark:text-yellow-400">Compras pendientes</p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-500">{formatCOP(kpis.por_pagar)} por pagar</p>
                 </Link>
               )}
               {totalAlertas === 0 && kpis.por_pagar === 0 && (
@@ -177,15 +177,15 @@ export default async function DashboardPage() {
 
           {/* Top clientes */}
           {topClientes.length > 0 && (
-            <div className="rounded-xl border border-gray-200 bg-white p-4">
+            <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <Users className="h-4 w-4 text-blue-500" /> Top clientes este mes
               </h3>
               <div className="flex flex-col gap-2">
                 {topClientes.map((c, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700 truncate flex-1 mr-2">{c.razon_social}</span>
-                    <span className="font-mono text-xs font-medium text-blue-700 shrink-0">{formatCOP(c.total)}</span>
+                    <span className="text-gray-700 dark:text-gray-300 truncate flex-1 mr-2">{c.razon_social}</span>
+                    <span className="font-mono text-xs font-medium text-blue-700 dark:text-blue-400 shrink-0">{formatCOP(c.total)}</span>
                   </div>
                 ))}
               </div>
@@ -197,24 +197,24 @@ export default async function DashboardPage() {
       {/* ── Tablas recientes ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Últimas facturas de venta */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-700">Últimas ventas</h3>
             <Link href="/ventas/facturas" className="text-xs text-blue-600 hover:underline">Ver todas →</Link>
           </div>
           <table className="w-full text-sm">
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
               {(ultimasFacturas as Record<string, unknown>[]).map((f) => (
-                <tr key={f.id as string} className="hover:bg-gray-50/50">
+                <tr key={f.id as string} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50">
                   <td className="py-2 pr-2">
                     <Link href={`/ventas/facturas/${f.id}`} className="font-mono text-xs text-blue-600 hover:underline">
                       {f.prefijo as string}{f.numero as number}
                     </Link>
                   </td>
-                  <td className="py-2 text-gray-700 truncate max-w-28">
+                  <td className="py-2 text-gray-700 dark:text-gray-300 truncate max-w-28">
                     {(f.cliente as { razon_social?: string } | null)?.razon_social ?? '—'}
                   </td>
-                  <td className="py-2 text-right font-mono text-xs font-medium text-gray-900">{formatCOP(f.total as number)}</td>
+                  <td className="py-2 text-right font-mono text-xs font-medium text-gray-900 dark:text-gray-100">{formatCOP(f.total as number)}</td>
                   <td className="py-2 pl-2 text-right">
                     <Badge variant={f.estado === 'pagada' ? 'success' : 'warning'}>
                       {f.estado === 'pagada' ? 'Pagada' : 'Pendiente'}
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Últimas compras */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-700">Últimas compras</h3>
             <Link href="/compras/facturas" className="text-xs text-blue-600 hover:underline">Ver todas →</Link>
@@ -238,7 +238,7 @@ export default async function DashboardPage() {
           <table className="w-full text-sm">
             <tbody className="divide-y divide-gray-50">
               {(ultimasCompras as Record<string, unknown>[]).map((c) => (
-                <tr key={c.id as string} className="hover:bg-gray-50/50">
+                <tr key={c.id as string} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50">
                   <td className="py-2 pr-2">
                     <Link href={`/compras/facturas/${c.id}`} className="font-mono text-xs text-orange-600 hover:underline">
                       {c.prefijo as string}{c.numero as number}

@@ -8,9 +8,9 @@ interface TablaProps {
 
 export function Tabla({ columnas, children, className }: TablaProps) {
   return (
-    <div className={cn('w-full overflow-x-auto rounded-lg border border-gray-200', className)}>
+    <div className={cn('w-full overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800', className)}>
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-gray-500">
+        <thead className="bg-gray-50 text-xs font-medium uppercase tracking-wide text-gray-500 dark:bg-gray-800 dark:text-gray-400">
           <tr>
             {columnas.map((col) => (
               <th key={col.key} className={cn('px-4 py-3 text-left', col.className)}>
@@ -19,7 +19,7 @@ export function Tabla({ columnas, children, className }: TablaProps) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">{children}</tbody>
+        <tbody className="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">{children}</tbody>
       </table>
     </div>
   )
@@ -38,7 +38,7 @@ export function FilaTabla({
     <tr
       className={cn(
         'transition-colors',
-        onClick ? 'cursor-pointer hover:bg-blue-50' : 'hover:bg-gray-50',
+        onClick ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
         className
       )}
       onClick={onClick}
@@ -55,5 +55,5 @@ export function CeldaTabla({
   children: React.ReactNode
   className?: string
 }) {
-  return <td className={cn('px-4 py-3 text-gray-700', className)}>{children}</td>
+  return <td className={cn('px-4 py-3 text-gray-700 dark:text-gray-300', className)}>{children}</td>
 }

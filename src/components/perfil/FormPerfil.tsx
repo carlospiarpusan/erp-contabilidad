@@ -68,7 +68,7 @@ export function FormPerfil({ usuario }: Props) {
       </div>
 
       {/* Datos personales */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <div className="flex items-center gap-2 mb-4">
           <User className="h-4 w-4 text-gray-400" />
           <h2 className="font-semibold text-gray-800">Datos personales</h2>
@@ -104,7 +104,7 @@ export function FormPerfil({ usuario }: Props) {
       </div>
 
       {/* Cambiar contraseña */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <div className="flex items-center gap-2 mb-4">
           <Lock className="h-4 w-4 text-gray-400" />
           <h2 className="font-semibold text-gray-800">Cambiar contraseña</h2>

@@ -60,26 +60,26 @@ export default async function RemisionesPage({ searchParams }: PageProps) {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Total</p>
           <p className="text-2xl font-bold text-gray-900 mt-0.5">{stats.total}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Enviadas</p>
           <p className="text-2xl font-bold text-blue-600 mt-0.5">{stats.enviada}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Entregadas</p>
           <p className="text-2xl font-bold text-green-600 mt-0.5">{stats.entregada}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Valor total</p>
           <p className="text-xl font-bold font-mono text-cyan-700 mt-0.5">{formatCOP(stats.valor)}</p>
         </div>
       </div>
 
       {/* Filtros y tabs */}
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="flex flex-wrap gap-1 p-2 border-b border-gray-100">
           {TABS.map(t => {
             const params = new URLSearchParams({ desde, hasta })
@@ -87,7 +87,7 @@ export default async function RemisionesPage({ searchParams }: PageProps) {
             return (
               <Link key={t.key} href={`/ventas/remisiones?${params}`}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  estado === t.key ? 'bg-cyan-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  estado === t.key ? 'bg-cyan-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:bg-gray-800'
                 }`}>
                 {t.label}
               </Link>
@@ -126,7 +126,7 @@ export default async function RemisionesPage({ searchParams }: PageProps) {
               const cliente = (r as never).cliente as { razon_social?: string } | null
               const bodega  = (r as never).bodega  as { nombre?: string } | null
               return (
-                <tr key={r.id} className="hover:bg-gray-50">
+                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="px-4 py-3">
                     <Link href={`/ventas/remisiones/${r.id}`} className="font-mono text-cyan-600 hover:underline">
                       {r.prefijo}{r.numero}

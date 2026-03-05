@@ -48,7 +48,7 @@ export default async function AsientosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4">
+      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Desde</label>
           <input type="date" name="desde" defaultValue={desde}
@@ -70,19 +70,19 @@ export default async function AsientosPage({ searchParams }: PageProps) {
         </div>
         <div className="flex items-end gap-2">
           <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Aplicar</button>
-          <Link href="/contabilidad/asientos" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Limpiar</Link>
+          <Link href="/contabilidad/asientos" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">Limpiar</Link>
         </div>
       </form>
 
       <div className="flex flex-col gap-4">
         {asientos.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-10 text-center text-gray-400">
+          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-10 text-center text-gray-400">
             No hay asientos contables
           </div>
         ) : asientos.map((a) => {
           const lineas = (a.lineas ?? []) as unknown as { id: string; descripcion?: string | null; debe: number; haber: number; cuenta?: { codigo: string; descripcion: string } | null }[]
           return (
-            <div key={a.id} className="rounded-xl border border-gray-200 bg-white">
+            <div key={a.id} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
               {/* Header */}
               <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100">
                 <div>

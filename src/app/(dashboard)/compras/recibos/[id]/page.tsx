@@ -42,7 +42,7 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
       </div>
 
       {/* Encabezado */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-100">
             <Receipt className="h-6 w-6 text-orange-600" />
@@ -63,7 +63,7 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
 
       {/* Proveedor */}
       {proveedor && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
             <Building2 className="h-3.5 w-3.5" /> Proveedor
           </p>
@@ -76,7 +76,7 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
 
       {/* Factura relacionada */}
       {doc?.id && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" /> Factura de compra
           </p>
@@ -99,7 +99,7 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
       )}
 
       {/* Detalle pago */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <p className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
           <CreditCard className="h-3.5 w-3.5" /> Detalle del pago
         </p>

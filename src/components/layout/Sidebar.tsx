@@ -132,8 +132,8 @@ function MenuItem({ item }: { item: typeof menuItems[number] }) {
           className={cn(
             'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
             isActive
-              ? 'bg-blue-50 text-blue-700 font-medium'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              ? 'bg-blue-50 text-blue-700 font-medium dark:bg-blue-900/20 dark:text-blue-400'
+              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
           )}
         >
           <item.icon className="h-4 w-4 shrink-0" />
@@ -145,7 +145,7 @@ function MenuItem({ item }: { item: typeof menuItems[number] }) {
           )}
         </button>
         {open && (
-          <div className="ml-7 mt-1 flex flex-col gap-0.5 border-l border-gray-200 pl-3">
+          <div className="ml-7 mt-1 flex flex-col gap-0.5 border-l border-gray-200 dark:border-gray-800 pl-3">
             {item.children.map((child) => (
               <Link
                 key={child.href}
@@ -154,7 +154,7 @@ function MenuItem({ item }: { item: typeof menuItems[number] }) {
                   'rounded-md px-2 py-1.5 text-sm transition-colors',
                   pathname === child.href
                     ? 'bg-blue-600 text-white font-medium'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
                 )}
               >
                 {child.label}
@@ -174,7 +174,7 @@ function MenuItem({ item }: { item: typeof menuItems[number] }) {
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
         isActive
           ? 'bg-blue-600 text-white font-medium'
-          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100'
       )}
     >
       <item.icon className="h-4 w-4 shrink-0" />
@@ -185,15 +185,15 @@ function MenuItem({ item }: { item: typeof menuItems[number] }) {
 
 export function Sidebar() {
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-gray-200 bg-white">
+    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800">
       {/* Logo */}
-      <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-4">
+      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 px-4 py-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
           <Building2 className="h-4 w-4 text-white" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-gray-900">ERP Contable</span>
-          <span className="text-xs text-gray-500">Maria Esperanza T.</span>
+          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">ERP Contable</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">Maria Esperanza T.</span>
         </div>
       </div>
 
@@ -207,8 +207,8 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 px-4 py-3">
-        <p className="text-xs text-gray-400">v1.0.0 — Colombia 🇨🇴</p>
+      <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-3">
+        <p className="text-xs text-gray-400 dark:text-gray-500">v1.0.0 — Colombia 🇨🇴</p>
       </div>
     </aside>
   )

@@ -119,8 +119,8 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Precio venta',   value: formatCOP(producto.precio_venta),  color: 'text-green-700', bg: 'bg-green-50'  },
-          { label: 'Precio compra',  value: formatCOP(producto.precio_compra), color: 'text-gray-700',  bg: 'bg-gray-50'   },
-          { label: 'Margen bruto',   value: `${margen}%`,                      color: margen >= 30 ? 'text-green-700' : margen >= 15 ? 'text-yellow-700' : 'text-red-700', bg: 'bg-white' },
+          { label: 'Precio compra',  value: formatCOP(producto.precio_compra), color: 'text-gray-700 dark:text-gray-300',  bg: 'bg-gray-50 dark:bg-gray-950'   },
+          { label: 'Margen bruto',   value: `${margen}%`,                      color: margen >= 30 ? 'text-green-700' : margen >= 15 ? 'text-yellow-700' : 'text-red-700', bg: 'bg-white dark:bg-gray-900' },
           { label: 'Stock total',    value: `${stockTotal.toLocaleString('es-CO')} ${producto.unidad_medida ?? 'UND'}`, color: stockBajo ? 'text-orange-700' : 'text-blue-700', bg: stockBajo ? 'bg-orange-50' : 'bg-blue-50' },
         ].map(k => (
           <div key={k.label} className={`rounded-xl border border-gray-100 ${k.bg} p-4`}>
@@ -132,7 +132,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stock por bodega */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <Warehouse className="h-4 w-4 text-blue-500" /> Stock por bodega
           </h3>
@@ -147,7 +147,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
                     <span className="text-sm text-gray-700">{(s.bodega as { nombre?: string } | null)?.nombre ?? 'Bodega'}</span>
                     <div className="flex items-center gap-2">
                       {bajo && <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />}
-                      <span className={`font-mono text-sm font-medium ${bajo ? 'text-orange-600' : 'text-gray-900'}`}>
+                      <span className={`font-mono text-sm font-medium ${bajo ? 'text-orange-600' : 'text-gray-900 dark:text-gray-100'}`}>
                         {s.cantidad.toLocaleString('es-CO')}
                       </span>
                       {s.cantidad_minima > 0 && (
@@ -162,7 +162,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
         </div>
 
         {/* Variantes */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <Layers className="h-4 w-4 text-purple-500" /> Variantes
           </h3>
@@ -183,7 +183,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
         </div>
 
         {/* Info adicional */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-green-500" /> Información
           </h3>
@@ -223,7 +223,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       </div>
 
       {/* Movimientos */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
           <Clock className="h-4 w-4 text-gray-400" /> Últimos movimientos de inventario
         </h3>
@@ -243,10 +243,10 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {movimientos.map(m => {
-                  const meta = TIPO_LABELS[m.tipo] ?? { label: m.tipo, icon: RefreshCw, color: 'text-gray-500' }
+                  const meta = TIPO_LABELS[m.tipo] ?? { label: m.tipo, icon: RefreshCw, color: 'text-gray-500 dark:text-gray-400 dark:text-gray-500' }
                   const Icon = meta.icon
                   return (
-                    <tr key={m.id} className="hover:bg-gray-50">
+                    <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <td className="py-2 text-gray-500 font-mono text-xs">{formatFecha(m.created_at)}</td>
                       <td className="py-2">
                         <span className={`flex items-center gap-1 ${meta.color}`}>

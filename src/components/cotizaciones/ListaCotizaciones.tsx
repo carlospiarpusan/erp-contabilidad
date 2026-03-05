@@ -44,7 +44,7 @@ export function ListaCotizaciones({ cotizaciones, total, estadoFiltro: estadoIni
         <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-1">
           {ESTADOS.map(e => (
             <Link key={e.value} href={e.value ? `/ventas/cotizaciones?estado=${e.value}` : '/ventas/cotizaciones'}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${estado === e.value ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${estado === e.value ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:bg-gray-800'}`}
               onClick={() => setEstado(e.value)}>
               {e.label}
             </Link>
@@ -58,7 +58,7 @@ export function ListaCotizaciones({ cotizaciones, total, estadoFiltro: estadoIni
       <p className="text-sm text-gray-500">{total} cotización{total !== 1 ? 'es' : ''}</p>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -75,7 +75,7 @@ export function ListaCotizaciones({ cotizaciones, total, estadoFiltro: estadoIni
             {cotizaciones.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400">No hay cotizaciones</td></tr>
             ) : cotizaciones.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50">
+              <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="px-4 py-3 font-mono font-medium text-gray-700">{c.prefijo}{c.numero}</td>
                 <td className="px-4 py-3 text-gray-600">{formatFecha(c.fecha)}</td>
                 <td className="px-4 py-3 text-gray-500 text-xs">{c.fecha_vencimiento ? formatFecha(c.fecha_vencimiento) : '—'}</td>

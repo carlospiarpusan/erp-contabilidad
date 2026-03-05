@@ -74,7 +74,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/clientes" className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+          <Link href="/clientes" className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white text-xl font-bold shadow-md">
@@ -108,9 +108,9 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
         {[
           { label: 'Total facturas',  valor: String(resumen?.total_facturas ?? 0),          icon: ShoppingCart, color: 'bg-blue-50 text-blue-700' },
           { label: 'Total facturado', valor: formatCOP(resumen?.total_compras ?? 0),         icon: TrendingUp,   color: 'bg-green-50 text-green-700' },
-          { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0),       icon: CreditCard,   color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500' },
+          { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0),       icon: CreditCard,   color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500 dark:text-gray-400 dark:text-gray-500' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-200 bg-white p-4">
+          <div key={k.label} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <div className={`mb-2 inline-flex rounded-lg p-2 ${k.color}`}>
               <k.icon className="h-4 w-4" />
             </div>
@@ -122,7 +122,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
 
       <div className="grid grid-cols-2 gap-6">
         {/* Datos generales */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 space-y-4">
           <h2 className="font-semibold text-gray-800 flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-400" /> Datos de la empresa
           </h2>
@@ -179,7 +179,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
         </div>
 
         {/* Crédito */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 space-y-4">
           <h2 className="font-semibold text-gray-800 flex items-center gap-2">
             <CreditCard className="h-4 w-4 text-gray-400" /> Condiciones de crédito
           </h2>
@@ -204,7 +204,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Crédito usado</span>
-                      <span className={`font-semibold ${usado > 0 ? 'text-orange-600' : 'text-gray-500'}`}>{formatCOP(usado)}</span>
+                      <span className={`font-semibold ${usado > 0 ? 'text-orange-600' : 'text-gray-500 dark:text-gray-400 dark:text-gray-500'}`}>{formatCOP(usado)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Crédito disponible</span>
@@ -237,7 +237,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
 
       {/* Observaciones */}
       {(cliente as { observaciones?: string }).observaciones && (
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <h2 className="mb-2 font-semibold text-gray-800">Observaciones</h2>
           <p className="text-sm text-gray-600 whitespace-pre-line">
             {(cliente as { observaciones?: string }).observaciones}
@@ -246,7 +246,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
       )}
 
       {/* Últimas facturas */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <ShoppingCart className="h-4 w-4 text-gray-400" /> Últimas facturas
@@ -281,7 +281,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
                       f.estado === 'pagada'    ? 'bg-green-100 text-green-700' :
                       f.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
                       f.estado === 'parcial'   ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-500'
+                      'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'
                     }`}>{f.estado}</span>
                   </td>
                   <td className="py-1.5 text-right font-mono font-medium text-gray-800">{formatCOP(f.total)}</td>

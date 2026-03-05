@@ -120,7 +120,7 @@ export function GestorPrecios({ precios: init, productos, clientes, grupos }: Pr
       </div>
 
       {precios.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-10 text-center">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-10 text-center">
           <Tag className="h-8 w-8 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-500 font-medium">No hay listas de precios configuradas</p>
           <p className="text-sm text-gray-400 mt-1">Crea precios especiales por producto, cliente o grupo.</p>
@@ -131,7 +131,7 @@ export function GestorPrecios({ precios: init, productos, clientes, grupos }: Pr
       ) : (
         <div className="flex flex-col gap-6">
           {Object.entries(agrupados).map(([nombre, items]) => (
-            <div key={nombre} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div key={nombre} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
               <div className="px-5 py-4 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-blue-900">{nombre}</h3>
@@ -158,7 +158,7 @@ export function GestorPrecios({ precios: init, productos, clientes, grupos }: Pr
                     const clienteN = r.cliente?.razon_social
                     const grupoN   = r.grupo?.nombre
                     return (
-                      <tr key={r.id} className="hover:bg-gray-50">
+                      <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                         <td className="px-4 py-2">
                           <p className="text-gray-900">{prod?.descripcion ?? '—'}</p>
                           {prod?.codigo && <p className="text-xs text-gray-400 font-mono">{prod.codigo}</p>}

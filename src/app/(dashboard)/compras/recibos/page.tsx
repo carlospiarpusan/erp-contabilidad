@@ -41,7 +41,7 @@ export default async function ComprasRecibosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4">
+      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Desde</label>
           <input type="date" name="desde" defaultValue={desde}
@@ -54,19 +54,19 @@ export default async function ComprasRecibosPage({ searchParams }: PageProps) {
         </div>
         <div className="flex items-end gap-2">
           <button type="submit" className="h-9 px-4 rounded-lg bg-orange-600 text-white text-sm hover:bg-orange-700">Aplicar</button>
-          <Link href="/compras/recibos" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Limpiar</Link>
+          <Link href="/compras/recibos" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">Limpiar</Link>
         </div>
       </form>
 
       {/* KPI */}
-      <div className="rounded-xl border border-gray-100 bg-white p-4 w-fit">
+      <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 w-fit">
         <p className="text-xs text-gray-500">Total pagado en el período</p>
         <p className="text-2xl font-bold font-mono text-orange-700 mt-0.5">{formatCOP(totalPago)}</p>
         <p className="text-xs text-gray-400 mt-0.5">{count ?? 0} recibo{(count ?? 0) !== 1 ? 's' : ''}</p>
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -86,7 +86,7 @@ export default async function ComprasRecibosPage({ searchParams }: PageProps) {
               const prov = r.proveedor as { razon_social?: string } | null
               const fp   = r.forma_pago as { descripcion?: string } | null
               return (
-                <tr key={r.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { window.location.href = `/compras/recibos/${r.id}` }}>
+                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => { window.location.href = `/compras/recibos/${r.id}` }}>
                   <td className="px-4 py-3 font-mono text-gray-600">{r.numero}</td>
                   <td className="px-4 py-3 text-gray-600">{formatFecha(r.fecha)}</td>
                   <td className="px-4 py-3">

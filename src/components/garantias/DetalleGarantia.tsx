@@ -24,7 +24,7 @@ const BADGE_ESTADO: Record<string, 'default' | 'outline' | 'success' | 'warning'
 }
 
 const PRIORIDAD_COLOR: Record<string, string> = {
-  baja: 'bg-gray-100 text-gray-600',
+  baja: 'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500',
   normal: 'bg-blue-100 text-blue-700',
   alta: 'bg-orange-100 text-orange-700',
   urgente: 'bg-red-100 text-red-700',
@@ -71,7 +71,7 @@ export function DetalleGarantia({ garantia }: Props) {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
@@ -81,7 +81,7 @@ export function DetalleGarantia({ garantia }: Props) {
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-bold text-gray-900">Garantía #{garantia.numero}</h2>
                 <Badge variant={BADGE_ESTADO[garantia.estado] ?? 'outline'}>{garantia.estado}</Badge>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORIDAD_COLOR[garantia.prioridad] ?? 'bg-gray-100 text-gray-600'}`}>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORIDAD_COLOR[garantia.prioridad] ?? 'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500'}`}>
                   {garantia.prioridad}
                 </span>
               </div>
@@ -112,7 +112,7 @@ export function DetalleGarantia({ garantia }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cliente */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Cliente</p>
           <p className="font-semibold text-gray-900">{garantia.cliente?.razon_social ?? '—'}</p>
           {garantia.cliente?.numero_documento && <p className="text-sm text-gray-500 mt-0.5">{garantia.cliente.numero_documento}</p>}
@@ -129,7 +129,7 @@ export function DetalleGarantia({ garantia }: Props) {
         </div>
 
         {/* Producto */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Producto en garantía</p>
           {garantia.producto ? (
             <>
@@ -147,7 +147,7 @@ export function DetalleGarantia({ garantia }: Props) {
       </div>
 
       {/* Notas y gestión */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Descripción y seguimiento</p>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">

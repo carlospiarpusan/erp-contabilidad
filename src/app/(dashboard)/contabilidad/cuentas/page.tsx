@@ -17,11 +17,11 @@ const TIPO_COLOR: Record<string, string> = {
 }
 
 const NIVEL_INDENT: Record<number, string> = {
-  1: 'font-bold text-gray-900',
-  2: 'pl-4 font-semibold text-gray-800',
-  3: 'pl-8 text-gray-700',
-  4: 'pl-12 text-gray-600',
-  5: 'pl-16 text-gray-500',
+  1: 'font-bold text-gray-900 dark:text-gray-100',
+  2: 'pl-4 font-semibold text-gray-800 dark:text-gray-200',
+  3: 'pl-8 text-gray-700 dark:text-gray-300',
+  4: 'pl-12 text-gray-600 dark:text-gray-400 dark:text-gray-500',
+  5: 'pl-16 text-gray-500 dark:text-gray-400 dark:text-gray-500',
 }
 
 export default async function CuentasPage({ searchParams }: PageProps) {
@@ -64,12 +64,12 @@ export default async function CuentasPage({ searchParams }: PageProps) {
         </select>
         <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors">Buscar</button>
         {(q || nivel) && (
-          <a href="/contabilidad/cuentas" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Limpiar</a>
+          <a href="/contabilidad/cuentas" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">Limpiar</a>
         )}
       </form>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -84,11 +84,11 @@ export default async function CuentasPage({ searchParams }: PageProps) {
             {cuentas.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No hay cuentas</td></tr>
             ) : cuentas.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50">
+              <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="px-4 py-2 font-mono text-gray-700">{c.codigo}</td>
-                <td className={`px-4 py-2 ${NIVEL_INDENT[c.nivel ?? 4] ?? 'text-gray-600'}`}>{c.descripcion}</td>
+                <td className={`px-4 py-2 ${NIVEL_INDENT[c.nivel ?? 4] ?? 'text-gray-600 dark:text-gray-400 dark:text-gray-500'}`}>{c.descripcion}</td>
                 <td className="px-4 py-2">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${TIPO_COLOR[c.tipo ?? ''] ?? 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${TIPO_COLOR[c.tipo ?? ''] ?? 'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500'}`}>
                     {c.tipo}
                   </span>
                 </td>

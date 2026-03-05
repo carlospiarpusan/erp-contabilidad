@@ -30,13 +30,13 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
           <p className="text-sm text-gray-500">{productos.length} artículo{productos.length !== 1 ? 's' : ''}</p>
         </div>
         <a href="/api/export/inventario" download
-           className="ml-auto flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50">
+           className="ml-auto flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">
           Exportar CSV
         </a>
       </div>
 
       {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4">
+      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Familia</label>
           <select name="familia_id" defaultValue={sp.familia_id ?? ''}
@@ -55,7 +55,7 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
         </div>
         <div className="flex items-end gap-2">
           <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Aplicar</button>
-          <Link href="/informes/articulos" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Limpiar</Link>
+          <Link href="/informes/articulos" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">Limpiar</Link>
         </div>
       </form>
 
@@ -66,15 +66,15 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
           { label: 'Valor a costo',      val: formatCOP(totales.valor_costo), mono: true, color: 'text-orange-700' },
           { label: 'Valor a precio venta', val: formatCOP(totales.valor_venta), mono: true, color: 'text-blue-700' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <p className="text-xs text-gray-500">{k.label}</p>
-            <p className={`text-lg font-bold mt-0.5 ${k.mono ? 'font-mono' : ''} ${k.color ?? 'text-gray-900'}`}>{k.val}</p>
+            <p className={`text-lg font-bold mt-0.5 ${k.mono ? 'font-mono' : ''} ${k.color ?? 'text-gray-900 dark:text-gray-100'}`}>{k.val}</p>
           </div>
         ))}
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -97,14 +97,14 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
               const valorVenta = (p.stock_actual ?? 0) * (p.precio_venta ?? 0)
               const stockBajo  = (p.stock_actual ?? 0) < (p.stock_minimo ?? 0)
               return (
-                <tr key={p.id} className={`hover:bg-gray-50 ${stockBajo ? 'bg-orange-50' : ''}`}>
+                <tr key={p.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${stockBajo ? 'bg-orange-50' : ''}`}>
                   <td className="px-4 py-2 font-mono text-xs text-gray-500">{p.codigo}</td>
                   <td className="px-4 py-2 text-gray-900">
                     <Link href={`/productos/${p.id}`} className="hover:text-blue-600">{p.descripcion}</Link>
                     {stockBajo && <span className="ml-2 text-xs text-orange-600 font-medium">Stock bajo</span>}
                   </td>
                   <td className="px-4 py-2 text-gray-500 text-xs">{fam?.descripcion ?? '—'}</td>
-                  <td className={`px-4 py-2 text-right font-semibold ${stockBajo ? 'text-orange-700' : 'text-gray-900'}`}>{p.stock_actual ?? 0}</td>
+                  <td className={`px-4 py-2 text-right font-semibold ${stockBajo ? 'text-orange-700' : 'text-gray-900 dark:text-gray-100'}`}>{p.stock_actual ?? 0}</td>
                   <td className="px-4 py-2 text-right font-mono text-gray-600">{formatCOP(p.precio_compra ?? 0)}</td>
                   <td className="px-4 py-2 text-right font-mono text-gray-900">{formatCOP(p.precio_venta ?? 0)}</td>
                   <td className="px-4 py-2 text-right font-mono text-orange-700">{formatCOP(valorCosto)}</td>

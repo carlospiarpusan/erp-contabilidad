@@ -51,7 +51,7 @@ export function FormServicio({ clientes }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Datos de la orden</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1 sm:col-span-2">

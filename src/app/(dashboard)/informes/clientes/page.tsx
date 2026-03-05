@@ -38,7 +38,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4">
+      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Desde</label>
           <input type="date" name="desde" defaultValue={desde}
@@ -51,7 +51,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
         </div>
         <div className="flex items-end gap-2">
           <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Aplicar</button>
-          <Link href="/informes/clientes" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Limpiar</Link>
+          <Link href="/informes/clientes" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">Limpiar</Link>
         </div>
       </form>
 
@@ -63,7 +63,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
           { label: 'Por cobrar',      val: totales.por_cobrar, color: 'text-orange-700' },
           { label: 'Utilidad bruta',  val: totales.utilidad,  color: 'text-emerald-700' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <p className="text-xs text-gray-500">{k.label}</p>
             <p className={`text-lg font-bold mt-0.5 font-mono ${k.color}`}>{formatCOP(k.val)}</p>
           </div>
@@ -71,7 +71,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -88,7 +88,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
             {clientes.length === 0 ? (
               <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400">Sin movimiento en el período</td></tr>
             ) : clientes.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50">
+              <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="px-4 py-2 font-medium text-gray-900">
                   <Link href={`/clientes/${c.id}`} className="text-blue-600 hover:underline">{c.razon_social}</Link>
                 </td>
@@ -96,7 +96,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
                 <td className="px-4 py-2 text-right text-gray-600">{c.num_facturas}</td>
                 <td className="px-4 py-2 text-right font-mono text-gray-900">{formatCOP(c.facturado)}</td>
                 <td className="px-4 py-2 text-right font-mono text-green-700">{formatCOP(c.cobrado)}</td>
-                <td className={`px-4 py-2 text-right font-mono ${c.por_cobrar > 0 ? 'text-orange-700 font-semibold' : 'text-gray-400'}`}>{formatCOP(c.por_cobrar)}</td>
+                <td className={`px-4 py-2 text-right font-mono ${c.por_cobrar > 0 ? 'text-orange-700 font-semibold' : 'text-gray-400 dark:text-gray-500'}`}>{formatCOP(c.por_cobrar)}</td>
                 <td className={`px-4 py-2 text-right font-mono ${c.utilidad >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{formatCOP(c.utilidad)}</td>
               </tr>
             ))}

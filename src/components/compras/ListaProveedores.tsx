@@ -138,7 +138,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>
@@ -158,7 +158,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                 </td>
               </tr>
             ) : filtrados.map(p => (
-              <tr key={p.id} className="hover:bg-gray-50/50 cursor-pointer" onClick={() => router.push(`/compras/proveedores/${p.id}`)}>
+              <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50 cursor-pointer" onClick={() => router.push(`/compras/proveedores/${p.id}`)}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">

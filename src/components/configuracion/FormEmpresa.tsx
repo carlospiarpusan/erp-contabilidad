@@ -85,7 +85,7 @@ export function FormEmpresa({ empresa }: Props) {
       )}
 
       {/* Identificación */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Identificación</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {field('Nombre comercial *', 'nombre', { placeholder: 'Nombre que aparece en documentos' })}
@@ -120,7 +120,7 @@ export function FormEmpresa({ empresa }: Props) {
       </div>
 
       {/* Contacto y ubicación */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Contacto y Ubicación</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {field('Dirección', 'direccion', { placeholder: 'Calle 123 # 45-67' })}

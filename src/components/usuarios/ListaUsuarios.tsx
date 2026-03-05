@@ -73,7 +73,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -86,7 +86,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {lista.map(u => (
-              <tr key={u.id} className="hover:bg-gray-50">
+              <tr key={u.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold text-xs">
@@ -122,7 +122,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
                     <button
                       onClick={() => toggleActivo(u.id, u.activo)}
                       title={u.activo ? 'Desactivar' : 'Activar'}
-                      className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                      className="rounded-md p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700"
                     >
                       {u.activo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                     </button>

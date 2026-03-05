@@ -39,7 +39,7 @@ export function GestionConsecutivos({ consecutivos: inicial }: Props) {
   const inputCls = 'rounded-lg border border-gray-200 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
       <table className="w-full text-sm">
         <thead className="border-b border-gray-100 bg-gray-50">
           <tr>
@@ -55,7 +55,7 @@ export function GestionConsecutivos({ consecutivos: inicial }: Props) {
           {consecutivos.length === 0 ? (
             <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">Sin consecutivos</td></tr>
           ) : consecutivos.map(c => (
-            <tr key={c.id} className="hover:bg-gray-50/50">
+            <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50">
               <td className="px-4 py-3 font-mono text-xs text-gray-600">{c.tipo}</td>
               <td className="px-4 py-3 text-gray-900">{c.descripcion}</td>
               <td className="px-4 py-3">

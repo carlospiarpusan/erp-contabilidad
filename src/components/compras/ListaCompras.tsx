@@ -62,7 +62,7 @@ export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorN
               key={e}
               onClick={() => setEstado(e)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                estado === e ? 'bg-orange-600 text-white' : 'text-gray-500 hover:text-gray-700'
+                estado === e ? 'bg-orange-600 text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-300'
               }`}
             >
               {e.charAt(0).toUpperCase() + e.slice(1)}
@@ -81,7 +81,7 @@ export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorN
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>
@@ -103,7 +103,7 @@ export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorN
                 </td>
               </tr>
             ) : filtradas.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50/50">
+              <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50">
                 <td className="px-4 py-3 font-mono text-sm text-gray-600">{c.prefijo}{c.numero}</td>
                 <td className="px-4 py-3 text-gray-700">{formatFecha(c.fecha)}</td>
                 <td className="px-4 py-3 font-medium text-gray-900">

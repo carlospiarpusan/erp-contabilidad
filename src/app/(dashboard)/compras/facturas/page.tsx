@@ -39,7 +39,7 @@ export default async function ComprasPage({ searchParams }: PageProps) {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4 flex items-center gap-3">
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 flex items-center gap-3">
             <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${k.color}`}>
               <k.icon className="h-4 w-4" />
             </div>

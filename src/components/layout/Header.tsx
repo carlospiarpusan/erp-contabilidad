@@ -16,7 +16,7 @@ interface HeaderProps {
 }
 
 export function Header({ titulo, userName, userEmail, userRol }: HeaderProps) {
-  const router   = useRouter()
+  const router = useRouter()
   const supabase = createClient()
   const [menu, setMenu] = useState(false)
 
@@ -38,7 +38,7 @@ export function Header({ titulo, userName, userEmail, userRol }: HeaderProps) {
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6 dark:bg-gray-900 dark:border-gray-700">
       <div>
         <h1 className="text-lg font-semibold text-gray-900 dark:text-white">{titulo}</h1>
-        <p className="text-xs text-gray-500 capitalize">{hoy}</p>
+        <p className="text-xs text-gray-500 capitalize dark:text-gray-400">{hoy}</p>
       </div>
 
       <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ export function Header({ titulo, userName, userEmail, userRol }: HeaderProps) {
                 {userName ?? userEmail ?? 'Usuario'}
               </p>
               {userRol && (
-                <p className="mt-0.5 text-xs capitalize text-gray-400">{userRol}</p>
+                <p className="mt-0.5 text-xs capitalize text-gray-400 dark:text-gray-500">{userRol}</p>
               )}
             </div>
             <ChevronDown className="h-3 w-3 text-gray-400" />

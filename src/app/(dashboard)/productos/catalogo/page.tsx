@@ -32,7 +32,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4">
+      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
         <div className="flex-1 min-w-48 flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Buscar</label>
           <input type="text" name="q" defaultValue={busqueda} placeholder="Código, descripción..."
@@ -50,13 +50,13 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
         </div>
         <div className="flex items-end gap-2">
           <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Aplicar</button>
-          <Link href="/productos/catalogo" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Limpiar</Link>
+          <Link href="/productos/catalogo" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">Limpiar</Link>
         </div>
       </form>
 
       {/* Cuadrícula */}
       {productos.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-12 text-center text-gray-400">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-12 text-center text-gray-400">
           No se encontraron productos
         </div>
       ) : (
@@ -68,7 +68,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
             return (
               <Link key={p.id} href={`/productos/${p.id}`}
-                className="group flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden hover:shadow-md transition-shadow">
+                className="group flex flex-col rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden hover:shadow-md transition-shadow">
                 {/* Placeholder imagen */}
                 <div className="h-36 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
                   <span className="text-3xl font-bold text-blue-200 select-none">
@@ -90,7 +90,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
                         ? 'bg-red-100 text-red-700'
                         : stockTotal > 0
                           ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-500'
+                          : 'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'
                     }`}>
                       {stockTotal > 0 ? `${stockTotal} uds` : 'Sin stock'}
                     </span>

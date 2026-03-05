@@ -74,7 +74,7 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
         <h3 className="text-sm font-semibold text-gray-700">{inicial.length} transportadora{inicial.length !== 1 ? 's' : ''}</h3>
         <Button size="sm" variant="outline" onClick={() => setAdding(true)} disabled={adding}>
@@ -116,7 +116,7 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
                   <button onClick={guardarNuevo} disabled={saving}
                     className="p-1.5 rounded text-indigo-600 hover:bg-indigo-100"><Check className="h-4 w-4" /></button>
                   <button onClick={() => setAdding(false)}
-                    className="p-1.5 rounded text-gray-400 hover:bg-gray-100"><X className="h-4 w-4" /></button>
+                    className="p-1.5 rounded text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"><X className="h-4 w-4" /></button>
                 </div>
               </td>
             </tr>
@@ -125,7 +125,7 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
           {inicial.length === 0 && !adding ? (
             <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No hay transportadoras</td></tr>
           ) : inicial.map(t => (
-            <tr key={t.id} className={`hover:bg-gray-50 ${!t.activa ? 'opacity-50' : ''}`}>
+            <tr key={t.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${!t.activa ? 'opacity-50' : ''}`}>
               {editando === t.id ? (
                 <>
                   <td className="px-4 py-2">
@@ -149,7 +149,7 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
                       <button onClick={() => guardarEdit(t.id)} disabled={saving}
                         className="p-1.5 rounded text-indigo-600 hover:bg-indigo-100"><Check className="h-4 w-4" /></button>
                       <button onClick={() => setEditando(null)}
-                        className="p-1.5 rounded text-gray-400 hover:bg-gray-100"><X className="h-4 w-4" /></button>
+                        className="p-1.5 rounded text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"><X className="h-4 w-4" /></button>
                     </div>
                   </td>
                 </>
@@ -167,13 +167,13 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button onClick={() => toggleActiva(t)}
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${t.activa ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${t.activa ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'}`}>
                       {t.activa ? 'Activa' : 'Inactiva'}
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => iniciarEdit(t)}
-                      className="p-1.5 rounded text-gray-400 hover:text-indigo-600 hover:bg-gray-100">
+                      className="p-1.5 rounded text-gray-400 hover:text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-800">
                       <Edit2 className="h-3.5 w-3.5" />
                     </button>
                   </td>

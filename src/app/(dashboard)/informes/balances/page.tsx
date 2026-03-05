@@ -49,7 +49,7 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
           { label: 'Cobrado año', val: totales.cobrado, color: 'text-green-700' },
           { label: 'Utilidad', val: totales.utilidad, color: totales.utilidad >= 0 ? 'text-emerald-700' : 'text-red-700' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <p className="text-xs text-gray-500">{k.label}</p>
             <p className={`text-lg font-bold mt-0.5 font-mono ${k.color}`}>{formatCOP(k.val)}</p>
           </div>
@@ -64,7 +64,7 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
       )}
 
       {/* Gráfico de barras mensual */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Evolución mensual {anio}</h3>
         <div className="flex items-end gap-2 h-48">
           {meses.map(m => (
@@ -101,7 +101,7 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla mensual */}
-      <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -115,7 +115,7 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {meses.map(m => (
-              <tr key={m.mes} className={`hover:bg-gray-50 ${m.ventas === 0 && m.compras === 0 ? 'opacity-40' : ''}`}>
+              <tr key={m.mes} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${m.ventas === 0 && m.compras === 0 ? 'opacity-40' : ''}`}>
                 <td className="px-4 py-2 font-medium text-gray-700">{m.nombre} {anio}</td>
                 <td className="px-4 py-2 text-right font-mono text-blue-700">{formatCOP(m.ventas)}</td>
                 <td className="px-4 py-2 text-right font-mono text-green-700">{formatCOP(m.cobrado)}</td>

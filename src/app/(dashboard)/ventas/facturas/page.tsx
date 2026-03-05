@@ -41,19 +41,19 @@ export default async function FacturasPage({ searchParams }: PageProps) {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Total facturas</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total.toLocaleString('es-CO')}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500 flex items-center gap-1"><Clock className="h-3 w-3 text-orange-500" />Por cobrar</p>
           <p className="text-2xl font-bold text-orange-600 mt-1">{formatCOP(stats.pendiente)}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500 flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" />Cobrado</p>
           <p className="text-2xl font-bold text-green-700 mt-1">{formatCOP(stats.pagada)}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500 flex items-center gap-1"><Calendar className="h-3 w-3 text-blue-500" />Este mes</p>
           <p className="text-2xl font-bold text-blue-700 mt-1">{formatCOP(stats.este_mes)}</p>
         </div>

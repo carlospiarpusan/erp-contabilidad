@@ -79,7 +79,7 @@ export function Fabricantes({ fabricantes: init }: Props) {
           {fabricantes.map(f => {
             const conteo = f.productos?.[0]?.count ?? 0
             return (
-              <div key={f.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 hover:shadow-sm transition-shadow">
+              <div key={f.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 hover:shadow-sm transition-shadow">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700 font-bold text-sm">
                     {f.nombre.charAt(0).toUpperCase()}

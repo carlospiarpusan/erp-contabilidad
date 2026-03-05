@@ -66,7 +66,7 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
       <div className="mb-4 flex justify-end">
         <Button size="sm" onClick={abrirNuevo}><Plus className="h-4 w-4 mr-1" /> Nueva forma de pago</Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>
@@ -82,7 +82,7 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
             {formasPago.length === 0 ? (
               <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">Sin formas de pago</td></tr>
             ) : formasPago.map(f => (
-              <tr key={f.id} className="hover:bg-gray-50/50">
+              <tr key={f.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50">
                 <td className="px-4 py-3 font-medium text-gray-900">{f.descripcion}</td>
                 <td className="px-4 py-3 text-gray-500 capitalize">{f.tipo}</td>
                 <td className="px-4 py-3 text-right text-gray-500">{f.dias_vencimiento ?? 0}</td>

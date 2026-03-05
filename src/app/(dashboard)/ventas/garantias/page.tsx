@@ -18,7 +18,7 @@ const BADGE_ESTADO: Record<string, 'default' | 'outline' | 'success' | 'warning'
 }
 
 const PRIORIDAD_COLOR: Record<string, string> = {
-  baja:   'bg-gray-100 text-gray-600',
+  baja:   'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500',
   normal: 'bg-blue-100 text-blue-700',
   alta:   'bg-orange-100 text-orange-700',
   urgente:'bg-red-100 text-red-700',
@@ -76,27 +76,27 @@ export default async function GarantiasPage({ searchParams }: PageProps) {
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Pendientes</p>
           <p className="text-2xl font-bold text-amber-600 mt-0.5">{stats.pendiente}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">En proceso</p>
           <p className="text-2xl font-bold text-blue-600 mt-0.5">{stats.en_proceso}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Resueltas</p>
           <p className="text-2xl font-bold text-green-600 mt-0.5">{stats.resuelta}</p>
         </div>
       </div>
 
       {/* Tabs + tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="flex gap-1 p-2 border-b border-gray-100">
           {TABS.map(t => (
             <Link key={t.key} href={t.key ? `/ventas/garantias?estado=${t.key}` : '/ventas/garantias'}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                estado === t.key ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                estado === t.key ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:bg-gray-800'
               }`}>
               {t.label}
             </Link>
@@ -127,7 +127,7 @@ export default async function GarantiasPage({ searchParams }: PageProps) {
               const cli  = (g as never).cliente  as { razon_social?: string } | null
               const prod = (g as never).producto as { descripcion?: string; codigo?: string } | null
               return (
-                <tr key={g.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href=`/ventas/garantias/${g.id}`}>
+                <tr key={g.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => window.location.href=`/ventas/garantias/${g.id}`}>
                   <td className="px-4 py-3 font-mono text-emerald-600 font-medium">{g.numero}</td>
                   <td className="px-4 py-3 text-gray-800">{cli?.razon_social ?? '—'}</td>
                   <td className="px-4 py-3">
@@ -139,7 +139,7 @@ export default async function GarantiasPage({ searchParams }: PageProps) {
                   </td>
                   <td className="px-4 py-3 text-gray-600">{g.fecha_venta ? formatFecha(g.fecha_venta) : '—'}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORIDAD_COLOR[g.prioridad ?? 'normal'] ?? 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORIDAD_COLOR[g.prioridad ?? 'normal'] ?? 'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500'}`}>
                       {g.prioridad ?? 'normal'}
                     </span>
                   </td>

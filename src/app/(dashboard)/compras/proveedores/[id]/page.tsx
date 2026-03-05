@@ -33,7 +33,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
   const kpis = [
     { label: 'Total facturas', valor: String(resumen?.total_facturas ?? 0), icon: ShoppingCart, color: 'bg-orange-50 text-orange-700' },
     { label: 'Total comprado', valor: formatCOP(resumen?.total_compras ?? 0), icon: TrendingDown, color: 'bg-red-50 text-red-700' },
-    { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0), icon: CreditCard, color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-amber-50 text-amber-700' : 'bg-gray-50 text-gray-500' },
+    { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0), icon: CreditCard, color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-amber-50 text-amber-700' : 'bg-gray-50 text-gray-500 dark:text-gray-400 dark:text-gray-500' },
   ]
 
   return (
@@ -44,7 +44,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
       </div>
 
       {/* Header */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 text-xl font-bold shadow-sm">
@@ -57,13 +57,13 @@ export default async function DetalleProveedorPage({ params }: Props) {
                   {proveedor.tipo_documento ?? 'NIT'}: {proveedor.numero_documento}{proveedor.dv ? `-${proveedor.dv}` : ''}
                 </p>
               )}
-              <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${proveedor.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+              <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${proveedor.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'}`}>
                 {proveedor.activo ? <><CheckCircle2 className="h-3 w-3" /> Activo</> : <><Clock className="h-3 w-3" /> Inactivo</>}
               </span>
             </div>
           </div>
           <Link href={`/compras/facturas?proveedor_id=${proveedor.id}`}
-            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+            className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             Ver compras →
           </Link>
         </div>
@@ -72,7 +72,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-200 bg-white p-4 flex items-center gap-3">
+          <div key={k.label} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 flex items-center gap-3">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${k.color}`}>
               <k.icon className="h-5 w-5" />
             </div>
@@ -86,7 +86,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Datos empresa */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 space-y-4">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 space-y-4">
           <h2 className="font-semibold text-gray-800 flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-400" /> Datos del proveedor
           </h2>
@@ -130,7 +130,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
         </div>
 
         {/* Últimas compras */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5">
+        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
           <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
             <FileText className="h-4 w-4 text-gray-400" /> Últimas facturas de compra
           </h2>
@@ -140,7 +140,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
             <div className="space-y-2">
               {(resumen?.ultimas_facturas ?? []).map(f => (
                 <Link key={f.id} href={`/compras/facturas/${f.id}`}
-                  className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors group">
+                  className="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group">
                   <div>
                     <p className="font-mono text-sm font-medium text-gray-700 group-hover:text-orange-600">
                       {f.prefijo}{f.numero}
@@ -148,7 +148,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
                     <p className="text-xs text-gray-400">{formatFecha(f.fecha)}</p>
                   </div>
                   <div className="text-right flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_BADGE[f.estado] ?? 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ESTADO_BADGE[f.estado] ?? 'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500'}`}>
                       {f.estado}
                     </span>
                     <span className="font-mono text-sm font-semibold text-gray-900">{formatCOP(f.total)}</span>

@@ -47,12 +47,12 @@ export default async function PedidosPage({ searchParams }: PageProps) {
           { label: 'Total', val: stats.total, color: '' },
           { label: 'Pendientes', val: stats.pendiente, color: 'text-yellow-700' },
           { label: 'En proceso', val: stats.en_proceso, color: 'text-blue-700' },
-          { label: 'Despachados', val: stats.despachado, color: 'text-gray-700' },
+          { label: 'Despachados', val: stats.despachado, color: 'text-gray-700 dark:text-gray-300' },
           { label: 'Valor pend.', val: formatCOP(stats.valor), color: 'text-purple-700' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <p className="text-xs text-gray-500">{k.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${k.color || 'text-gray-900'}`}>{k.val}</p>
+            <p className={`text-2xl font-bold mt-1 ${k.color || 'text-gray-900 dark:text-gray-100'}`}>{k.val}</p>
           </div>
         ))}
       </div>
@@ -68,13 +68,13 @@ export default async function PedidosPage({ searchParams }: PageProps) {
         ].map(e => (
           <Link key={e.value}
             href={e.value ? `/ventas/pedidos?estado=${e.value}` : '/ventas/pedidos'}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${estado === e.value ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${estado === e.value ? 'bg-purple-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 dark:bg-gray-800'}`}>
             {e.label}
           </Link>
         ))}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
@@ -92,7 +92,7 @@ export default async function PedidosPage({ searchParams }: PageProps) {
             ) : pedidos.map(p => {
               const c = p.cliente as { razon_social?: string } | null
               return (
-                <tr key={p.id} className="hover:bg-gray-50">
+                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="px-4 py-3 font-mono font-medium text-gray-700">{p.prefijo}{p.numero}</td>
                   <td className="px-4 py-3 text-gray-600">{formatFecha(p.fecha)}</td>
                   <td className="px-4 py-3 text-gray-900">{c?.razon_social ?? '—'}</td>

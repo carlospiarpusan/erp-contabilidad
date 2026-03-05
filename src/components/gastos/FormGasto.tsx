@@ -65,7 +65,7 @@ export function FormGasto({ acreedores, tiposGasto, formasPago }: Props) {
   const labelCls = 'block text-xs font-medium text-gray-600 mb-1'
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-6">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <label className={labelCls}>Tipo de gasto *</label>

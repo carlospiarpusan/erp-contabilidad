@@ -13,9 +13,9 @@ interface Resultado {
 }
 
 export function BusquedaGlobal() {
-  const router  = useRouter()
-  const [open, setOpen]       = useState(false)
-  const [query, setQuery]     = useState('')
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
   const [results, setResults] = useState<Resultado[]>([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState(0)
@@ -75,18 +75,18 @@ export function BusquedaGlobal() {
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === 'ArrowDown') setSelected(s => Math.min(s + 1, results.length - 1))
-    if (e.key === 'ArrowUp')   setSelected(s => Math.max(s - 1, 0))
+    if (e.key === 'ArrowUp') setSelected(s => Math.max(s - 1, 0))
     if (e.key === 'Enter' && results[selected]) navegar(results[selected].href)
   }
 
   if (!open) return (
     <button
       onClick={() => setOpen(true)}
-      className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+      className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
     >
       <Search className="h-3.5 w-3.5" />
       <span className="hidden sm:inline">Buscar...</span>
-      <kbd className="hidden rounded bg-gray-200 px-1.5 py-0.5 text-xs font-mono text-gray-500 sm:inline dark:bg-gray-700">⌘K</kbd>
+      <kbd className="hidden rounded bg-gray-200 px-1.5 py-0.5 text-xs font-mono text-gray-500 sm:inline dark:bg-gray-700 dark:text-gray-400">⌘K</kbd>
     </button>
   )
 
@@ -134,11 +134,11 @@ export function BusquedaGlobal() {
                 <button
                   key={item.href}
                   onClick={() => navegar(item.href)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
-                  <item.icon className="h-4 w-4 text-gray-400" />
+                  <item.icon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                   {item.label}
-                  <ArrowRight className="ml-auto h-3 w-3 text-gray-300" />
+                  <ArrowRight className="ml-auto h-3 w-3 text-gray-300 dark:text-gray-600" />
                 </button>
               ))}
             </div>
@@ -147,20 +147,18 @@ export function BusquedaGlobal() {
             <button
               key={r.id}
               onClick={() => navegar(r.href)}
-              className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                i === selected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
+              className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${i === selected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:hover:bg-gray-800'
+                }`}
             >
-              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                r.tipo === 'cliente' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700'
-              }`}>
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${r.tipo === 'cliente' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
+                }`}>
                 {r.tipo === 'cliente' ? <Users className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />}
               </div>
               <div className="flex-1 text-left">
                 <p className="font-medium text-gray-900 dark:text-white">{r.nombre}</p>
-                <p className="text-xs text-gray-400">{r.detalle}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{r.detalle}</p>
               </div>
-              <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
+              <ArrowRight className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />
             </button>
           ))}
         </div>

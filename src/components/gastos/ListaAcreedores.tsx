@@ -58,7 +58,7 @@ export function ListaAcreedores({ acreedores: inicial, total }: Props) {
       <div className="mb-4 flex justify-end">
         <Button size="sm" onClick={abrirNuevo}><Plus className="h-4 w-4 mr-1" /> Nuevo acreedor</Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>
@@ -73,7 +73,7 @@ export function ListaAcreedores({ acreedores: inicial, total }: Props) {
             {acreedores.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-400">No hay acreedores</td></tr>
             ) : acreedores.map(a => (
-              <tr key={a.id} className="hover:bg-gray-50/50">
+              <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50">
                 <td className="px-4 py-3 font-medium text-gray-900">{a.razon_social}</td>
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">{a.numero_documento ?? '—'}</td>
                 <td className="px-4 py-3 text-gray-600">

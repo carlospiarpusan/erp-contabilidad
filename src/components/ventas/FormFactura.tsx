@@ -166,7 +166,7 @@ export function FormFactura({ clientes, productos, impuestos, bodegas, formasPag
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {/* Cabecera */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Información general</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Cliente */}
@@ -266,7 +266,7 @@ export function FormFactura({ clientes, productos, impuestos, bodegas, formasPag
       </div>
 
       {/* Líneas */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-gray-700">Artículos</h3>
           <Button type="button" size="sm" onClick={agregarLinea} disabled={productos.length === 0}>
@@ -374,7 +374,7 @@ export function FormFactura({ clientes, productos, impuestos, bodegas, formasPag
       {/* Totales */}
       {lineas.length > 0 && (
         <div className="flex justify-end">
-          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-2">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 flex flex-col gap-2">
             <div className="flex justify-between text-sm text-gray-600">
               <span>Subtotal</span>
               <span className="font-mono">{formatCOP(subtotal)}</span>

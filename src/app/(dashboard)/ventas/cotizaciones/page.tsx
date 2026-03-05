@@ -39,9 +39,9 @@ export default async function CotizacionesPage({ searchParams }: PageProps) {
           { label: 'Aprobadas',   val: stats.aprobada,   mono: false },
           { label: 'Valor aprob.', val: formatCOP(stats.valor), mono: true, color: 'text-green-700' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
+          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <p className="text-xs text-gray-500">{k.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${k.mono ? 'font-mono text-lg' : ''} ${k.color ?? 'text-gray-900'}`}>{k.val}</p>
+            <p className={`text-2xl font-bold mt-1 ${k.mono ? 'font-mono text-lg' : ''} ${k.color ?? 'text-gray-900 dark:text-gray-100'}`}>{k.val}</p>
           </div>
         ))}
       </div>

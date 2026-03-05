@@ -121,7 +121,7 @@ export function ListaProductos({
 
         <button
           onClick={() => setFiltros(p => !p)}
-          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors ${showFiltros ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'}`}
+          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors ${showFiltros ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950'}`}
         >
           <SlidersHorizontal className="h-4 w-4" /> Filtros
           {(familia_id || fabricante_id) && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-bold">!</span>}

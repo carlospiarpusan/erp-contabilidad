@@ -58,7 +58,7 @@ export function ListaGastos({ gastos: inicial, total }: Props) {
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>
@@ -74,7 +74,7 @@ export function ListaGastos({ gastos: inicial, total }: Props) {
             {filtrados.length === 0 ? (
               <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-400">No hay gastos registrados</td></tr>
             ) : filtrados.map(g => (
-              <tr key={g.id} className="hover:bg-gray-50/50 cursor-pointer" onClick={() => { window.location.href = `/gastos/${g.id}` }}>
+              <tr key={g.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50 cursor-pointer" onClick={() => { window.location.href = `/gastos/${g.id}` }}>
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">{g.prefijo}{g.numero}</td>
                 <td className="px-4 py-3 text-gray-700">{formatFecha(g.fecha)}</td>
                 <td className="px-4 py-3 text-gray-900 font-medium">

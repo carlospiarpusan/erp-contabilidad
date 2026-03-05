@@ -36,28 +36,28 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           <h2 className="text-xl font-bold text-gray-900">Artículos / Productos</h2>
           <p className="text-sm text-gray-500">Inventario, precios y variantes</p>
         </div>
-        <a href="/api/export/inventario" download className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+        <a href="/api/export/inventario" download className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
           <BarChart3 className="h-4 w-4" /> Exportar CSV
         </a>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Total productos</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total.toLocaleString('es-CO')}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500 flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-500" />Activos</p>
           <p className="text-2xl font-bold text-green-700 mt-1">{stats.activos.toLocaleString('es-CO')}</p>
         </div>
-        <Link href="/productos/stock-bajo" className="rounded-xl border border-gray-100 bg-white p-4 hover:shadow-sm transition-shadow block">
+        <Link href="/productos/stock-bajo" className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 hover:shadow-sm transition-shadow block">
           <p className="text-xs text-gray-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-orange-500" />Stock bajo</p>
-          <p className={`text-2xl font-bold mt-1 ${stats.stockBajo > 0 ? 'text-orange-600' : 'text-gray-900'}`}>
+          <p className={`text-2xl font-bold mt-1 ${stats.stockBajo > 0 ? 'text-orange-600' : 'text-gray-900 dark:text-gray-100'}`}>
             {stats.stockBajo.toLocaleString('es-CO')}
           </p>
         </Link>
-        <div className="rounded-xl border border-gray-100 bg-white p-4">
+        <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500 flex items-center gap-1"><BarChart3 className="h-3 w-3 text-blue-500" />Unidades totales</p>
           <p className="text-2xl font-bold text-blue-700 mt-1">{stats.unidades.toLocaleString('es-CO')}</p>
         </div>

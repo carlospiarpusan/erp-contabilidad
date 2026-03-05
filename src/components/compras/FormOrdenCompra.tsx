@@ -108,7 +108,7 @@ export function FormOrdenCompra({ proveedores, productos, impuestos, bodegas }: 
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Información general</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="sm:col-span-2 flex flex-col gap-1">
@@ -149,7 +149,7 @@ export function FormOrdenCompra({ proveedores, productos, impuestos, bodegas }: 
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-gray-700">Productos a ordenar</h3>
           <Button type="button" size="sm" variant="outline" onClick={agregarLinea}>
@@ -224,7 +224,7 @@ export function FormOrdenCompra({ proveedores, productos, impuestos, bodegas }: 
 
       {lineas.length > 0 && (
         <div className="flex justify-end">
-          <div className="w-64 rounded-xl border border-gray-200 bg-white p-4 flex flex-col gap-2 text-sm">
+          <div className="w-64 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 flex flex-col gap-2 text-sm">
             <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-mono">{formatCOP(subtotal)}</span></div>
             {descuento > 0 && <div className="flex justify-between text-red-600"><span>Descuento</span><span className="font-mono">-{formatCOP(descuento)}</span></div>}
             <div className="flex justify-between text-gray-600"><span>IVA</span><span className="font-mono">{formatCOP(totalIva)}</span></div>
