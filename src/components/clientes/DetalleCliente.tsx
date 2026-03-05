@@ -11,21 +11,21 @@ import { formatCOP } from '@/utils/cn'
 import {
   Phone, Mail, MapPin, CreditCard, Building2, User,
   Pencil, ArrowLeft, MessageCircle, Tag, Calendar,
-  TrendingUp, ShoppingCart, AlertCircle, CheckCircle2
+  TrendingUp, ShoppingCart, AlertCircle, CheckCircle2, Trash2
 } from 'lucide-react'
 import Link from 'next/link'
 
 interface Resumen {
-  total_facturas:   number
-  total_compras:    number
-  total_cobrado:    number
-  saldo_pendiente:  number
+  total_facturas: number
+  total_compras: number
+  total_cobrado: number
+  saldo_pendiente: number
   ultimas_facturas: { id: string; numero: number; prefijo?: string; total: number; fecha: string; estado: string }[]
 }
 
 interface Props {
   cliente: Cliente
-  grupos:  GrupoCliente[]
+  grupos: GrupoCliente[]
   resumen?: Resumen | null
 }
 
@@ -47,11 +47,11 @@ function CreditoSemaforo({ limite, dias }: { limite?: number; dias?: number }) {
 export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
   const router = useRouter()
   const [cliente, setCliente] = useState(init)
-  const [modal, setModal]     = useState(false)
-  const [saving, setSaving]   = useState(false)
-  const [error, setError]     = useState('')
+  const [modal, setModal] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
-  async function guardar(datos: Partial<Cliente>) {
+  async function guardar(datos: any) {
     setSaving(true)
     setError('')
     const res = await fetch(`/api/clientes/${cliente.id}`, {
@@ -65,6 +65,22 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
     setCliente(data)
     setModal(false)
     router.refresh()
+  }
+
+  async function handleEliminar() {
+    if (!confirm(`¿Estás seguro de eliminar al cliente "${cliente.razon_social}"?\nSi tiene facturas asociadas, solo se desactivará.`)) return
+
+    try {
+      const res = await fetch(`/api/clientes/${cliente.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Error al eliminar')
+      }
+      router.push('/clientes')
+      router.refresh()
+    } catch (e: any) {
+      alert(e.message)
+    }
   }
 
   const grupo = cliente.grupo as { nombre: string; descuento_porcentaje?: number } | null
@@ -98,17 +114,22 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
             </div>
           </div>
         </div>
-        <Button onClick={() => setModal(true)}>
-          <Pencil className="h-4 w-4 mr-2" /> Editar
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="text-red-600 hover:bg-red-50 border-red-200" onClick={handleEliminar}>
+            <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+          </Button>
+          <Button onClick={() => setModal(true)}>
+            <Pencil className="h-4 w-4 mr-2" /> Editar
+          </Button>
+        </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total facturas',  valor: String(resumen?.total_facturas ?? 0),          icon: ShoppingCart, color: 'bg-blue-50 text-blue-700' },
-          { label: 'Total facturado', valor: formatCOP(resumen?.total_compras ?? 0),         icon: TrendingUp,   color: 'bg-green-50 text-green-700' },
-          { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0),       icon: CreditCard,   color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500 dark:text-gray-400 dark:text-gray-500' },
+          { label: 'Total facturas', valor: String(resumen?.total_facturas ?? 0), icon: ShoppingCart, color: 'bg-blue-50 text-blue-700' },
+          { label: 'Total facturado', valor: formatCOP(resumen?.total_compras ?? 0), icon: TrendingUp, color: 'bg-green-50 text-green-700' },
+          { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0), icon: CreditCard, color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500 dark:text-gray-400 dark:text-gray-500' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
             <div className={`mb-2 inline-flex rounded-lg p-2 ${k.color}`}>
@@ -187,10 +208,10 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
           {(cliente.limite_credito ?? 0) > 0 && (
             <dl className="space-y-3">
               {(() => {
-                const limite   = cliente.limite_credito ?? 0
-                const usado    = resumen?.saldo_pendiente ?? 0
+                const limite = cliente.limite_credito ?? 0
+                const usado = resumen?.saldo_pendiente ?? 0
                 const disponible = Math.max(0, limite - usado)
-                const pct      = limite > 0 ? Math.min(100, Math.round(usado / limite * 100)) : 0
+                const pct = limite > 0 ? Math.min(100, Math.round(usado / limite * 100)) : 0
                 const barColor = pct >= 90 ? 'bg-red-500' : pct >= 60 ? 'bg-orange-400' : 'bg-green-400'
                 return (
                   <>
@@ -277,12 +298,11 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
                   </td>
                   <td className="py-1.5 text-gray-500 text-xs">{f.fecha}</td>
                   <td className="py-1.5">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      f.estado === 'pagada'    ? 'bg-green-100 text-green-700' :
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${f.estado === 'pagada' ? 'bg-green-100 text-green-700' :
                       f.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700' :
-                      f.estado === 'parcial'   ? 'bg-blue-100 text-blue-700' :
-                      'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'
-                    }`}>{f.estado}</span>
+                        f.estado === 'parcial' ? 'bg-blue-100 text-blue-700' :
+                          'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'
+                      }`}>{f.estado}</span>
                   </td>
                   <td className="py-1.5 text-right font-mono font-medium text-gray-800">{formatCOP(f.total)}</td>
                 </tr>

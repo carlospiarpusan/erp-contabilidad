@@ -134,12 +134,26 @@ export async function updateCliente(id: string, datos: Partial<Cliente>) {
 
 export async function deleteCliente(id: string) {
   const supabase = await createClient()
-  const { error } = await supabase
+
+  // Intentamos borrado físico primero
+  const { error: deleteError } = await supabase
     .from('clientes')
-    .update({ activo: false })
+    .delete()
     .eq('id', id)
 
-  if (error) throw error
+  if (deleteError) {
+    // Si el error es por integridad referencial (código 23503), hacemos borrado lógico
+    if (deleteError.code === '23503') {
+      const { error: updateError } = await supabase
+        .from('clientes')
+        .update({ activo: false })
+        .eq('id', id)
+
+      if (updateError) throw updateError
+      return
+    }
+    throw deleteError
+  }
 }
 
 // ── Grupos ────────────────────────────────────────────────────

@@ -14,30 +14,30 @@ import Link from 'next/link'
 
 const COLUMNAS = [
   { key: 'razon_social', label: 'Cliente' },
-  { key: 'documento',    label: 'Documento' },
-  { key: 'contacto',     label: 'Contacto' },
-  { key: 'grupo',        label: 'Grupo' },
-  { key: 'estado',       label: 'Estado', className: 'text-center' },
-  { key: 'acciones',     label: '', className: 'w-28' },
+  { key: 'documento', label: 'Documento' },
+  { key: 'contacto', label: 'Contacto' },
+  { key: 'grupo', label: 'Grupo' },
+  { key: 'estado', label: 'Estado', className: 'text-center' },
+  { key: 'acciones', label: '', className: 'w-28' },
 ]
 
 const TIPOS_DOC = [
-  { value: '',    label: 'Todos los tipos' },
+  { value: '', label: 'Todos los tipos' },
   { value: 'NIT', label: 'NIT' },
-  { value: 'CC',  label: 'Cédula' },
-  { value: 'CE',  label: 'C. Extranjería' },
+  { value: 'CC', label: 'Cédula' },
+  { value: 'CE', label: 'C. Extranjería' },
   { value: 'PAS', label: 'Pasaporte' },
 ]
 
 interface ListaClientesProps {
-  clientes:    Cliente[]
-  total:       number
-  grupos:      GrupoCliente[]
-  busqueda:    string
-  offset:      number
-  limit:       number
+  clientes: Cliente[]
+  total: number
+  grupos: GrupoCliente[]
+  busqueda: string
+  offset: number
+  limit: number
   grupoFiltro: string
-  tipoFiltro:  string
+  tipoFiltro: string
 }
 
 export function ListaClientes({
@@ -48,20 +48,20 @@ export function ListaClientes({
   const router = useRouter()
   const [, startTransition] = useTransition()
 
-  const [busqueda, setBusqueda]   = useState(busquedaInicial)
-  const [grupo_id, setGrupoId]    = useState(grupoInicial)
-  const [tipo, setTipo]           = useState(tipoInicial)
-  const [offset, setOffset]       = useState(offsetInicial)
+  const [busqueda, setBusqueda] = useState(busquedaInicial)
+  const [grupo_id, setGrupoId] = useState(grupoInicial)
+  const [tipo, setTipo] = useState(tipoInicial)
+  const [offset, setOffset] = useState(offsetInicial)
   const [showFiltros, setFiltros] = useState(false)
-  const [modalAbierto, setModal]  = useState(false)
+  const [modalAbierto, setModal] = useState(false)
   const [clienteEditar, setEditar] = useState<Cliente | null>(null)
-  const [cargando, setCargando]   = useState(false)
-  const [error, setError]         = useState('')
+  const [cargando, setCargando] = useState(false)
+  const [error, setError] = useState('')
 
   function navegar(params: Record<string, string | number>) {
     const sp = new URLSearchParams()
-    if (params.q)       sp.set('q', String(params.q))
-    if (params.offset)  sp.set('offset', String(params.offset))
+    if (params.q) sp.set('q', String(params.q))
+    if (params.offset) sp.set('offset', String(params.offset))
     if (params.grupo_id) sp.set('grupo_id', String(params.grupo_id))
     if (params.tipo_documento) sp.set('tipo_documento', String(params.tipo_documento))
     startTransition(() => router.push(`/clientes?${sp.toString()}`))
@@ -81,9 +81,9 @@ export function ListaClientes({
   async function handleGuardar(datos: Record<string, unknown>) {
     setCargando(true); setError('')
     try {
-      const url    = clienteEditar ? `/api/clientes/${clienteEditar.id}` : '/api/clientes'
+      const url = clienteEditar ? `/api/clientes/${clienteEditar.id}` : '/api/clientes'
       const method = clienteEditar ? 'PATCH' : 'POST'
-      const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
       if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? 'Error') }
       setModal(false); setEditar(null); router.refresh()
     } catch (e: unknown) {
@@ -94,7 +94,7 @@ export function ListaClientes({
   }
 
   async function handleEliminar(id: string, nombre: string) {
-    if (!confirm(`¿Desactivar al cliente "${nombre}"?`)) return
+    if (!confirm(`¿Estás seguro de eliminar al cliente "${nombre}"?\nSi tiene facturas asociadas, solo se desactivará.`)) return
     await fetch(`/api/clientes/${id}`, { method: 'DELETE' })
     router.refresh()
   }
@@ -191,7 +191,7 @@ export function ListaClientes({
             <CeldaTabla>
               <div className="flex flex-col gap-0.5 text-xs text-gray-500">
                 {c.telefono && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{c.telefono}</span>}
-                {c.email    && <span className="flex items-center gap-1 truncate max-w-[150px]"><Mail className="h-3 w-3" />{c.email}</span>}
+                {c.email && <span className="flex items-center gap-1 truncate max-w-[150px]"><Mail className="h-3 w-3" />{c.email}</span>}
               </div>
             </CeldaTabla>
             <CeldaTabla>
