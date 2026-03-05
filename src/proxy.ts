@@ -41,12 +41,15 @@ export async function proxy(request: NextRequest) {
   if (pathname.startsWith('/superadmin') || pathname.startsWith('/api/superadmin')) {
     const { data: perfil } = await supabase
       .from('usuarios')
-      .select('roles(nombre)')
+      .select('rol_id')
       .eq('id', user.id)
       .single()
 
-    const rol = ((Array.isArray(perfil?.roles) ? perfil?.roles[0] : perfil?.roles) as { nombre: string } | null)?.nombre
-    if (rol !== 'superadmin') {
+    const { data: rolData } = perfil?.rol_id
+      ? await supabase.from('roles').select('nombre').eq('id', perfil.rol_id).single()
+      : { data: null }
+
+    if (rolData?.nombre !== 'superadmin') {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }

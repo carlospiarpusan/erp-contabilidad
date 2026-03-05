@@ -17,13 +17,20 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
 
   const { data } = await supabase
     .from('usuarios')
-    .select('id, nombre, empresa_id, rol_id, roles(nombre), empresas(nombre)')
+    .select('id, nombre, empresa_id, rol_id, empresas(nombre)')
     .eq('id', user.id)
     .single()
 
   if (!data) return null
 
-  const rol = ((Array.isArray(data.roles) ? data.roles[0] : data.roles) as { nombre: string } | null)?.nombre as UserSession['rol'] ?? 'solo_lectura'
+  // Consulta de rol separada para evitar problemas con joins y RLS
+  const { data: rolData } = await supabase
+    .from('roles')
+    .select('nombre')
+    .eq('id', data.rol_id)
+    .single()
+
+  const rol = (rolData?.nombre ?? 'solo_lectura') as UserSession['rol']
   const empresa_nombre = ((Array.isArray(data.empresas) ? data.empresas[0] : data.empresas) as { nombre: string } | null)?.nombre ?? undefined
 
   return {
