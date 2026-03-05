@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Producto, Familia, Fabricante } from '@/types'
 import { cleanUUIDs } from '@/lib/utils/db'
+import { getEmpresaId } from '@/lib/db/maestros'
 
 // ── Productos ────────────────────────────────────────────────
 
@@ -104,7 +105,8 @@ export async function getMovimientosProducto(producto_id: string, limit = 15) {
 }
 
 export async function createProducto(datos: Partial<Producto>) {
-  const payload = cleanUUIDs({ ...datos }, ['familia_id', 'fabricante_id', 'impuesto_id', 'cuenta_venta_id', 'cuenta_compra_id', 'cuenta_inventario_id'])
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...datos, empresa_id })
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -118,7 +120,8 @@ export async function createProducto(datos: Partial<Producto>) {
 }
 
 export async function updateProducto(id: string, datos: Partial<Producto>) {
-  const payload = cleanUUIDs({ ...datos }, ['familia_id', 'fabricante_id', 'impuesto_id', 'cuenta_venta_id', 'cuenta_compra_id', 'cuenta_inventario_id'])
+  const { id: _, ...rest } = datos
+  const payload = cleanUUIDs(rest)
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -194,15 +197,19 @@ export async function getFamilias() {
 }
 
 export async function createFamilia(datos: Partial<Familia>) {
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...datos, empresa_id })
   const supabase = await createClient()
-  const { data, error } = await supabase.from('familias').insert(datos).select().single()
+  const { data, error } = await supabase.from('familias').insert(payload).select().single()
   if (error) throw error
   return data as Familia
 }
 
 export async function updateFamilia(id: string, datos: Partial<Familia>) {
+  const { id: _, ...rest } = datos
+  const payload = cleanUUIDs(rest)
   const supabase = await createClient()
-  const { data, error } = await supabase.from('familias').update(datos).eq('id', id).select().single()
+  const { data, error } = await supabase.from('familias').update(payload).eq('id', id).select().single()
   if (error) throw error
   return data as Familia
 }
@@ -221,15 +228,19 @@ export async function getFabricantes() {
 }
 
 export async function createFabricante(datos: Partial<Fabricante>) {
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...datos, empresa_id })
   const supabase = await createClient()
-  const { data, error } = await supabase.from('fabricantes').insert(datos).select().single()
+  const { data, error } = await supabase.from('fabricantes').insert(payload).select().single()
   if (error) throw error
   return data as Fabricante
 }
 
 export async function updateFabricante(id: string, datos: Partial<Fabricante>) {
+  const { id: _, ...rest } = datos
+  const payload = cleanUUIDs(rest)
   const supabase = await createClient()
-  const { data, error } = await supabase.from('fabricantes').update(datos).eq('id', id).select().single()
+  const { data, error } = await supabase.from('fabricantes').update(payload).eq('id', id).select().single()
   if (error) throw error
   return data as Fabricante
 }

@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { cleanUUIDs } from '@/lib/utils/db'
+import { getEmpresaId } from '@/lib/db/maestros'
 
 // ── Proveedores ──────────────────────────────────────────────────────────────
 
@@ -50,13 +52,13 @@ export async function createProveedor(proveedor: {
   departamento?: string
   observaciones?: string
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: uRow } = await supabase.from('usuarios').select('empresa_id').eq('id', user!.id).single()
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...proveedor, empresa_id, activo: true })
 
+  const supabase = await createClient()
   const { data, error } = await supabase
     .from('proveedores')
-    .insert({ ...proveedor, empresa_id: uRow!.empresa_id, activo: true })
+    .insert(payload)
     .select()
     .single()
   if (error) throw error
@@ -64,10 +66,13 @@ export async function createProveedor(proveedor: {
 }
 
 export async function updateProveedor(id: string, fields: Record<string, unknown>) {
+  const { id: _, ...rest } = fields
+  const payload = cleanUUIDs(rest)
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('proveedores')
-    .update({ ...fields, updated_at: new Date().toISOString() })
+    .update({ ...payload, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
@@ -109,9 +114,7 @@ export async function getResumenProveedor(proveedor_id: string) {
 export async function getEstadisticasCompras() {
   const supabase = await createClient()
   const { data, error } = await supabase
-    .from('documentos')
-    .select('total, estado, fecha')
-    .eq('tipo', 'factura_compra')
+    .from('documentos').select('total, estado, fecha').eq('tipo', 'factura_compra')
   if (error) throw error
 
   const hoy = new Date()

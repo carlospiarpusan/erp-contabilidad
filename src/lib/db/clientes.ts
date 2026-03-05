@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Cliente, GrupoCliente } from '@/types'
 import { cleanUUIDs } from '@/lib/utils/db'
+import { getEmpresaId } from '@/lib/db/maestros'
 
 export async function getClientes(params?: {
   busqueda?: string
@@ -80,7 +81,8 @@ export async function getEstadisticasClientes() {
 }
 
 export async function createCliente(datos: Partial<Cliente>) {
-  const payload = cleanUUIDs({ ...datos }, ['grupo_id', 'colaborador_id'])
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...datos, empresa_id })
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -94,7 +96,9 @@ export async function createCliente(datos: Partial<Cliente>) {
 }
 
 export async function updateCliente(id: string, datos: Partial<Cliente>) {
-  const payload = cleanUUIDs({ ...datos }, ['grupo_id', 'colaborador_id'])
+  // Remove id from payload if present, and clean other UUID fields
+  const { id: _, ...rest } = datos
+  const payload = cleanUUIDs(rest)
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -143,10 +147,13 @@ export async function getGruposConConteo() {
 }
 
 export async function createGrupo(datos: Partial<GrupoCliente>) {
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...datos, empresa_id })
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('grupos_clientes')
-    .insert(datos)
+    .insert(payload)
     .select()
     .single()
 
@@ -155,10 +162,13 @@ export async function createGrupo(datos: Partial<GrupoCliente>) {
 }
 
 export async function updateGrupo(id: string, datos: Partial<GrupoCliente>) {
+  const { id: _, ...rest } = datos
+  const payload = cleanUUIDs(rest)
+
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('grupos_clientes')
-    .update(datos)
+    .update(payload)
     .eq('id', id)
     .select()
     .single()

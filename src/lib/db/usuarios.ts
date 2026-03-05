@@ -40,7 +40,8 @@ export async function getUsuarioActual() {
 }
 
 export async function updateUsuario(id: string, values: Partial<UsuarioRow>) {
-  const payload = cleanUUIDs({ ...values }, ['rol_id'])
+  const { id: _, ...rest } = values
+  const payload = cleanUUIDs(rest)
 
   const supabase = await createClient()
   const { data, error } = await supabase

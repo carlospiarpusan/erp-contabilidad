@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { cleanUUIDs } from '@/lib/utils/db'
+import { getEmpresaId } from '@/lib/db/maestros'
 
 // ── Acreedores ───────────────────────────────────────────────────────────────
 
@@ -16,18 +17,22 @@ export async function getAcreedores(params?: { busqueda?: string; activo?: boole
 export async function createAcreedor(fields: {
   razon_social: string; contacto?: string; numero_documento?: string; email?: string; telefono?: string
 }) {
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...fields, empresa_id, activo: true })
+
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: uRow } = await supabase.from('usuarios').select('empresa_id').eq('id', user!.id).single()
   const { data, error } = await supabase.from('acreedores')
-    .insert({ ...fields, empresa_id: uRow!.empresa_id, activo: true }).select().single()
+    .insert(payload).select().single()
   if (error) throw error
   return data
 }
 
 export async function updateAcreedor(id: string, fields: Record<string, unknown>) {
+  const { id: _, ...rest } = fields
+  const payload = cleanUUIDs(rest)
+
   const supabase = await createClient()
-  const { data, error } = await supabase.from('acreedores').update(fields).eq('id', id).select().single()
+  const { data, error } = await supabase.from('acreedores').update(payload).eq('id', id).select().single()
   if (error) throw error
   return data
 }
@@ -45,19 +50,19 @@ export async function getTiposGasto() {
 }
 
 export async function createTipoGasto(fields: { descripcion: string; cuenta_id?: string; valor_estimado?: number }) {
-  const payload = cleanUUIDs({ ...fields }, ['cuenta_id'])
+  const empresa_id = await getEmpresaId()
+  const payload = cleanUUIDs({ ...fields, empresa_id })
 
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: uRow } = await supabase.from('usuarios').select('empresa_id').eq('id', user!.id).single()
   const { data, error } = await supabase.from('tipos_gasto')
-    .insert({ ...payload, empresa_id: uRow!.empresa_id }).select().single()
+    .insert(payload).select().single()
   if (error) throw error
   return data
 }
 
 export async function updateTipoGasto(id: string, fields: Record<string, unknown>) {
-  const payload = cleanUUIDs({ ...fields }, ['cuenta_id'])
+  const { id: _, ...rest } = fields
+  const payload = cleanUUIDs(rest)
 
   const supabase = await createClient()
   const { data, error } = await supabase.from('tipos_gasto').update(payload).eq('id', id).select().single()
