@@ -32,7 +32,7 @@ export default async function RecibosPage() {
         {recibos.length === 0 ? (
           <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-400">No hay recibos registrados</td></tr>
         ) : recibos.map(r => (
-          <FilaTabla key={r.id}>
+          <FilaTabla key={r.id} onClick={() => { window.location.href = `/ventas/recibos/${r.id}` }} className="cursor-pointer">
             <CeldaTabla><span className="font-mono text-sm text-gray-600">{r.numero}</span></CeldaTabla>
             <CeldaTabla><span className="text-sm text-gray-700">{formatFecha(r.fecha)}</span></CeldaTabla>
             <CeldaTabla>

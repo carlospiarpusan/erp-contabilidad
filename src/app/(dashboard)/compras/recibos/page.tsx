@@ -86,7 +86,7 @@ export default async function ComprasRecibosPage({ searchParams }: PageProps) {
               const prov = r.proveedor as { razon_social?: string } | null
               const fp   = r.forma_pago as { descripcion?: string } | null
               return (
-                <tr key={r.id} className="hover:bg-gray-50">
+                <tr key={r.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { window.location.href = `/compras/recibos/${r.id}` }}>
                   <td className="px-4 py-3 font-mono text-gray-600">{r.numero}</td>
                   <td className="px-4 py-3 text-gray-600">{formatFecha(r.fecha)}</td>
                   <td className="px-4 py-3">

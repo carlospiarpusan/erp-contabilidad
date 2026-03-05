@@ -172,6 +172,23 @@ export async function getRecibos(params?: {
   return { recibos: data ?? [], total: count ?? 0 }
 }
 
+export async function getReciboById(id: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('recibos')
+    .select(`
+      *,
+      documento:documentos(id, numero, prefijo, total, fecha,
+        cliente:clientes(razon_social, numero_documento, tipo_documento, email, telefono)
+      ),
+      forma_pago:formas_pago(id, descripcion)
+    `)
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function createRecibo(params: {
   empresa_id:    string
   ejercicio_id:  string
