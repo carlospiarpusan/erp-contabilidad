@@ -3,15 +3,18 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { Warehouse } from 'lucide-react'
 import { FormBodegas } from '@/components/configuracion/FormBodegas'
-
-const EMPRESA_ID = '00000000-0000-0000-0000-000000000001'
+import { getSession } from '@/lib/auth/session'
+import { redirect } from 'next/navigation'
 
 export default async function BodegasPage() {
+  const session = await getSession()
+  if (!session) redirect('/login')
+
   const supabase = await createClient()
   const { data } = await supabase
     .from('bodegas')
     .select('id, codigo, nombre, principal, activa')
-    .eq('empresa_id', EMPRESA_ID)
+    .eq('empresa_id', session.empresa_id)
     .order('nombre')
 
   const bodegas = data ?? []

@@ -9,6 +9,16 @@ function adminClient() {
   )
 }
 
+function superadminConfigError() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { error: 'Falta configurar SUPABASE_SERVICE_ROLE_KEY en el entorno' },
+      { status: 500 }
+    )
+  }
+  return null
+}
+
 async function requireSuperadmin() {
   const session = await getSession()
   if (!session || session.rol !== 'superadmin') return null
@@ -16,6 +26,8 @@ async function requireSuperadmin() {
 }
 
 export async function GET() {
+  const configErr = superadminConfigError()
+  if (configErr) return configErr
   if (!await requireSuperadmin()) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }
@@ -29,6 +41,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const configErr = superadminConfigError()
+  if (configErr) return configErr
   if (!await requireSuperadmin()) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   }

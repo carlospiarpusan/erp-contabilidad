@@ -10,7 +10,7 @@ export async function GET(_: NextRequest, { params }: Ctx) {
   try {
     const { id } = await params
     return NextResponse.json(await getPedidoById(id))
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
@@ -78,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
 
     return NextResponse.json({ error: 'Acción no válida' }, { status: 400 })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

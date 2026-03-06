@@ -11,8 +11,8 @@ export async function GET() {
       .order('nombre')
     if (error) throw error
     return NextResponse.json(data ?? [])
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
       .select('id').single()
     if (error) throw error
     return NextResponse.json({ id: data.id })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
@@ -52,8 +52,8 @@ export async function PATCH(req: NextRequest) {
     const { error } = await supabase.from('colaboradores').update(updates).eq('id', id)
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
@@ -65,7 +65,7 @@ export async function DELETE(req: NextRequest) {
     const { error } = await supabase.from('colaboradores').delete().eq('id', id)
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

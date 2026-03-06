@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       offset:       parseInt(searchParams.get('offset') ?? '0'),
     })
     return NextResponse.json(result)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ id: recibo_id }, { status: 201 })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error al crear recibo' }, { status: 500 })
   }
 }

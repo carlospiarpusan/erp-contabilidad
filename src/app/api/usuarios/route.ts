@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const [usuarios, roles] = await Promise.all([getUsuarios(), getRoles()])
     return NextResponse.json({ usuarios, roles })
-  } catch (e: any) {
+  } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Error'
     return NextResponse.json({ error: msg }, { status: 500 })
   }
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
     await invitarUsuario(email, nombre, rol_id)
     return NextResponse.json({ ok: true }, { status: 201 })
-  } catch (e: any) {
+  } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Error'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

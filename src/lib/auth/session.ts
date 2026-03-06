@@ -20,29 +20,33 @@ export interface UserSession {
 }
 
 export const getSession = cache(async (): Promise<UserSession | null> => {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) return null
 
-  const { data } = await supabase
-    .from('usuarios')
-    .select('id, nombre, empresa_id, rol_id, empresas(nombre)')
-    .eq('id', user.id)
-    .single()
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre, empresa_id, rol_id, empresas(nombre)')
+      .eq('id', user.id)
+      .single()
 
-  if (!data) return null
+    if (error || !data) return null
 
-  // Resolver rol desde mapa estático — evita query a tabla roles (bloqueada por RLS)
-  const rol = ROL_POR_ID[data.rol_id] ?? 'solo_lectura'
-  const empresa_nombre = ((Array.isArray(data.empresas) ? data.empresas[0] : data.empresas) as { nombre: string } | null)?.nombre ?? undefined
+    // Resolver rol desde mapa estático — evita query a tabla roles (bloqueada por RLS)
+    const rol = ROL_POR_ID[data.rol_id] ?? 'solo_lectura'
+    const empresa_nombre = ((Array.isArray(data.empresas) ? data.empresas[0] : data.empresas) as { nombre: string } | null)?.nombre ?? undefined
 
-  return {
-    id: data.id,
-    email: user.email ?? '',
-    nombre: data.nombre,
-    rol,
-    empresa_id: data.empresa_id,
-    empresa_nombre,
+    return {
+      id: data.id,
+      email: user.email ?? '',
+      nombre: data.nombre,
+      rol,
+      empresa_id: data.empresa_id,
+      empresa_nombre,
+    }
+  } catch {
+    return null
   }
 })
 

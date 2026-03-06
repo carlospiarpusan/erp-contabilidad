@@ -5,6 +5,8 @@ import { formatFecha } from '@/utils/cn'
 import { Badge } from '@/components/ui/badge'
 import { ShieldCheck, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { getSession } from '@/lib/auth/session'
+import { redirect } from 'next/navigation'
 
 interface PageProps {
   searchParams: Promise<{ estado?: string }>
@@ -32,9 +34,10 @@ const TABS = [
   { key: 'rechazada',  label: 'Rechazada' },
 ]
 
-const EMPRESA_ID = '00000000-0000-0000-0000-000000000001'
-
 export default async function GarantiasPage({ searchParams }: PageProps) {
+  const session = await getSession()
+  if (!session) redirect('/login')
+
   const sp     = await searchParams
   const estado = sp.estado || ''
 
@@ -42,7 +45,7 @@ export default async function GarantiasPage({ searchParams }: PageProps) {
   let q = supabase
     .from('garantias')
     .select('id, numero, estado, prioridad, numero_serie, numero_rma, fecha_venta, observaciones, created_at, cliente:cliente_id(razon_social), producto:producto_id(descripcion, codigo)', { count: 'exact' })
-    .eq('empresa_id', EMPRESA_ID)
+    .eq('empresa_id', session.empresa_id)
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -127,8 +130,12 @@ export default async function GarantiasPage({ searchParams }: PageProps) {
               const cli  = (g as any).cliente  as { razon_social?: string } | null
               const prod = (g as any).producto as { descripcion?: string; codigo?: string } | null
               return (
-                <tr key={g.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => window.location.href=`/ventas/garantias/${g.id}`}>
-                  <td className="px-4 py-3 font-mono text-emerald-600 font-medium">{g.numero}</td>
+                <tr key={g.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td className="px-4 py-3 font-mono text-emerald-600 font-medium">
+                    <Link href={`/ventas/garantias/${g.id}`} className="hover:underline">
+                      {g.numero}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-gray-800">{cli?.razon_social ?? '—'}</td>
                   <td className="px-4 py-3">
                     <p className="text-gray-800">{prod?.descripcion ?? '—'}</p>

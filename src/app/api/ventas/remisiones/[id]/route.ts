@@ -10,7 +10,7 @@ export async function GET(_: NextRequest, { params }: Params) {
     const { id } = await params
     const data = await getRemisionById(id)
     return NextResponse.json(data)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

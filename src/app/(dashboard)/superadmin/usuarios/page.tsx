@@ -25,6 +25,7 @@ const ROL_COLOR: Record<string, string> = {
 export default async function SuperadminUsuariosPage() {
   const session = await getSession()
   if (!session || session.rol !== 'superadmin') redirect('/')
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) redirect('/')
 
   const admin = adminClient()
 

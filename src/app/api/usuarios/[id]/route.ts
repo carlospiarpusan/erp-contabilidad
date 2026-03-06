@@ -7,7 +7,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const body = await req.json()
     const updated = await updateUsuario(id, body)
     return NextResponse.json(updated)
-  } catch (e: any) {
+  } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Error'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

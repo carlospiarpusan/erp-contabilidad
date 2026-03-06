@@ -7,7 +7,11 @@
 3. `migrations/003_schema_documentos.sql` → Facturas, Recibos, Asientos, Servicios
 4. `migrations/004_rls_policies.sql`      → Seguridad por empresa (RLS)
 5. `migrations/005_funciones_negocio.sql` → Lógica contable y de inventario
-6. `seeds/001_seed_colombia.sql`          → Datos base Colombia (PUC, impuestos, etc.)
+6. `migrations/006_funciones_recibos.sql` → Flujo recibos de venta
+7. `migrations/007_crear_factura_compra.sql` → Flujo compras + pago proveedor
+8. `migrations/008_crear_gasto.sql`       → Flujo gastos
+9. `migrations/009_roles_hardening.sql`   → Hardening de roles + superadmin
+10. `seeds/001_seed_colombia.sql`         → Datos base Colombia (PUC, impuestos, etc.)
 
 ## Configurar .env.local con las credenciales de Supabase
 

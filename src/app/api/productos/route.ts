@@ -13,15 +13,14 @@ export async function GET(req: NextRequest) {
       offset:       parseInt(searchParams.get('offset') ?? '0'),
     })
     return NextResponse.json(result)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { variantes, ...rest } = body
     const datos = {
       ...rest,
@@ -32,7 +31,7 @@ export async function POST(req: NextRequest) {
     }
     const producto = await createProducto(datos)
     return NextResponse.json(producto, { status: 201 })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

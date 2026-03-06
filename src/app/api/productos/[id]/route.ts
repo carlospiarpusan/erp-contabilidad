@@ -6,7 +6,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params
     const producto = await getProductoById(id)
     return NextResponse.json(producto)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
@@ -16,7 +16,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params
     const body   = await req.json()
     // Strip join relations and variantes — only persist scalar columns
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { variantes, familia, fabricante, impuesto, stock, producto_variantes, ...rest } = body
     const datos = {
       ...rest,
@@ -27,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     const producto = await updateProducto(id, datos)
     return NextResponse.json(producto)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

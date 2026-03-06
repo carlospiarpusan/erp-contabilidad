@@ -56,6 +56,7 @@ const menuItems: MenuItem[] = [
       { label: 'Pedidos', href: '/ventas/pedidos' },
       { label: 'Remisiones', href: '/ventas/remisiones' },
       { label: 'Lista de Precios', href: '/ventas/precios' },
+      { label: 'Notas Crédito', href: '/ventas/notas-credito' },
       { label: 'Garantías', href: '/ventas/garantias' },
       { label: 'Servicio Técnico', href: '/ventas/servicios' },
     ],
@@ -122,6 +123,10 @@ const menuItems: MenuItem[] = [
     roles: ['admin', 'contador', 'vendedor'],
     children: [
       { label: 'Balances', href: '/informes/balances' },
+      { label: 'Sumas y Saldos', href: '/informes/sumas-saldos' },
+      { label: 'Balance de Situación', href: '/informes/balance-situacion' },
+      { label: 'PyG', href: '/informes/pyg' },
+      { label: 'Libro Mayor', href: '/informes/libro-mayor' },
       { label: 'Facturas', href: '/informes/facturas' },
       { label: 'Pedidos', href: '/informes/pedidos' },
       { label: 'Cotizaciones', href: '/informes/cotizaciones' },
@@ -141,6 +146,7 @@ const menuItems: MenuItem[] = [
       { label: 'Bodegas', href: '/configuracion/bodegas' },
       { label: 'Transportadoras', href: '/configuracion/transportadoras' },
       { label: 'Usuarios', href: '/configuracion/usuarios' },
+      { label: 'Importar datos', href: '/configuracion/importar' },
     ],
   },
   {

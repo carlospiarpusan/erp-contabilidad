@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
         'Content-Disposition': `attachment; filename="compras-${new Date().toISOString().split('T')[0]}.csv"`,
       },
     })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

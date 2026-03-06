@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const EMPRESA_ID = '00000000-0000-0000-0000-000000000001'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const estado = searchParams.get('estado')
     const desde  = searchParams.get('desde')
@@ -14,7 +16,7 @@ export async function GET(req: NextRequest) {
     let q = supabase
       .from('garantias')
       .select('id, numero, estado, prioridad, numero_serie, numero_rma, fecha_venta, observaciones, created_at, cliente:cliente_id(razon_social), producto:producto_id(descripcion, codigo), documento:documento_venta_id(prefijo, numero)', { count: 'exact' })
-      .eq('empresa_id', EMPRESA_ID)
+      .eq('empresa_id', session.empresa_id)
       .order('created_at', { ascending: false })
       .limit(100)
 
@@ -25,13 +27,16 @@ export async function GET(req: NextRequest) {
     const { data, count, error } = await q
     if (error) throw error
     return NextResponse.json({ garantias: data ?? [], total: count ?? 0 })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const body = await req.json()
     const { cliente_id, producto_id, numero_serie, numero_rma, fecha_venta, observaciones, prioridad = 'normal', documento_venta_id } = body
 
@@ -39,7 +44,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from('garantias')
       .insert({
-        empresa_id: EMPRESA_ID,
+        empresa_id: session.empresa_id,
         cliente_id: cliente_id || null,
         producto_id: producto_id || null,
         numero_serie: numero_serie || null,
@@ -53,13 +58,16 @@ export async function POST(req: NextRequest) {
       .select('id').single()
     if (error) throw error
     return NextResponse.json({ id: data.id }, { status: 201 })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id, estado, observaciones } = await req.json()
     if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
 
@@ -68,10 +76,10 @@ export async function PATCH(req: NextRequest) {
     if (estado       !== undefined) updates.estado       = estado
     if (observaciones !== undefined) updates.observaciones = observaciones
 
-    const { error } = await supabase.from('garantias').update(updates).eq('id', id)
+    const { error } = await supabase.from('garantias').update(updates).eq('id', id).eq('empresa_id', session.empresa_id)
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

@@ -11,8 +11,8 @@ export async function GET() {
       .single()
     if (error) throw error
     return NextResponse.json(data)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
@@ -36,7 +36,7 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
 
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

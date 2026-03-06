@@ -8,6 +8,32 @@ import Link from 'next/link'
 
 interface PageProps { params: Promise<{ id: string }> }
 
+type ProveedorRecibo = {
+  razon_social?: string
+  numero_documento?: string
+  tipo_documento?: string
+  email?: string
+  telefono?: string
+}
+
+type DocumentoReciboCompra = {
+  id?: string
+  numero?: number
+  prefijo?: string
+  total?: number
+  fecha?: string
+  proveedor?: ProveedorRecibo | null
+}
+
+type ReciboCompraDetalle = {
+  numero: number
+  fecha: string
+  valor: number
+  observaciones?: string | null
+  documento?: DocumentoReciboCompra | null
+  forma_pago?: { descripcion?: string } | null
+}
+
 async function getReciboCompraById(id: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -31,8 +57,9 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
 
   if (!recibo) notFound()
 
-  const doc      = (recibo as any).documento as { id?: string; numero?: number; prefijo?: string; total?: number; fecha?: string; proveedor?: { razon_social?: string; numero_documento?: string; tipo_documento?: string; email?: string; telefono?: string } | null } | null
-  const fp       = (recibo as any).forma_pago as { descripcion?: string } | null
+  const detalle = recibo as ReciboCompraDetalle
+  const doc = detalle.documento ?? null
+  const fp = detalle.forma_pago ?? null
   const proveedor = doc?.proveedor ?? null
 
   return (
@@ -49,13 +76,13 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900">Recibo de Compra N° {(recibo as any).numero}</h1>
+              <h1 className="text-xl font-bold text-gray-900">Recibo de Compra N° {detalle.numero}</h1>
               <span className="rounded-full bg-orange-100 px-3 py-0.5 text-xs font-medium text-orange-700">Registrado</span>
             </div>
-            <p className="text-sm text-gray-500 mt-0.5">Fecha: {formatFecha((recibo as any).fecha)}</p>
+            <p className="text-sm text-gray-500 mt-0.5">Fecha: {formatFecha(detalle.fecha)}</p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold font-mono text-orange-700">{formatCOP((recibo as any).valor)}</p>
+            <p className="text-2xl font-bold font-mono text-orange-700">{formatCOP(detalle.valor)}</p>
             <p className="text-sm text-gray-500 mt-0.5">{fp?.descripcion ?? '—'}</p>
           </div>
         </div>
@@ -110,16 +137,16 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
           </div>
           <div className="flex justify-between py-1 border-b border-gray-50">
             <dt className="text-gray-500">Valor pagado</dt>
-            <dd className="font-mono font-bold text-orange-700 text-base">{formatCOP((recibo as any).valor)}</dd>
+            <dd className="font-mono font-bold text-orange-700 text-base">{formatCOP(detalle.valor)}</dd>
           </div>
           <div className="flex justify-between py-1 border-b border-gray-50">
             <dt className="text-gray-500">Fecha de pago</dt>
-            <dd className="text-gray-900">{formatFecha((recibo as any).fecha)}</dd>
+            <dd className="text-gray-900">{formatFecha(detalle.fecha)}</dd>
           </div>
-          {(recibo as any).observaciones && (
+          {detalle.observaciones && (
             <div className="flex justify-between py-1">
               <dt className="text-gray-500">Observaciones</dt>
-              <dd className="text-gray-700 text-right max-w-xs">{(recibo as any).observaciones}</dd>
+              <dd className="text-gray-700 text-right max-w-xs">{detalle.observaciones}</dd>
             </div>
           )}
         </dl>

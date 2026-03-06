@@ -14,7 +14,34 @@ export default async function SuperadminHomePage() {
   const session = await getSession()
   if (!session || session.rol !== 'superadmin') redirect('/')
 
-  const stats = await getEstadisticasGlobales()
+  const hasSuperadminConfig = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+  if (!hasSuperadminConfig) {
+    return (
+      <div className="max-w-3xl rounded-xl border border-amber-200 bg-amber-50 p-6">
+        <h1 className="text-lg font-bold text-amber-900">Configuración incompleta de Superadmin</h1>
+        <p className="mt-2 text-sm text-amber-800">
+          Falta configurar <code>SUPABASE_SERVICE_ROLE_KEY</code> en Vercel.
+        </p>
+      </div>
+    )
+  }
+
+  let stats
+  try {
+    stats = await getEstadisticasGlobales()
+  } catch {
+    return (
+      <div className="max-w-3xl rounded-xl border border-red-200 bg-red-50 p-6">
+        <h1 className="text-lg font-bold text-red-900">No se pudo cargar el panel superadmin</h1>
+        <p className="mt-2 text-sm text-red-800">
+          Revisa variables de entorno y conexión con Supabase en producción.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">

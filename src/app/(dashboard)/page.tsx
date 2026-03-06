@@ -38,7 +38,11 @@ async function cargarDatos() {
 
 export default async function DashboardPage() {
   const session = await getSession()
-  if (session?.rol === 'superadmin') redirect('/superadmin')
+  const hasSuperadminConfig = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+  if (session?.rol === 'superadmin' && hasSuperadminConfig) redirect('/superadmin')
 
   const datos = await cargarDatos()
   if (!datos) {

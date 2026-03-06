@@ -5,6 +5,8 @@ import { formatFecha } from '@/utils/cn'
 import { Badge } from '@/components/ui/badge'
 import { Wrench, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { getSession } from '@/lib/auth/session'
+import { redirect } from 'next/navigation'
 
 interface PageProps {
   searchParams: Promise<{ estado?: string }>
@@ -35,9 +37,10 @@ const TABS = [
   { key: 'entregado',  label: 'Entregado' },
 ]
 
-const EMPRESA_ID = '00000000-0000-0000-0000-000000000001'
-
 export default async function ServiciosPage({ searchParams }: PageProps) {
+  const session = await getSession()
+  if (!session) redirect('/login')
+
   const sp     = await searchParams
   const estado = sp.estado || ''
 
@@ -45,7 +48,7 @@ export default async function ServiciosPage({ searchParams }: PageProps) {
   let q = supabase
     .from('servicios_tecnicos')
     .select('id, numero, tipo, estado, servicio, prioridad, fecha_inicio, fecha_promesa, fecha_cierre, created_at, cliente:cliente_id(razon_social)', { count: 'exact' })
-    .eq('empresa_id', EMPRESA_ID)
+    .eq('empresa_id', session.empresa_id)
     .order('created_at', { ascending: false })
     .limit(100)
 
@@ -130,8 +133,12 @@ export default async function ServiciosPage({ searchParams }: PageProps) {
             ) : servicios.map(s => {
               const cli = (s as any).cliente as { razon_social?: string } | null
               return (
-                <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => window.location.href=`/ventas/servicios/${s.id}`}>
-                  <td className="px-4 py-3 font-mono text-violet-600 font-medium">{s.numero}</td>
+                <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td className="px-4 py-3 font-mono text-violet-600 font-medium">
+                    <Link href={`/ventas/servicios/${s.id}`} className="hover:underline">
+                      {s.numero}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3 text-gray-800">{cli?.razon_social ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{s.servicio ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs capitalize">{s.tipo ?? '—'}</td>

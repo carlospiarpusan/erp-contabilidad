@@ -11,8 +11,8 @@ export async function GET() {
       .order('tipo')
     if (error) throw error
     return NextResponse.json(data ?? [])
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest) {
       .upsert({ empresa_id, tipo, cuenta_id }, { onConflict: 'tipo' })
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

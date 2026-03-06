@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const EMPRESA_ID = '00000000-0000-0000-0000-000000000001'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET() {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('transportadoras')
       .select('id, nombre, whatsapp, url_rastreo, activa')
-      .eq('empresa_id', EMPRESA_ID)
+      .eq('empresa_id', session.empresa_id)
       .order('nombre')
     if (error) throw error
     return NextResponse.json(data ?? [])
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { nombre, whatsapp, url_rastreo } = await req.json()
     if (!nombre) return NextResponse.json({ error: 'Nombre requerido' }, { status: 400 })
 
@@ -27,7 +32,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase
       .from('transportadoras')
       .insert({
-        empresa_id: EMPRESA_ID,
+        empresa_id: session.empresa_id,
         nombre,
         whatsapp: whatsapp || null,
         url_rastreo: url_rastreo || null,
@@ -37,13 +42,16 @@ export async function POST(req: NextRequest) {
       .single()
     if (error) throw error
     return NextResponse.json({ id: data.id })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id, nombre, whatsapp, url_rastreo, activa } = await req.json()
     if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
 
@@ -54,10 +62,10 @@ export async function PATCH(req: NextRequest) {
     if (url_rastreo !== undefined) updates.url_rastreo = url_rastreo || null
     if (activa !== undefined)      updates.activa      = activa
 
-    const { error } = await supabase.from('transportadoras').update(updates).eq('id', id)
+    const { error } = await supabase.from('transportadoras').update(updates).eq('id', id).eq('empresa_id', session.empresa_id)
     if (error) throw error
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

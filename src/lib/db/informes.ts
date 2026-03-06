@@ -1,5 +1,137 @@
 import { createClient } from '@/lib/supabase/server'
 
+// ── Sumas y Saldos ────────────────────────────────────────────────────────────
+
+export async function getSumasYSaldos(params: { desde: string; hasta: string }) {
+  const supabase = await createClient()
+
+  const { data: lineas, error } = await supabase
+    .from('asientos_lineas')
+    .select(`
+      debe, haber,
+      cuenta:cuenta_id(id, codigo, descripcion, tipo, nivel, naturaleza),
+      asiento:asiento_id(fecha, empresa_id)
+    `)
+    .gte('asiento.fecha', params.desde)
+    .lte('asiento.fecha', params.hasta)
+
+  if (error) throw error
+
+  const mapa: Record<string, {
+    id: string; codigo: string; descripcion: string
+    tipo: string; nivel: number; naturaleza: string
+    debe: number; haber: number
+  }> = {}
+
+  for (const l of lineas ?? []) {
+    const c = l.cuenta as { id?: string; codigo?: string; descripcion?: string; tipo?: string; nivel?: number; naturaleza?: string } | null
+    const a = l.asiento as { fecha?: string } | null
+    if (!c?.id || !a?.fecha) continue
+    if (!mapa[c.id]) {
+      mapa[c.id] = {
+        id: c.id, codigo: c.codigo ?? '', descripcion: c.descripcion ?? '',
+        tipo: c.tipo ?? '', nivel: c.nivel ?? 4, naturaleza: c.naturaleza ?? 'debito',
+        debe: 0, haber: 0,
+      }
+    }
+    mapa[c.id].debe  += l.debe  ?? 0
+    mapa[c.id].haber += l.haber ?? 0
+  }
+
+  return Object.values(mapa)
+    .filter(r => r.debe > 0 || r.haber > 0)
+    .sort((a, b) => a.codigo.localeCompare(b.codigo))
+    .map(r => ({ ...r, saldo: r.debe - r.haber }))
+}
+
+// ── Balance de Situación ──────────────────────────────────────────────────────
+
+export async function getBalanceSituacion(params: { fecha_corte: string }) {
+  const supabase = await createClient()
+
+  const desde = '2000-01-01'
+  const rows = await getSumasYSaldos({ desde, hasta: params.fecha_corte })
+
+  const activos    = rows.filter(r => r.tipo === 'activo')
+  const pasivos    = rows.filter(r => r.tipo === 'pasivo')
+  const patrimonio = rows.filter(r => r.tipo === 'patrimonio')
+
+  const sum = (items: typeof rows) =>
+    items.reduce((s, r) => s + (r.naturaleza === 'debito' ? r.debe - r.haber : r.haber - r.debe), 0)
+
+  return {
+    activos,    total_activos:    sum(activos),
+    pasivos,    total_pasivos:    sum(pasivos),
+    patrimonio, total_patrimonio: sum(patrimonio),
+  }
+}
+
+// ── PyG — Pérdidas y Ganancias ────────────────────────────────────────────────
+
+export async function getPyG(params: { desde: string; hasta: string }) {
+  const supabase = await createClient()
+  const rows = await getSumasYSaldos(params)
+
+  const ingresos = rows.filter(r => r.tipo === 'ingreso')
+  const costos   = rows.filter(r => r.tipo === 'costo')
+  const gastos   = rows.filter(r => r.tipo === 'gasto')
+
+  const sumIngreso = (items: typeof rows) =>
+    items.reduce((s, r) => s + (r.haber - r.debe), 0)
+  const sumEgreso = (items: typeof rows) =>
+    items.reduce((s, r) => s + (r.debe - r.haber), 0)
+
+  const total_ingresos = sumIngreso(ingresos)
+  const total_costos   = sumEgreso(costos)
+  const total_gastos   = sumEgreso(gastos)
+  const utilidad       = total_ingresos - total_costos - total_gastos
+
+  return { ingresos, costos, gastos, total_ingresos, total_costos, total_gastos, utilidad }
+}
+
+// ── Libro Mayor ───────────────────────────────────────────────────────────────
+
+export async function getLibroMayor(params: { cuenta_id: string; desde: string; hasta: string }) {
+  const supabase = await createClient()
+
+  const { data: lineas, error } = await supabase
+    .from('asientos_lineas')
+    .select(`
+      id, descripcion, debe, haber,
+      asiento:asiento_id(id, numero, fecha, concepto, tipo_doc)
+    `)
+    .eq('cuenta_id', params.cuenta_id)
+    .gte('asiento.fecha', params.desde)
+    .lte('asiento.fecha', params.hasta)
+    .order('asiento.fecha', { ascending: true })
+
+  if (error) throw error
+
+  const { data: cuenta } = await supabase
+    .from('cuentas_puc')
+    .select('codigo, descripcion, naturaleza')
+    .eq('id', params.cuenta_id)
+    .single()
+
+  let saldoAcumulado = 0
+  const movimientos = (lineas ?? []).map(l => {
+    const a = l.asiento as { id?: string; numero?: number; fecha?: string; concepto?: string; tipo_doc?: string } | null
+    saldoAcumulado += (l.debe ?? 0) - (l.haber ?? 0)
+    return {
+      asiento_id: a?.id ?? '',
+      numero:     a?.numero ?? 0,
+      fecha:      a?.fecha ?? '',
+      concepto:   a?.concepto ?? l.descripcion ?? '',
+      tipo_doc:   a?.tipo_doc ?? '',
+      debe:       l.debe  ?? 0,
+      haber:      l.haber ?? 0,
+      saldo:      saldoAcumulado,
+    }
+  }).filter(l => l.fecha >= params.desde && l.fecha <= params.hasta)
+
+  return { cuenta, movimientos }
+}
+
 // ── Informe de Facturas ───────────────────────────────────────────────────────
 
 export async function getInformeFacturas(params: {

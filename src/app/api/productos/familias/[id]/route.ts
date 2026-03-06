@@ -7,7 +7,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const datos  = await req.json()
     const familia = await updateFamilia(id, datos)
     return NextResponse.json(familia)
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }
@@ -17,7 +17,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params
     await deleteFamilia(id)
     return NextResponse.json({ ok: true })
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
   }
 }

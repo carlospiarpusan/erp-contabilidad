@@ -11,7 +11,10 @@ interface PageProps {
 export default async function InformeBalancesPage({ searchParams }: PageProps) {
   const sp = await searchParams
   const anio = sp.anio ? parseInt(sp.anio) : new Date().getFullYear()
-  const { meses, totales, por_cobrar } = await getInformeBalances({ anio })
+  const [{ meses, totales, por_cobrar }, { meses: mesesAnt, totales: totalesAnt }] = await Promise.all([
+    getInformeBalances({ anio }),
+    getInformeBalances({ anio: anio - 1 }),
+  ])
 
   const maxVal = Math.max(...meses.map(m => Math.max(m.ventas, m.compras, m.gastos)), 1)
 
@@ -40,20 +43,28 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
         <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Ver</button>
       </form>
 
-      {/* KPIs anuales */}
+      {/* KPIs anuales con comparativa */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         {[
-          { label: 'Ventas año', val: totales.ventas, color: 'text-blue-700' },
-          { label: 'Compras año', val: totales.compras, color: 'text-orange-700' },
-          { label: 'Gastos año', val: totales.gastos, color: 'text-red-700' },
-          { label: 'Cobrado año', val: totales.cobrado, color: 'text-green-700' },
-          { label: 'Utilidad', val: totales.utilidad, color: totales.utilidad >= 0 ? 'text-emerald-700' : 'text-red-700' },
-        ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
-            <p className="text-xs text-gray-500">{k.label}</p>
-            <p className={`text-lg font-bold mt-0.5 font-mono ${k.color}`}>{formatCOP(k.val)}</p>
-          </div>
-        ))}
+          { label: 'Ventas año', val: totales.ventas, ant: totalesAnt.ventas, color: 'text-blue-700' },
+          { label: 'Compras año', val: totales.compras, ant: totalesAnt.compras, color: 'text-orange-700' },
+          { label: 'Gastos año', val: totales.gastos, ant: totalesAnt.gastos, color: 'text-red-700' },
+          { label: 'Cobrado año', val: totales.cobrado, ant: totalesAnt.cobrado, color: 'text-green-700' },
+          { label: 'Utilidad', val: totales.utilidad, ant: totalesAnt.utilidad, color: totales.utilidad >= 0 ? 'text-emerald-700' : 'text-red-700' },
+        ].map(k => {
+          const diff = k.ant > 0 ? Math.round(((k.val - k.ant) / k.ant) * 100) : null
+          return (
+            <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+              <p className="text-xs text-gray-500">{k.label}</p>
+              <p className={`text-lg font-bold mt-0.5 font-mono ${k.color}`}>{formatCOP(k.val)}</p>
+              {diff !== null && (
+                <p className={`text-xs mt-1 ${diff >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {diff >= 0 ? '▲' : '▼'} {Math.abs(diff)}% vs {anio - 1}
+                </p>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {por_cobrar > 0 && (
@@ -100,39 +111,56 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Tabla mensual */}
+      {/* Tabla mensual con comparativa año anterior */}
       <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-4 py-3 text-left font-semibold text-gray-600">Mes</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">Ventas</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">Ventas {anio}</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-400">Ventas {anio - 1}</th>
               <th className="px-4 py-3 text-right font-semibold text-gray-600">Cobrado</th>
               <th className="px-4 py-3 text-right font-semibold text-gray-600">Compras</th>
               <th className="px-4 py-3 text-right font-semibold text-gray-600">Gastos</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">Utilidad</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">Utilidad {anio}</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-400">Utilidad {anio - 1}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {meses.map(m => (
-              <tr key={m.mes} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${m.ventas === 0 && m.compras === 0 ? 'opacity-40' : ''}`}>
-                <td className="px-4 py-2 font-medium text-gray-700">{m.nombre} {anio}</td>
-                <td className="px-4 py-2 text-right font-mono text-blue-700">{formatCOP(m.ventas)}</td>
-                <td className="px-4 py-2 text-right font-mono text-green-700">{formatCOP(m.cobrado)}</td>
-                <td className="px-4 py-2 text-right font-mono text-orange-700">{formatCOP(m.compras)}</td>
-                <td className="px-4 py-2 text-right font-mono text-red-600">{formatCOP(m.gastos)}</td>
-                <td className={`px-4 py-2 text-right font-mono font-semibold ${m.utilidad >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{formatCOP(m.utilidad)}</td>
-              </tr>
-            ))}
+            {meses.map((m, i) => {
+              const ant = mesesAnt[i]
+              const diffVentas = ant.ventas > 0 ? Math.round(((m.ventas - ant.ventas) / ant.ventas) * 100) : null
+              return (
+                <tr key={m.mes} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${m.ventas === 0 && m.compras === 0 ? 'opacity-40' : ''}`}>
+                  <td className="px-4 py-2 font-medium text-gray-700">
+                    {m.nombre}
+                    {diffVentas !== null && (
+                      <span className={`ml-2 text-xs ${diffVentas >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {diffVentas >= 0 ? '▲' : '▼'}{Math.abs(diffVentas)}%
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2 text-right font-mono text-blue-700">{formatCOP(m.ventas)}</td>
+                  <td className="px-4 py-2 text-right font-mono text-gray-400">{formatCOP(ant.ventas)}</td>
+                  <td className="px-4 py-2 text-right font-mono text-green-700">{formatCOP(m.cobrado)}</td>
+                  <td className="px-4 py-2 text-right font-mono text-orange-700">{formatCOP(m.compras)}</td>
+                  <td className="px-4 py-2 text-right font-mono text-red-600">{formatCOP(m.gastos)}</td>
+                  <td className={`px-4 py-2 text-right font-mono font-semibold ${m.utilidad >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{formatCOP(m.utilidad)}</td>
+                  <td className="px-4 py-2 text-right font-mono text-gray-400">{formatCOP(ant.utilidad)}</td>
+                </tr>
+              )
+            })}
           </tbody>
-          <tfoot className="border-t-2 border-gray-800">
+          <tfoot className="border-t-2 border-gray-300">
             <tr className="font-bold">
               <td className="px-4 py-3 text-gray-900">TOTAL</td>
               <td className="px-4 py-3 text-right font-mono text-blue-700">{formatCOP(totales.ventas)}</td>
+              <td className="px-4 py-3 text-right font-mono text-gray-400">{formatCOP(totalesAnt.ventas)}</td>
               <td className="px-4 py-3 text-right font-mono text-green-700">{formatCOP(totales.cobrado)}</td>
               <td className="px-4 py-3 text-right font-mono text-orange-700">{formatCOP(totales.compras)}</td>
               <td className="px-4 py-3 text-right font-mono text-red-600">{formatCOP(totales.gastos)}</td>
               <td className={`px-4 py-3 text-right font-mono ${totales.utilidad >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>{formatCOP(totales.utilidad)}</td>
+              <td className="px-4 py-3 text-right font-mono text-gray-400">{formatCOP(totalesAnt.utilidad)}</td>
             </tr>
           </tfoot>
         </table>

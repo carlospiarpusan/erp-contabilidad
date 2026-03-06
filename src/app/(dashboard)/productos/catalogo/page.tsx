@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getProductos, getFamilias } from '@/lib/db/productos'
 import { formatCOP } from '@/utils/cn'
-import { LayoutGrid } from 'lucide-react'
+import { LayoutGrid, Printer } from 'lucide-react'
 import Link from 'next/link'
 
 interface PageProps {
@@ -21,14 +21,20 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
-          <LayoutGrid className="h-5 w-5 text-blue-600" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
+            <LayoutGrid className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Catálogo de Productos</h1>
+            <p className="text-sm text-gray-500">{total} producto{total !== 1 ? 's' : ''} activos</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Catálogo de Productos</h1>
-          <p className="text-sm text-gray-500">{total} producto{total !== 1 ? 's' : ''} activos</p>
-        </div>
+        <Link href="/print/catalogo" target="_blank"
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+          <Printer className="h-4 w-4" /> Imprimir catálogo
+        </Link>
       </div>
 
       {/* Filtros */}
