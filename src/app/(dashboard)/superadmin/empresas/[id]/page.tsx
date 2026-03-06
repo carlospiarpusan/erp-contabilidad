@@ -17,13 +17,14 @@ function adminClient() {
 export default async function EmpresaDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
   if (!session || session.rol !== 'superadmin') redirect('/')
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) redirect('/')
 
   const { id } = await params
   const admin = adminClient()
 
   const [{ data: empresa }, { data: usuarios }, { data: roles }] = await Promise.all([
     admin.from('empresas').select('*').eq('id', id).single(),
-    admin.from('usuarios').select('id, nombre, email, telefono, activo, created_at, roles(id, nombre)').eq('empresa_id', id).order('nombre'),
+    admin.from('usuarios').select('id, nombre, email, telefono, activo, created_at, rol_id').eq('empresa_id', id).order('nombre'),
     admin.from('roles').select('id, nombre, descripcion').order('nombre'),
   ])
 
@@ -66,7 +67,7 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
         empresa_id={id}
         usuarios={(usuarios ?? []).map(u => ({
           ...u,
-          roles: (Array.isArray(u.roles) ? u.roles[0] : u.roles) ?? null,
+          roles: (roles ?? []).find(r => r.id === u.rol_id) ?? null,
         }))}
         roles={roles ?? []}
       />

@@ -48,7 +48,14 @@ export function FormPerfil({ usuario }: Props) {
     setTimeout(() => setMsgPass(''), 3000)
   }
 
-  const rolNombre = usuario.roles?.nombre ?? 'sin rol'
+  const ROL_NOMBRE: Record<string, string> = {
+    '10000000-0000-0000-0000-000000000001': 'admin',
+    '10000000-0000-0000-0000-000000000002': 'vendedor',
+    '10000000-0000-0000-0000-000000000003': 'contador',
+    '10000000-0000-0000-0000-000000000004': 'solo_lectura',
+    '10000000-0000-0000-0000-000000000005': 'superadmin',
+  }
+  const rolNombre = ROL_NOMBRE[usuario.rol_id ?? ''] ?? 'sin rol'
 
   return (
     <div className="grid gap-6 max-w-2xl">

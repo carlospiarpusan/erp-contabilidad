@@ -9,6 +9,16 @@ function adminClient() {
   )
 }
 
+function superadminConfigError() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json(
+      { error: 'Falta configurar SUPABASE_SERVICE_ROLE_KEY en el entorno' },
+      { status: 500 }
+    )
+  }
+  return null
+}
+
 async function requireSuperadmin() {
   const session = await getSession()
   if (!session || session.rol !== 'superadmin') return null
@@ -16,12 +26,14 @@ async function requireSuperadmin() {
 }
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const configErr = superadminConfigError()
+  if (configErr) return configErr
   if (!await requireSuperadmin()) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   const { id } = await params
   const admin = adminClient()
   const { data, error } = await admin
     .from('usuarios')
-    .select('id, nombre, email, telefono, activo, created_at, roles(id, nombre)')
+    .select('id, nombre, email, telefono, activo, created_at, rol_id')
     .eq('empresa_id', id)
     .order('nombre')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -29,6 +41,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const configErr = superadminConfigError()
+  if (configErr) return configErr
   if (!await requireSuperadmin()) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   const { id: empresa_id } = await params
   const { email, nombre, rol_id, password } = await req.json()
@@ -65,6 +79,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const configErr = superadminConfigError()
+  if (configErr) return configErr
   if (!await requireSuperadmin()) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
   const { id: empresa_id } = await params
   const { usuario_id, ...fields } = await req.json()
