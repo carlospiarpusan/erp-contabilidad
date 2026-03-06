@@ -1,6 +1,6 @@
 # ERP Contable — Plataforma SaaS Multiempresa
 
-Sistema ERP colombiano para gestión comercial y contable, construido con **Next.js 15** y **Supabase**. Diseñado como SaaS: múltiples empresas comparten la plataforma con datos completamente aislados por empresa.
+Plataforma SaaS colombiana para gestión comercial y contable, construida con **Next.js 15** y **Supabase**. Permite que múltiples empresas lleven su contabilidad de forma independiente: cada empresa tiene sus propios usuarios, datos y configuración completamente aislados del resto.
 
 ---
 
@@ -221,9 +221,8 @@ Abre [http://localhost:3000](http://localhost:3000) en el navegador.
 
 ---
 
-## Contexto del negocio
+## Notas
 
-- **Cliente:** Bella y Saludable — venta de fajas, brassieres, adelgazantes y jabones
-- **Ubicación:** Ipiales, Nariño, Colombia
-- **Moneda:** Pesos colombianos (COP)
-- **Importación de datos:** Facturas importadas desde Coin In ERP (sistema previo)
+- Moneda configurada en pesos colombianos (COP)
+- Cada empresa que se registra en la plataforma opera de forma completamente independiente
+- El superadmin gestiona la plataforma globalmente sin acceso a los datos de ninguna empresa
