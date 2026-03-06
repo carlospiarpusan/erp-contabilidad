@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { Upload, CheckCircle, XCircle, FileText, Download } from 'lucide-react'
 
-type Entidad = 'clientes' | 'proveedores' | 'productos'
+type Entidad = 'clientes' | 'proveedores' | 'productos' | 'facturas-compra'
 
 interface ResultadoFila {
   fila: number
@@ -13,6 +13,16 @@ interface ResultadoFila {
 }
 
 const COLUMNAS: Record<Entidad, { campo: string; label: string; requerido: boolean }[]> = {
+  'facturas-compra': [
+    { campo: 'nit_proveedor', label: 'NIT Proveedor', requerido: true },
+    { campo: 'numero_externo', label: 'N° Factura Proveedor', requerido: true },
+    { campo: 'fecha', label: 'Fecha (YYYY-MM-DD)', requerido: true },
+    { campo: 'total', label: 'Total', requerido: true },
+    { campo: 'subtotal', label: 'Subtotal (sin IVA)', requerido: false },
+    { campo: 'iva', label: 'IVA', requerido: false },
+    { campo: 'descripcion', label: 'Descripción', requerido: false },
+    { campo: 'observaciones', label: 'Observaciones', requerido: false },
+  ],
   clientes: [
     { campo: 'razon_social', label: 'Razón Social', requerido: true },
     { campo: 'numero_documento', label: 'NIT/CC', requerido: true },
@@ -57,6 +67,7 @@ function generarCSVEjemplo(entidad: Entidad): string {
   const cols = COLUMNAS[entidad]
   const header = cols.map(c => c.campo).join(',')
   const ejemplo: Record<Entidad, string> = {
+    'facturas-compra': '900123456,FV-001,2025-01-15,119000,100000,19000,Mercancía general,',
     clientes: 'Juan Pérez,123456789,CC,juan@email.com,3001234567,Calle 1 #2-3,Pasto',
     proveedores: 'Distribuciones SA,900123456,Contacto Ventas,ventas@dist.com,6021234567,Av Principal 45',
     productos: 'PROD001,Producto Ejemplo,25000,15000,100,10,UND',
@@ -137,12 +148,12 @@ export function ImportarCSV() {
     <div className="flex flex-col gap-6">
       {/* Tabs entidad */}
       <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-        {(['clientes', 'proveedores', 'productos'] as Entidad[]).map(e => (
+        {(['clientes', 'proveedores', 'productos', 'facturas-compra'] as Entidad[]).map(e => (
           <button key={e} onClick={() => { setEntidad(e); setFilas([]); setResultados([]); setCompletado(false) }}
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
               entidad === e ? 'bg-white dark:bg-gray-900 shadow text-teal-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
             }`}>
-            {e}
+            {e === 'facturas-compra' ? 'Facturas Compra' : e}
           </button>
         ))}
       </div>
@@ -166,6 +177,12 @@ export function ImportarCSV() {
           ))}
         </div>
         <p className="text-xs text-gray-400 mt-2">* Los campos marcados son obligatorios. Primera fila = encabezados.</p>
+      {entidad === 'facturas-compra' && (
+        <p className="text-xs text-amber-600 mt-2 bg-amber-50 rounded px-3 py-2 border border-amber-200">
+          Las facturas importadas se crean como históricas (no mueven stock). Usa <strong>Contabilidad → Generar Asientos</strong> para contabilizarlas.
+          El proveedor debe existir previamente en el sistema.
+        </p>
+      )}
       </div>
 
       {/* Subir archivo */}

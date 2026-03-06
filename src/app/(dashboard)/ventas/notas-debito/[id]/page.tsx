@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { TrendingUp, Printer, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
 
 export default async function NotaDebitoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -50,10 +51,13 @@ export default async function NotaDebitoDetailPage({ params }: { params: Promise
             <p className="text-sm text-gray-500">{formatFecha(nd.fecha)}</p>
           </div>
         </div>
-        <Link href={`/print/nota-debito/${nd.id}`} target="_blank"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50">
-          <Printer className="h-4 w-4" /> Imprimir
-        </Link>
+        <div className="flex items-center gap-2">
+          <EnviarEmailButton apiPath="/api/email/nota-debito" docId={nd.id} emailCliente={cliente?.email ?? null} />
+          <Link href={`/print/nota-debito/${nd.id}`} target="_blank"
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50">
+            <Printer className="h-4 w-4" /> Imprimir
+          </Link>
+        </div>
       </div>
 
       {/* Info grid */}

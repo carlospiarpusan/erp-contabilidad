@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { Receipt, CreditCard, FileText, Building2 } from 'lucide-react'
+import { Receipt, CreditCard, FileText, Building2, Printer } from 'lucide-react'
 import Link from 'next/link'
 
 interface PageProps { params: Promise<{ id: string }> }
@@ -64,8 +64,14 @@ export default async function DetalleReciboCompraPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
-      <div className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/compras/recibos" className="hover:text-gray-700">← Recibos de compra</Link>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Link href="/compras/recibos" className="hover:text-gray-700">← Recibos de compra</Link>
+        </div>
+        <Link href={`/print/recibo-compra/${id}`} target="_blank"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 hover:bg-gray-50">
+          <Printer className="h-4 w-4" /> Imprimir
+        </Link>
       </div>
 
       {/* Encabezado */}
