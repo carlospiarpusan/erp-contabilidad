@@ -9,6 +9,7 @@ import { FormRecibo } from './FormRecibo'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import Link from 'next/link'
 import { FileText, User, CreditCard, Warehouse, CheckCircle, XCircle, Printer } from 'lucide-react'
+import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
 
 interface FormaPago { id: string; descripcion: string }
 
@@ -106,6 +107,11 @@ export function DetalleFactura({ factura, formasPago }: Props) {
               <XCircle className="h-4 w-4 mr-1" /> Cancelar
             </Button>
           )}
+          <EnviarEmailButton
+            apiPath="/api/email/factura"
+            docId={factura.id}
+            emailCliente={factura.cliente?.email}
+          />
           <Link href={`/print/factura/${factura.id}`} target="_blank">
             <Button size="sm" variant="outline">
               <Printer className="h-4 w-4 mr-1" /> Imprimir

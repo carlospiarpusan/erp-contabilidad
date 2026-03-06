@@ -2,7 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import { getBalanceSituacion } from '@/lib/db/informes'
 import { formatCOP } from '@/utils/cn'
-import { Landmark } from 'lucide-react'
+import { Landmark, Download } from 'lucide-react'
+import Link from 'next/link'
 
 interface PageProps {
   searchParams: Promise<{ fecha?: string }>
@@ -73,6 +74,10 @@ export default async function BalanceSituacionPage({ searchParams }: PageProps) 
         <input type="date" name="fecha" defaultValue={fecha_corte}
           className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
         <button type="submit" className="h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700">Ver</button>
+        <Link href={`/api/export/balance-situacion?fecha=${fecha_corte}`}
+          className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+          <Download className="h-4 w-4" /> CSV
+        </Link>
       </form>
 
       {/* Ecuación contable */}

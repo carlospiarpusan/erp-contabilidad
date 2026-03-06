@@ -2,10 +2,21 @@ import { createClient } from '@/lib/supabase/server'
 import type { Producto, Familia, Fabricante } from '@/types'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
+import { hasLowStock, isLowStock } from '@/lib/utils/stock'
 
 // ── Productos ────────────────────────────────────────────────
 
-export async function getProductos(params?: {
+const PRODUCTOS_SELECT_FULL = `
+  *,
+  familia:familias(id, nombre),
+  fabricante:fabricantes(id, nombre),
+  impuesto:impuestos(id, codigo, porcentaje),
+  stock(id, bodega_id, cantidad, cantidad_minima, bodega:bodegas(nombre))
+`
+
+const PRODUCTOS_SELECT_SELECTOR = 'id, codigo, descripcion, precio_venta, precio_compra, impuesto_id, activo'
+
+type GetProductosParams = {
   busqueda?: string
   familia_id?: string
   fabricante_id?: string
@@ -13,42 +24,69 @@ export async function getProductos(params?: {
   stock_bajo?: boolean
   limit?: number
   offset?: number
-}) {
-  const supabase = await createClient()
-  const { busqueda, familia_id, fabricante_id, activo = true, stock_bajo, limit = 50, offset = 0 } = params ?? {}
+  select_mode?: 'full' | 'selector'
+  include_total?: boolean
+}
 
-  let query = supabase
+export async function getProductos(params?: GetProductosParams) {
+  const supabase = await createClient()
+  const {
+    busqueda,
+    familia_id,
+    fabricante_id,
+    activo = true,
+    stock_bajo,
+    limit = 50,
+    offset = 0,
+    select_mode = 'full',
+    include_total,
+  } = params ?? {}
+
+  const mode = stock_bajo ? 'full' : select_mode
+  const needsTotal = (include_total ?? mode === 'full') && !stock_bajo
+  const fields = mode === 'selector' ? PRODUCTOS_SELECT_SELECTOR : PRODUCTOS_SELECT_FULL
+
+  const applyFilters = (query: any) => {
+    if (activo !== undefined) query = query.eq('activo', activo)
+    if (familia_id) query = query.eq('familia_id', familia_id)
+    if (fabricante_id) query = query.eq('fabricante_id', fabricante_id)
+    if (busqueda) {
+      query = query.or(
+        `descripcion.ilike.%${busqueda}%,codigo.ilike.%${busqueda}%,codigo_barras.ilike.%${busqueda}%`
+      )
+    }
+    return query
+  }
+
+  const dataQuery = applyFilters(
+    supabase
     .from('productos')
-    .select(`
-      *,
-      familia:familias(id, nombre),
-      fabricante:fabricantes(id, nombre),
-      impuesto:impuestos(id, codigo, porcentaje),
-      stock(id, bodega_id, cantidad, cantidad_minima, bodega:bodegas(nombre))
-    `, { count: 'exact' })
+    .select(fields)
     .order('descripcion')
     .range(offset, offset + limit - 1)
+  )
 
-  if (activo !== undefined) query = query.eq('activo', activo)
-  if (familia_id) query = query.eq('familia_id', familia_id)
-  if (fabricante_id) query = query.eq('fabricante_id', fabricante_id)
-  if (busqueda) {
-    query = query.or(
-      `descripcion.ilike.%${busqueda}%,codigo.ilike.%${busqueda}%,codigo_barras.ilike.%${busqueda}%`
-    )
-  }
+  const [dataRes, countRes] = await Promise.all([
+    dataQuery,
+    needsTotal
+      ? applyFilters(
+        supabase
+          .from('productos')
+          .select('id', { count: 'exact', head: true })
+      )
+      : Promise.resolve(null),
+  ])
 
-  const { data, error, count } = await query
-  if (error) throw error
+  if (dataRes.error) throw dataRes.error
+  if (countRes?.error) throw countRes.error
 
-  let productos = (data ?? []) as Producto[]
+  let productos = (dataRes.data ?? []) as Producto[]
   if (stock_bajo) {
-    productos = productos.filter(p =>
-      (p.stock ?? []).some(s => s.cantidad_minima > 0 && s.cantidad <= s.cantidad_minima)
-    )
+    productos = productos.filter(p => hasLowStock(p.stock))
   }
 
-  return { productos, total: stock_bajo ? productos.length : (count ?? 0) }
+  const total = stock_bajo ? productos.length : (needsTotal ? (countRes?.count ?? 0) : productos.length)
+  return { productos, total }
 }
 
 export async function getProductoById(id: string) {
@@ -73,15 +111,18 @@ export async function getProductoById(id: string) {
 export async function getEstadisticasInventario() {
   const supabase = await createClient()
 
-  const [totalRes, activosRes, stockRes] = await Promise.all([
+  const [totalRes, activosRes, productosRes] = await Promise.all([
     supabase.from('productos').select('*', { count: 'exact', head: true }),
     supabase.from('productos').select('*', { count: 'exact', head: true }).eq('activo', true),
-    supabase.from('stock').select('cantidad, cantidad_minima, producto_id'),
+    supabase.from('productos').select('id, stock(cantidad, cantidad_minima)').eq('activo', true),
   ])
 
-  const stockData = stockRes.data ?? []
-  const stockBajo = stockData.filter(s => s.cantidad_minima > 0 && s.cantidad <= s.cantidad_minima).length
-  const valorTotal = stockData.reduce((sum, s) => sum + (s.cantidad ?? 0), 0)
+  const productos = productosRes.data ?? []
+  const stockBajo = productos.filter((p) => hasLowStock(p.stock)).length
+  const valorTotal = productos.reduce((sum, p) => {
+    const totalProducto = (Array.isArray(p.stock) ? p.stock : []).reduce((s, st) => s + (st.cantidad ?? 0), 0)
+    return sum + totalProducto
+  }, 0)
 
   return {
     total: totalRes.count ?? 0,
@@ -148,43 +189,17 @@ export async function ajustarStock(params: {
   const { producto_id, bodega_id, tipo, cantidad, notas } = params
   const delta = tipo === 'ajuste_negativo' || tipo === 'salida_venta' ? -Math.abs(cantidad) : Math.abs(cantidad)
 
-  // Upsert stock
-  const { error: stockError } = await supabase.rpc('actualizar_stock', {
+  const { error } = await supabase.rpc('secure_actualizar_stock', {
     p_producto_id: producto_id,
     p_variante_id: null,
     p_bodega_id: bodega_id,
-    p_delta: delta,
+    p_cantidad: delta,
     p_tipo: tipo,
-    p_doc_id: null,
+    p_documento_id: null,
+    p_precio_costo: 0,
+    p_numero_lote: notas || null,
   })
-
-  if (stockError) {
-    // Fallback: direct update
-    const { data: existing } = await supabase
-      .from('stock')
-      .select('id, cantidad')
-      .eq('producto_id', producto_id)
-      .eq('bodega_id', bodega_id)
-      .single()
-
-    if (existing) {
-      await supabase
-        .from('stock')
-        .update({ cantidad: Math.max(0, (existing.cantidad ?? 0) + delta) })
-        .eq('id', existing.id)
-    } else {
-      await supabase
-        .from('stock')
-        .insert({ producto_id, bodega_id, cantidad: Math.max(0, delta) })
-    }
-
-    // Insert movement manually
-    await supabase.from('stock_movimientos').insert({
-      producto_id, bodega_id,
-      tipo, cantidad: delta,
-      notas: notas || null,
-    })
-  }
+  if (error) throw error
 }
 
 // ── Maestros ─────────────────────────────────────────────────
@@ -267,7 +282,39 @@ export async function getBodegas() {
 
 export async function getStockBajo() {
   const supabase = await createClient()
-  const { data, error } = await supabase.from('stock_bajo').select('*').order('cantidad')
+  const { data, error } = await supabase
+    .from('productos')
+    .select('id, codigo, descripcion, stock(id, bodega_id, cantidad, cantidad_minima, bodega:bodegas(nombre))')
+    .eq('activo', true)
+    .order('descripcion')
+
   if (error) throw error
-  return data ?? []
+
+  const filas: Array<Record<string, unknown>> = []
+  for (const p of data ?? []) {
+    const stocks = Array.isArray(p.stock) ? p.stock : []
+    if (stocks.length === 0) {
+      filas.push({
+        id: `sin-stock-${p.id}`,
+        producto_id: p.id,
+        bodega_id: null,
+        cantidad: 0,
+        cantidad_minima: 0,
+        bodega: { nombre: 'Sin bodega' },
+        codigo: p.codigo,
+        descripcion: p.descripcion,
+      })
+      continue
+    }
+    for (const s of stocks) {
+      if (!isLowStock(s)) continue
+      filas.push({
+        ...s,
+        codigo: p.codigo,
+        descripcion: p.descripcion,
+      })
+    }
+  }
+
+  return filas
 }

@@ -145,8 +145,7 @@ export async function createGasto(params: {
   observaciones?: string
 }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('crear_gasto', {
-    p_empresa_id: params.empresa_id,
+  const { data, error } = await supabase.rpc('secure_crear_gasto', {
     p_ejercicio_id: params.ejercicio_id,
     p_acreedor_id: params.acreedor_id || null,
     p_tipo_gasto_id: params.tipo_gasto_id,

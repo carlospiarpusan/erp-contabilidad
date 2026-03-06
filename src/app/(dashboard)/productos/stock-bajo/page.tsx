@@ -5,6 +5,7 @@ import { Tabla, FilaTabla, CeldaTabla } from '@/components/ui/tabla'
 import { AlertTriangle, Package } from 'lucide-react'
 import { formatCOP } from '@/utils/cn'
 import Link from 'next/link'
+import { isLowStock } from '@/lib/utils/stock'
 
 const COLUMNAS = [
   { key: 'codigo',      label: 'Código' },
@@ -18,11 +19,36 @@ const COLUMNAS = [
 export default async function StockBajoPage() {
   const { productos } = await getProductos({ stock_bajo: true, limit: 200 })
 
-  const filas = productos.flatMap(p =>
-    (p.stock ?? [])
-      .filter(s => s.cantidad_minima > 0 && s.cantidad <= s.cantidad_minima)
-      .map(s => ({ producto: p, stock: s }))
-  )
+  type StockFila = {
+    id: string
+    cantidad: number
+    cantidad_minima: number
+    bodega?: { nombre?: string } | null
+  }
+
+  const filas: Array<{ producto: typeof productos[number]; stock: StockFila }> = []
+  for (const p of productos) {
+    const stocks = p.stock ?? []
+    if (stocks.length === 0) {
+      filas.push({
+        producto: p,
+        stock: { id: `sin-stock-${p.id}`, cantidad: 0, cantidad_minima: 0, bodega: { nombre: 'Sin bodega' } },
+      })
+      continue
+    }
+    for (const s of stocks) {
+      if (!isLowStock(s)) continue
+      filas.push({
+        producto: p,
+        stock: {
+          id: s.id,
+          cantidad: s.cantidad,
+          cantidad_minima: s.cantidad_minima,
+          bodega: (s.bodega as { nombre?: string } | null) ?? null,
+        },
+      })
+    }
+  }
 
   return (
     <div>
@@ -40,12 +66,12 @@ export default async function StockBajoPage() {
         <div className="rounded-xl border-2 border-dashed border-gray-200 p-16 text-center">
           <Package className="mx-auto h-12 w-12 text-green-300 mb-3" />
           <p className="text-gray-600 font-medium text-lg">Todo en orden</p>
-          <p className="text-sm text-gray-400">No hay productos con stock bajo el mínimo</p>
+          <p className="text-sm text-gray-400">No hay productos con stock crítico o bajo mínimo</p>
         </div>
       ) : (
         <>
           <p className="text-sm text-gray-500 mb-4">
-            {filas.length} producto{filas.length !== 1 ? 's' : ''} bajo el mínimo
+            {filas.length} producto{filas.length !== 1 ? 's' : ''} en stock crítico o bajo mínimo
           </p>
           <Tabla columnas={COLUMNAS}>
             {filas.map(({ producto: p, stock: s }) => (

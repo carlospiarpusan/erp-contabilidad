@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest) {
     const { data: emp } = await supabase.from('empresas').select('id').limit(1).single()
     if (!emp?.id) return NextResponse.json({ error: 'Empresa no encontrada' }, { status: 404 })
 
-    const allowed = ['nombre', 'nit', 'dv', 'razon_social', 'direccion', 'ciudad', 'departamento', 'pais', 'telefono', 'email', 'regimen', 'tipo_org']
+    const allowed = ['nombre', 'nit', 'dv', 'razon_social', 'direccion', 'ciudad', 'departamento', 'pais', 'telefono', 'email', 'regimen', 'tipo_org', 'plantilla_pdf']
     const updates: Record<string, unknown> = {}
     for (const k of allowed) {
       if (k in body) updates[k] = body[k] === '' ? null : body[k]

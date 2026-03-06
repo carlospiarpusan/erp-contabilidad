@@ -77,7 +77,7 @@ export default async function NotaCreditoDetailPage({ params }: { params: Promis
                 className="font-semibold text-rose-700 hover:underline font-mono">
                 {origen.prefijo}{origen.numero}
               </Link>
-              <p className="text-sm text-rose-600">{formatFecha(origen.fecha)}</p>
+              <p className="text-sm text-rose-600">{origen.fecha ? formatFecha(origen.fecha) : '—'}</p>
             </>
           ) : <p className="text-gray-400">—</p>}
           <p className="text-xs text-rose-600 mt-2 font-medium">Motivo:</p>

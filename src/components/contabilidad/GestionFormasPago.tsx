@@ -22,6 +22,7 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
   const [editando, setEditando] = useState<FormaPago | null>(null)
   const [form, setForm] = useState({ descripcion: '', tipo: 'contado', dias_vencimiento: 0 })
   const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
 
   function abrirNuevo() { setEditando(null); setForm({ descripcion: '', tipo: 'contado', dias_vencimiento: 0 }); setModal(true) }
   function abrirEditar(f: FormaPago) {
@@ -32,30 +33,52 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
 
   async function guardar() {
     setGuardando(true)
+    setError('')
     try {
       if (editando) {
         const res = await fetch(`/api/contabilidad/formas-pago/${editando.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-        const updated = await res.json()
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error ?? 'No se pudo actualizar la forma de pago')
+        const updated = body as FormaPago
         setFormasPago(prev => prev.map(f => f.id === editando.id ? { ...f, ...updated } : f))
       } else {
         const res = await fetch('/api/contabilidad/formas-pago', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-        const created = await res.json()
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error ?? 'No se pudo crear la forma de pago')
+        const created = body as FormaPago
         setFormasPago(prev => [...prev, created])
       }
       setModal(false); router.refresh()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error guardando forma de pago')
     } finally { setGuardando(false) }
   }
 
   async function eliminar(id: string) {
     if (!confirm('¿Eliminar esta forma de pago?')) return
-    await fetch(`/api/contabilidad/formas-pago/${id}`, { method: 'DELETE' })
-    setFormasPago(prev => prev.filter(f => f.id !== id))
+    setError('')
+    try {
+      const res = await fetch(`/api/contabilidad/formas-pago/${id}`, { method: 'DELETE' })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'No se pudo eliminar la forma de pago')
+      setFormasPago(prev => prev.filter(f => f.id !== id))
+      router.refresh()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error eliminando forma de pago')
+    }
   }
 
   async function toggleActivo(f: FormaPago) {
-    const res = await fetch(`/api/contabilidad/formas-pago/${f.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activo: !f.activo }) })
-    const updated = await res.json()
-    setFormasPago(prev => prev.map(x => x.id === f.id ? { ...x, ...updated } : x))
+    setError('')
+    try {
+      const res = await fetch(`/api/contabilidad/formas-pago/${f.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activo: !f.activo }) })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'No se pudo actualizar el estado')
+      const updated = body as FormaPago
+      setFormasPago(prev => prev.map(x => x.id === f.id ? { ...x, ...updated } : x))
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error actualizando estado')
+    }
   }
 
   const inputCls = 'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -104,6 +127,10 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
         </table>
       </div>
 
+      {error && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+      )}
+
       <Modal open={modal} onClose={() => setModal(false)} titulo={editando ? 'Editar forma de pago' : 'Nueva forma de pago'} size="sm">
         <div className="flex flex-col gap-4">
           <div>
@@ -117,6 +144,7 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
                 <option value="contado">Contado</option>
                 <option value="credito">Crédito</option>
                 <option value="anticipo">Anticipo</option>
+                <option value="anticipado">Anticipado</option>
               </select>
             </div>
             <div>

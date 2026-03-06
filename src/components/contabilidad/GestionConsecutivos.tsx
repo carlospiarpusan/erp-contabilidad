@@ -16,6 +16,7 @@ export function GestionConsecutivos({ consecutivos: inicial }: Props) {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ prefijo: '', consecutivo_actual: 0 })
   const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
 
   function startEdit(c: Consecutivo) {
     setEditandoId(c.id)
@@ -24,15 +25,20 @@ export function GestionConsecutivos({ consecutivos: inicial }: Props) {
 
   async function save(id: string) {
     setGuardando(true)
+    setError('')
     try {
       const res = await fetch(`/api/contabilidad/consecutivos/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editForm),
       })
-      const updated = await res.json()
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error ?? 'No se pudo actualizar el consecutivo')
+      const updated = body as Consecutivo
       setConsecutivos(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c))
       setEditandoId(null)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error actualizando consecutivo')
     } finally { setGuardando(false) }
   }
 
@@ -91,6 +97,10 @@ export function GestionConsecutivos({ consecutivos: inicial }: Props) {
           ))}
         </tbody>
       </table>
+
+      {error && (
+        <p className="border-t border-gray-100 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
+      )}
     </div>
   )
 }

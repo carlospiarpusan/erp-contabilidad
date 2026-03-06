@@ -4,27 +4,54 @@ import { getEmpresaId } from '@/lib/db/maestros'
 
 // ── Proveedores ──────────────────────────────────────────────────────────────
 
+const PROVEEDORES_SELECT_FULL = '*'
+const PROVEEDORES_SELECT_SELECTOR = 'id, razon_social, numero_documento, activo'
+
 export async function getProveedores(params?: {
   busqueda?: string
   activo?: boolean
   limit?: number
   offset?: number
+  select_mode?: 'full' | 'selector'
+  include_total?: boolean
 }) {
   const supabase = await createClient()
-  const { busqueda, activo, limit = 100, offset = 0 } = params ?? {}
+  const { busqueda, activo, limit = 100, offset = 0, select_mode = 'full', include_total } = params ?? {}
 
-  let q = supabase
+  const needsTotal = include_total ?? select_mode === 'full'
+  const fields = select_mode === 'selector' ? PROVEEDORES_SELECT_SELECTOR : PROVEEDORES_SELECT_FULL
+
+  const applyFilters = (query: any) => {
+    if (activo !== undefined) query = query.eq('activo', activo)
+    if (busqueda) query = query.ilike('razon_social', `%${busqueda}%`)
+    return query
+  }
+
+  const dataQuery = applyFilters(
+    supabase
     .from('proveedores')
-    .select('*', { count: 'exact' })
+    .select(fields)
     .order('razon_social')
     .range(offset, offset + limit - 1)
+  )
 
-  if (activo !== undefined) q = q.eq('activo', activo)
-  if (busqueda) q = q.ilike('razon_social', `%${busqueda}%`)
+  const [dataRes, countRes] = await Promise.all([
+    dataQuery,
+    needsTotal
+      ? applyFilters(
+        supabase
+          .from('proveedores')
+          .select('id', { count: 'exact', head: true })
+      )
+      : Promise.resolve(null),
+  ])
 
-  const { data, count, error } = await q
-  if (error) throw error
-  return { proveedores: data ?? [], total: count ?? 0 }
+  if (dataRes.error) throw dataRes.error
+  if (countRes?.error) throw countRes.error
+
+  const proveedores = dataRes.data ?? []
+  const total = needsTotal ? (countRes?.count ?? 0) : proveedores.length
+  return { proveedores, total }
 }
 
 export async function getProveedorById(id: string) {
@@ -208,8 +235,7 @@ export async function createCompra(params: {
   }[]
 }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('crear_factura_compra', {
-    p_empresa_id: params.empresa_id,
+  const { data, error } = await supabase.rpc('secure_crear_factura_compra', {
     p_ejercicio_id: params.ejercicio_id,
     p_proveedor_id: params.proveedor_id,
     p_bodega_id: params.bodega_id,
@@ -246,8 +272,7 @@ export async function pagarCompra(params: {
   observaciones?: string
 }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('crear_pago_compra', {
-    p_empresa_id: params.empresa_id,
+  const { data, error } = await supabase.rpc('secure_crear_pago_compra', {
     p_documento_id: params.documento_id,
     p_forma_pago_id: params.forma_pago_id,
     p_ejercicio_id: params.ejercicio_id,

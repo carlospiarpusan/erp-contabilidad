@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/modal'
 import { FormProducto } from './FormProducto'
 import { AjusteStock } from './AjusteStock'
 import { formatCOP, formatFecha } from '@/utils/cn'
+import { hasLowStock, isLowStock } from '@/lib/utils/stock'
 import {
   Package, Pencil, ArrowUpCircle, ArrowDownCircle, RefreshCw,
   Layers, Warehouse, TrendingUp, AlertTriangle, Clock,
@@ -48,7 +49,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
   const [error, setError]               = useState('')
 
   const stockTotal = (producto.stock ?? []).reduce((s, st) => s + (st.cantidad ?? 0), 0)
-  const stockBajo  = (producto.stock ?? []).some(s => s.cantidad_minima > 0 && s.cantidad <= s.cantidad_minima)
+  const stockBajo  = hasLowStock(producto.stock)
   const margen     = producto.precio_venta > 0
     ? Math.round(((producto.precio_venta - producto.precio_compra) / producto.precio_venta) * 100)
     : 0
@@ -141,7 +142,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
           ) : (
             <div className="flex flex-col gap-2">
               {(producto.stock ?? []).map(s => {
-                const bajo = s.cantidad_minima > 0 && s.cantidad <= s.cantidad_minima
+                const bajo = isLowStock(s)
                 return (
                   <div key={s.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
                     <span className="text-sm text-gray-700">{(s.bodega as { nombre?: string } | null)?.nombre ?? 'Bodega'}</span>

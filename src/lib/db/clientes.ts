@@ -3,7 +3,10 @@ import type { Cliente, GrupoCliente } from '@/types'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
 
-export async function getClientes(params?: {
+const CLIENTES_SELECT_FULL = '*, grupo:grupos_clientes(id, nombre), colaborador:colaboradores(id, nombre)'
+const CLIENTES_SELECT_SELECTOR = 'id, razon_social, numero_documento, email, telefono, activo'
+
+type GetClientesParams = {
   busqueda?: string
   activo?: boolean
   grupo_id?: string
@@ -12,33 +15,60 @@ export async function getClientes(params?: {
   limite_credito?: boolean
   limit?: number
   offset?: number
-}) {
+  select_mode?: 'full' | 'selector'
+  include_total?: boolean
+}
+
+export async function getClientes(params?: GetClientesParams) {
   const supabase = await createClient()
   const {
     busqueda, activo = true, grupo_id, tipo_documento,
-    ciudad, limite_credito, limit = 50, offset = 0
+    ciudad, limite_credito, limit = 50, offset = 0,
+    select_mode = 'full', include_total,
   } = params ?? {}
 
-  let query = supabase
-    .from('clientes')
-    .select('*, grupo:grupos_clientes(id, nombre), colaborador:colaboradores(id, nombre)', { count: 'exact' })
-    .order('razon_social')
-    .range(offset, offset + limit - 1)
+  const needsTotal = include_total ?? select_mode === 'full'
+  const fields = select_mode === 'selector' ? CLIENTES_SELECT_SELECTOR : CLIENTES_SELECT_FULL
 
-  if (activo !== undefined) query = query.eq('activo', activo)
-  if (grupo_id) query = query.eq('grupo_id', grupo_id)
-  if (tipo_documento) query = query.eq('tipo_documento', tipo_documento)
-  if (ciudad) query = query.ilike('ciudad', `%${ciudad}%`)
-  if (limite_credito) query = query.gt('limite_credito', 0)
-  if (busqueda) {
-    query = query.or(
-      `razon_social.ilike.%${busqueda}%,numero_documento.ilike.%${busqueda}%,email.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`
-    )
+  const applyFilters = (query: any) => {
+    if (activo !== undefined) query = query.eq('activo', activo)
+    if (grupo_id) query = query.eq('grupo_id', grupo_id)
+    if (tipo_documento) query = query.eq('tipo_documento', tipo_documento)
+    if (ciudad) query = query.ilike('ciudad', `%${ciudad}%`)
+    if (limite_credito) query = query.gt('limite_credito', 0)
+    if (busqueda) {
+      query = query.or(
+        `razon_social.ilike.%${busqueda}%,numero_documento.ilike.%${busqueda}%,email.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`
+      )
+    }
+    return query
   }
 
-  const { data, error, count } = await query
-  if (error) throw error
-  return { clientes: (data ?? []) as Cliente[], total: count ?? 0 }
+  const dataQuery = applyFilters(
+    supabase
+    .from('clientes')
+    .select(fields)
+    .order('razon_social')
+    .range(offset, offset + limit - 1)
+  )
+
+  const [dataRes, countRes] = await Promise.all([
+    dataQuery,
+    needsTotal
+      ? applyFilters(
+        supabase
+          .from('clientes')
+          .select('id', { count: 'exact', head: true })
+      )
+      : Promise.resolve(null),
+  ])
+
+  if (dataRes.error) throw dataRes.error
+  if (countRes?.error) throw countRes.error
+
+  const clientes = (dataRes.data ?? []) as Cliente[]
+  const total = needsTotal ? (countRes?.count ?? 0) : clientes.length
+  return { clientes, total }
 }
 
 export async function getClienteById(id: string) {

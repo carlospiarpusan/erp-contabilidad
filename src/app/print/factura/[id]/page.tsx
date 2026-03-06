@@ -5,13 +5,14 @@ import { getFacturaById } from '@/lib/db/ventas'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { PrintButton } from '@/components/print/PrintButton'
+import { PrintLayout } from '@/components/print/PrintLayout'
 
 interface PageProps { params: Promise<{ id: string }> }
 
 async function getEmpresa() {
   const supabase = await createClient()
   const { data } = await supabase
-    .from('empresas').select('nombre, nit, dv, razon_social, direccion, ciudad, departamento, telefono, email, regimen').limit(1).single()
+    .from('empresas').select('nombre, nit, dv, razon_social, direccion, ciudad, departamento, telefono, email, regimen, plantilla_pdf').limit(1).single()
   return data
 }
 
@@ -39,8 +40,11 @@ export default async function PrintFacturaPage({ params }: PageProps) {
 
   const cliente = factura.cliente as { razon_social?: string; numero_documento?: string; tipo_documento?: string; email?: string; telefono?: string; direccion?: string } | null
 
+  const plantilla = (empresa as any)?.plantilla_pdf ?? 'clasica'
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" data-plantilla={plantilla}>
+      <PrintLayout plantilla={plantilla} />
       {/* Controles de impresión — se ocultan al imprimir */}
       <div className="print:hidden flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200">
         <PrintButton />

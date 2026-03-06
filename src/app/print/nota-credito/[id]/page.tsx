@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { PrintButton } from '@/components/print/PrintButton'
+import Link from 'next/link'
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -44,7 +45,7 @@ export default async function PrintNotaCreditoPage({ params }: PageProps) {
     <div className="min-h-screen bg-white">
       <div className="print:hidden flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200">
         <PrintButton />
-        <a href={`/ventas/notas-credito/${id}`} className="text-sm text-gray-500 hover:text-gray-700">← Volver</a>
+        <Link href={`/ventas/notas-credito/${id}`} className="text-sm text-gray-500 hover:text-gray-700">← Volver</Link>
       </div>
 
       <div className="max-w-2xl mx-auto px-8 py-8 print:px-6 print:py-4 print:max-w-none">
@@ -73,7 +74,7 @@ export default async function PrintNotaCreditoPage({ params }: PageProps) {
           <div className="mb-4 rounded bg-gray-50 border border-gray-200 px-4 py-2 text-sm">
             <span className="font-medium text-gray-700">Nota crédito a factura: </span>
             <span className="font-mono font-bold">{origen.prefijo}{origen.numero}</span>
-            <span className="text-gray-500 ml-2">({formatFecha(origen.fecha)})</span>
+            <span className="text-gray-500 ml-2">({origen.fecha ? formatFecha(origen.fecha) : '—'})</span>
           </div>
         )}
 

@@ -10,6 +10,7 @@ import { Paginacion } from '@/components/ui/paginacion'
 import { FormProducto } from './FormProducto'
 import type { Producto, Familia, Fabricante, Impuesto } from '@/types'
 import { formatCOP } from '@/utils/cn'
+import { hasLowStock } from '@/lib/utils/stock'
 import { Search, Plus, Pencil, Layers, AlertTriangle, Eye, SlidersHorizontal } from 'lucide-react'
 import Link from 'next/link'
 
@@ -192,7 +193,7 @@ export function ListaProductos({
         ) : productos.map(p => {
           const stockTotal = calcularStock(p)
           const margen     = calcularMargen(p)
-          const stockBajo  = p.stock?.some(s => s.cantidad <= s.cantidad_minima && s.cantidad_minima > 0)
+          const stockBajo  = hasLowStock(p.stock)
           return (
             <FilaTabla key={p.id}>
               <CeldaTabla>

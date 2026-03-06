@@ -26,7 +26,7 @@ export default async function InformeFacturasPage({ searchParams }: PageProps) {
 
   const [{ facturas, totales, total }, clientes] = await Promise.all([
     getInformeFacturas({ desde, hasta, estado: sp.estado, cliente_id: sp.cliente_id }),
-    getClientes({ limit: 500 }),
+    getClientes({ limit: 500, select_mode: 'selector', include_total: false }),
   ])
 
   return (

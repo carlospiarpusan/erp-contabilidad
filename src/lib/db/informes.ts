@@ -228,7 +228,7 @@ export async function getInformeArticulos(params?: { familia_id?: string; con_st
 
   let q = supabase
     .from('productos')
-    .select('id, codigo, descripcion, precio_venta, precio_compra, stock_actual, stock_minimo, activo, familia:familia_id(descripcion)')
+    .select('id, codigo, descripcion, precio_venta, precio_compra, activo, familia:familia_id(nombre, descripcion), stock(cantidad, cantidad_minima)')
     .eq('activo', true)
     .order('descripcion')
 
@@ -237,7 +237,12 @@ export async function getInformeArticulos(params?: { familia_id?: string; con_st
   const { data, error } = await q
   if (error) throw error
 
-  let rows = data ?? []
+  let rows = (data ?? []).map((r) => {
+    const stocks = Array.isArray(r.stock) ? r.stock : []
+    const stock_actual = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
+    const stock_minimo = stocks.reduce((s, st) => s + (st.cantidad_minima ?? 0), 0)
+    return { ...r, stock_actual, stock_minimo }
+  })
   if (params?.con_stock) rows = rows.filter(r => (r.stock_actual ?? 0) > 0)
 
   const totales = rows.reduce((acc, r) => ({

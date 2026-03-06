@@ -6,26 +6,27 @@ export async function GET() {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('productos')
-      .select('codigo, descripcion, referencia, precio_venta, precio_compra, stock_actual, stock_minimo, activo, categoria:categoria_id(descripcion), unidad:unidad_id(descripcion)')
+      .select('codigo, descripcion, precio_venta, precio_compra, unidad_medida, activo, familia:familia_id(nombre, descripcion), stock(cantidad, cantidad_minima)')
       .order('descripcion')
 
     if (error) throw error
 
     const rows = data ?? []
-    const headers = ['Código', 'Descripción', 'Referencia', 'Categoría', 'Unidad', 'Precio Venta', 'Precio Compra', 'Stock Actual', 'Stock Mínimo', 'Activo']
+    const headers = ['Código', 'Descripción', 'Familia', 'Unidad', 'Precio Venta', 'Precio Compra', 'Stock Actual', 'Stock Mínimo', 'Activo']
     const csv = [
       headers.join(','),
       ...rows.map(r => {
-        const cat = r.categoria as { descripcion?: string } | null
-        const uni = r.unidad as { descripcion?: string } | null
+        const fam = r.familia as { nombre?: string; descripcion?: string } | null
+        const stocks = Array.isArray(r.stock) ? r.stock : []
+        const stockActual = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
+        const stockMinimo = stocks.reduce((s, st) => s + (st.cantidad_minima ?? 0), 0)
         return [
           r.codigo ?? '',
           `"${(r.descripcion ?? '').replace(/"/g, '""')}"`,
-          r.referencia ?? '',
-          `"${(cat?.descripcion ?? '').replace(/"/g, '""')}"`,
-          uni?.descripcion ?? '',
+          `"${(fam?.descripcion ?? fam?.nombre ?? '').replace(/"/g, '""')}"`,
+          r.unidad_medida ?? '',
           r.precio_venta ?? 0, r.precio_compra ?? 0,
-          r.stock_actual ?? 0, r.stock_minimo ?? 0,
+          stockActual, stockMinimo,
           r.activo ? 'Sí' : 'No',
         ].join(',')
       }),

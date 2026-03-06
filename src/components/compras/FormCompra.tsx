@@ -8,7 +8,7 @@ import { formatCOP } from '@/utils/cn'
 
 interface Proveedor { id: string; razon_social: string }
 interface Producto  { id: string; codigo: string; descripcion: string; precio_compra: number; impuesto_id?: string | null }
-interface Impuesto  { id: string; nombre: string; porcentaje: number }
+interface Impuesto  { id: string; nombre?: string; descripcion?: string; codigo?: string; porcentaje: number }
 interface Bodega    { id: string; nombre: string }
 
 interface Linea {
@@ -220,7 +220,11 @@ export function FormCompra({ proveedores, productos, impuestos, bodegas }: Props
                         className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                       >
                         <option value="">Sin IVA</option>
-                        {impuestos.map(t => <option key={t.id} value={t.id}>{t.nombre} {t.porcentaje}%</option>)}
+                        {impuestos.map(t => (
+                          <option key={t.id} value={t.id}>
+                            {t.descripcion ?? t.nombre ?? t.codigo ?? 'Impuesto'} {t.porcentaje}%
+                          </option>
+                        ))}
                       </select>
                     </td>
                     <td className="py-2 pr-2 text-right font-mono text-gray-900">{formatCOP(c.total)}</td>

@@ -37,7 +37,7 @@ const COLUMNAS: Record<Entidad, { campo: string; label: string; requerido: boole
     { campo: 'precio_compra', label: 'Precio Compra', requerido: false },
     { campo: 'stock_actual', label: 'Stock Inicial', requerido: false },
     { campo: 'stock_minimo', label: 'Stock Mínimo', requerido: false },
-    { campo: 'unidad', label: 'Unidad', requerido: false },
+    { campo: 'unidad_medida', label: 'Unidad', requerido: false },
   ],
 }
 

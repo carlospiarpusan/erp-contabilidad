@@ -7,8 +7,8 @@ import { ShoppingCart } from 'lucide-react'
 
 export default async function NuevaOrdenCompraPage() {
   const [{ proveedores }, { productos }, impuestos, bodegas] = await Promise.all([
-    getProveedores({ activo: true, limit: 500 }),
-    getProductos({ activo: true, limit: 500 }),
+    getProveedores({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
+    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
     getImpuestos(),
     getBodegas(),
   ])

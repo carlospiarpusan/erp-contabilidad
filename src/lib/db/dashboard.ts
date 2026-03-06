@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { hasLowStock } from '@/lib/utils/stock'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -119,9 +120,17 @@ export async function getAlertasStock() {
   const supabase = await createClient()
   const { data } = await supabase
     .from('productos')
-    .select('id, codigo, descripcion, stock_actual, stock_minimo')
+    .select('id, codigo, descripcion, stock(cantidad, cantidad_minima)')
     .eq('activo', true).limit(50)
-  return (data ?? []).filter(p => (p.stock_actual ?? 0) < (p.stock_minimo ?? 0))
+
+  return (data ?? [])
+    .map((p) => {
+      const stocks = Array.isArray(p.stock) ? p.stock : []
+      const stock_actual = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
+      const stock_minimo = stocks.reduce((s, st) => s + (st.cantidad_minima ?? 0), 0)
+      return { ...p, stock_actual, stock_minimo }
+    })
+    .filter(p => hasLowStock(p.stock))
 }
 
 export async function getFacturasVencidas(limit = 5) {

@@ -8,6 +8,7 @@ import { Modal } from '@/components/ui/modal'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { FileText, CheckCircle, XCircle, ArrowRight, Printer } from 'lucide-react'
 import Link from 'next/link'
+import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
 
 interface FormaPago { id: string; descripcion: string }
 interface Linea {
@@ -106,6 +107,11 @@ export function DetalleCotizacion({ cotizacion, formasPago }: Props) {
                 <XCircle className="h-4 w-4 mr-1" /> Cancelar
               </Button>
             )}
+            <EnviarEmailButton
+              apiPath="/api/email/cotizacion"
+              docId={cotizacion.id}
+              emailCliente={cotizacion.cliente?.email}
+            />
             <Link href={`/print/cotizacion/${cotizacion.id}`} target="_blank"
               className="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
               <Printer className="h-4 w-4" /> Imprimir

@@ -57,6 +57,7 @@ const menuItems: MenuItem[] = [
       { label: 'Remisiones', href: '/ventas/remisiones' },
       { label: 'Lista de Precios', href: '/ventas/precios' },
       { label: 'Notas Crédito', href: '/ventas/notas-credito' },
+      { label: 'Notas Débito', href: '/ventas/notas-debito' },
       { label: 'Garantías', href: '/ventas/garantias' },
       { label: 'Servicio Técnico', href: '/ventas/servicios' },
     ],
@@ -115,6 +116,7 @@ const menuItems: MenuItem[] = [
       { label: 'Impuestos', href: '/contabilidad/impuestos' },
       { label: 'Formas de Pago', href: '/contabilidad/formas-pago' },
       { label: 'Consecutivos', href: '/contabilidad/consecutivos' },
+      { label: 'Generar Asientos', href: '/contabilidad/asientos-masivo' },
     ],
   },
   {
@@ -195,6 +197,7 @@ function MenuItemComponent({ item }: { item: MenuItem }) {
               <Link
                 key={child.href}
                 href={child.href}
+                prefetch={false}
                 className={cn(
                   'rounded-md px-2 py-1.5 text-sm transition-colors',
                   pathname === child.href
@@ -217,6 +220,7 @@ function MenuItemComponent({ item }: { item: MenuItem }) {
   return (
     <Link
       href={item.href!}
+      prefetch={false}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
         isActive

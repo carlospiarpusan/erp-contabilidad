@@ -115,8 +115,7 @@ export async function createFactura(params: {
   }>
 }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('crear_factura_venta', {
-    p_empresa_id: params.empresa_id,
+  const { data, error } = await supabase.rpc('secure_crear_factura_venta', {
     p_ejercicio_id: params.ejercicio_id,
     p_serie_tipo: 'factura_venta',
     p_cliente_id: params.cliente_id,
@@ -210,8 +209,7 @@ export async function createRecibo(params: {
   observaciones: string | null
 }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('crear_recibo_venta', {
-    p_empresa_id: params.empresa_id,
+  const { data, error } = await supabase.rpc('secure_crear_recibo_venta', {
     p_documento_id: params.documento_id,
     p_forma_pago_id: params.forma_pago_id,
     p_ejercicio_id: params.ejercicio_id,

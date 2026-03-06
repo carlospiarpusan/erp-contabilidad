@@ -17,12 +17,19 @@ interface Empresa {
   email?: string | null
   regimen?: string | null
   tipo_org?: string | null
+  plantilla_pdf?: string | null
 }
 
 interface Props { empresa: Empresa | null }
 
 const REGIMENES = ['Responsable de IVA', 'No Responsable de IVA', 'Gran Contribuyente', 'Autorretenedor']
 const TIPOS_ORG = ['Persona Natural', 'Persona Jurídica']
+const PLANTILLAS = [
+  { value: 'clasica',      label: 'Clásica',      desc: 'Bordes tradicionales, sello de empresa' },
+  { value: 'moderna',      label: 'Moderna',      desc: 'Encabezado con color, tipografía limpia' },
+  { value: 'minimalista',  label: 'Minimalista',  desc: 'Sin bordes, mucho espacio en blanco' },
+  { value: 'compacta',     label: 'Compacta',     desc: 'Media carta, fuente pequeña, densa' },
+]
 
 export function FormEmpresa({ empresa }: Props) {
   const [form, setForm] = useState<Omit<Empresa, 'id'>>({
@@ -38,6 +45,7 @@ export function FormEmpresa({ empresa }: Props) {
     email:       empresa?.email       ?? '',
     regimen:     empresa?.regimen     ?? '',
     tipo_org:    empresa?.tipo_org    ?? '',
+    plantilla_pdf: empresa?.plantilla_pdf ?? 'clasica',
   })
   const [guardando, setGuardando] = useState(false)
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'err'; texto: string } | null>(null)
@@ -130,6 +138,31 @@ export function FormEmpresa({ empresa }: Props) {
           {field('Teléfono', 'telefono', { type: 'tel', placeholder: '+57 300 000 0000' })}
           {field('Email', 'email', { type: 'email', placeholder: 'empresa@correo.com' })}
         </div>
+      </div>
+
+      {/* Plantilla PDF */}
+      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Plantilla de documentos PDF</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {PLANTILLAS.map(p => (
+            <button
+              key={p.value}
+              type="button"
+              onClick={() => set('plantilla_pdf', p.value)}
+              className={`flex flex-col items-start p-3 rounded-xl border-2 text-left transition-colors ${
+                form.plantilla_pdf === p.value
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className={`text-sm font-semibold ${form.plantilla_pdf === p.value ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                {p.label}
+              </span>
+              <span className="text-xs text-gray-500 mt-0.5">{p.desc}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400 mt-3">Se aplica a facturas, cotizaciones, remisiones y demás documentos imprimibles.</p>
       </div>
 
       <div className="flex justify-end">

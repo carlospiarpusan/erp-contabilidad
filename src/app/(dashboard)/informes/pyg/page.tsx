@@ -2,10 +2,57 @@ export const dynamic = 'force-dynamic'
 
 import { getPyG } from '@/lib/db/informes'
 import { formatCOP } from '@/utils/cn'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, Download } from 'lucide-react'
+import Link from 'next/link'
 
 interface PageProps {
   searchParams: Promise<{ desde?: string; hasta?: string }>
+}
+
+interface CuentaPyG {
+  codigo: string
+  descripcion: string
+  debe: number
+  haber: number
+  naturaleza: string
+}
+
+function SeccionPyG({
+  titulo,
+  cuentas,
+  total,
+  colorClass,
+}: {
+  titulo: string
+  cuentas: CuentaPyG[]
+  total: number
+  colorClass: string
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <h3 className={`font-bold text-sm uppercase tracking-wide mb-3 ${colorClass}`}>{titulo}</h3>
+      <table className="w-full text-sm">
+        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+          {cuentas.map((c, i) => {
+            const saldo = c.naturaleza === 'credito' ? c.haber - c.debe : c.debe - c.haber
+            return (
+              <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <td className="py-1.5 font-mono text-xs text-gray-500 pr-3">{c.codigo}</td>
+                <td className="py-1.5 text-gray-700 dark:text-gray-300">{c.descripcion}</td>
+                <td className="py-1.5 text-right font-mono text-gray-800 dark:text-gray-200">{formatCOP(Math.abs(saldo))}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+        <tfoot>
+          <tr className="border-t-2 border-gray-300 dark:border-gray-600">
+            <td colSpan={2} className={`py-2 font-bold ${colorClass}`}>Total {titulo}</td>
+            <td className={`py-2 text-right font-bold font-mono ${colorClass}`}>{formatCOP(total)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  )
 }
 
 export default async function PyGPage({ searchParams }: PageProps) {
@@ -18,39 +65,6 @@ export default async function PyGPage({ searchParams }: PageProps) {
     await getPyG({ desde, hasta })
 
   const margen = total_ingresos > 0 ? Math.round((utilidad / total_ingresos) * 10000) / 100 : 0
-
-  function SeccionPyG({ titulo, cuentas, total, colorClass }: {
-    titulo: string
-    cuentas: { codigo: string; descripcion: string; debe: number; haber: number; naturaleza: string }[]
-    total: number
-    colorClass: string
-  }) {
-    return (
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
-        <h3 className={`font-bold text-sm uppercase tracking-wide mb-3 ${colorClass}`}>{titulo}</h3>
-        <table className="w-full text-sm">
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {cuentas.map((c, i) => {
-              const saldo = c.naturaleza === 'credito' ? c.haber - c.debe : c.debe - c.haber
-              return (
-                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="py-1.5 font-mono text-xs text-gray-500 pr-3">{c.codigo}</td>
-                  <td className="py-1.5 text-gray-700 dark:text-gray-300">{c.descripcion}</td>
-                  <td className="py-1.5 text-right font-mono text-gray-800 dark:text-gray-200">{formatCOP(Math.abs(saldo))}</td>
-                </tr>
-              )
-            })}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-gray-300 dark:border-gray-600">
-              <td colSpan={2} className={`py-2 font-bold ${colorClass}`}>Total {titulo}</td>
-              <td className={`py-2 text-right font-bold font-mono ${colorClass}`}>{formatCOP(total)}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    )
-  }
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
@@ -73,6 +87,10 @@ export default async function PyGPage({ searchParams }: PageProps) {
         <input type="date" name="hasta" defaultValue={hasta}
           className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Ver</button>
+        <Link href={`/api/export/pyg?desde=${desde}&hasta=${hasta}`}
+          className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+          <Download className="h-4 w-4" /> CSV
+        </Link>
       </form>
 
       {/* Resumen */}

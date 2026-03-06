@@ -5,6 +5,7 @@ import { getFamilias } from '@/lib/db/productos'
 import { formatCOP } from '@/utils/cn'
 import { Package } from 'lucide-react'
 import Link from 'next/link'
+import { isLowStockValue } from '@/lib/utils/stock'
 
 interface PageProps {
   searchParams: Promise<{ familia_id?: string; con_stock?: string }>
@@ -92,10 +93,10 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
             {productos.length === 0 ? (
               <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-400">Sin artículos</td></tr>
             ) : productos.map(p => {
-              const fam = p.familia as { descripcion?: string } | null
+              const fam = p.familia as { nombre?: string; descripcion?: string } | null
               const valorCosto = (p.stock_actual ?? 0) * (p.precio_compra ?? 0)
               const valorVenta = (p.stock_actual ?? 0) * (p.precio_venta ?? 0)
-              const stockBajo  = (p.stock_actual ?? 0) < (p.stock_minimo ?? 0)
+              const stockBajo  = isLowStockValue(p.stock_actual ?? 0, p.stock_minimo ?? 0)
               return (
                 <tr key={p.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${stockBajo ? 'bg-orange-50' : ''}`}>
                   <td className="px-4 py-2 font-mono text-xs text-gray-500">{p.codigo}</td>
@@ -103,7 +104,7 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
                     <Link href={`/productos/${p.id}`} className="hover:text-blue-600">{p.descripcion}</Link>
                     {stockBajo && <span className="ml-2 text-xs text-orange-600 font-medium">Stock bajo</span>}
                   </td>
-                  <td className="px-4 py-2 text-gray-500 text-xs">{fam?.descripcion ?? '—'}</td>
+                  <td className="px-4 py-2 text-gray-500 text-xs">{fam?.descripcion ?? fam?.nombre ?? '—'}</td>
                   <td className={`px-4 py-2 text-right font-semibold ${stockBajo ? 'text-orange-700' : 'text-gray-900 dark:text-gray-100'}`}>{p.stock_actual ?? 0}</td>
                   <td className="px-4 py-2 text-right font-mono text-gray-600">{formatCOP(p.precio_compra ?? 0)}</td>
                   <td className="px-4 py-2 text-right font-mono text-gray-900">{formatCOP(p.precio_venta ?? 0)}</td>

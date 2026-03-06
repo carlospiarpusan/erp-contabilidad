@@ -7,8 +7,8 @@ import { Truck } from 'lucide-react'
 
 export default async function NuevaRemisionPage() {
   const [{ clientes }, { productos }, impuestos, bodegas] = await Promise.all([
-    getClientes({ activo: true, limit: 500 }),
-    getProductos({ activo: true, limit: 500 }),
+    getClientes({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
+    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
     getImpuestos(),
     getBodegas(),
   ])

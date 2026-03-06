@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
+import { getEjercicioActivo } from '@/lib/db/maestros'
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,11 +42,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'El motivo es requerido' }, { status: 400 })
     }
 
-    const [empresa_id, ejercicio] = await Promise.all([getEmpresaId(), getEjercicioActivo()])
+    const ejercicio = await getEjercicioActivo()
     const supabase = await createClient()
 
-    const { data, error } = await supabase.rpc('crear_nota_credito', {
-      p_empresa_id:   empresa_id,
+    const { data, error } = await supabase.rpc('secure_crear_nota_credito', {
       p_ejercicio_id: ejercicio.id,
       p_factura_id:   factura_id,
       p_motivo:       motivo.trim(),

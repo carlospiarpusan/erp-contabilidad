@@ -25,6 +25,7 @@ export function GestionEjercicios({ ejercicios: inicial }: Props) {
   const [editando, setEditando] = useState<Ejercicio | null>(null)
   const [form, setForm] = useState({ año: new Date().getFullYear(), descripcion: '', fecha_inicio: '', fecha_fin: '', estado: 'activo' })
   const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
 
   function abrirNuevo() {
     const hoy = new Date()
@@ -47,22 +48,29 @@ export function GestionEjercicios({ ejercicios: inicial }: Props) {
 
   async function guardar() {
     setGuardando(true)
+    setError('')
     try {
       if (editando) {
         const res = await fetch(`/api/contabilidad/ejercicios/${editando.id}`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form),
         })
-        const updated = await res.json()
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error ?? 'No se pudo actualizar el ejercicio')
+        const updated = body as Ejercicio
         setEjercicios(prev => prev.map(e => e.id === editando.id ? updated : e))
       } else {
         const res = await fetch('/api/contabilidad/ejercicios', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form),
         })
-        const created = await res.json()
+        const body = await res.json()
+        if (!res.ok) throw new Error(body.error ?? 'No se pudo crear el ejercicio')
+        const created = body as Ejercicio
         setEjercicios(prev => [created, ...prev])
       }
       setModal(false)
       router.refresh()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Error guardando ejercicio')
     } finally {
       setGuardando(false)
     }
@@ -108,6 +116,10 @@ export function GestionEjercicios({ ejercicios: inicial }: Props) {
           </tbody>
         </table>
       </div>
+
+      {error && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+      )}
 
       <Modal open={modal} onClose={() => setModal(false)} titulo={editando ? 'Editar ejercicio' : 'Nuevo ejercicio'} size="sm">
         <div className="flex flex-col gap-4">

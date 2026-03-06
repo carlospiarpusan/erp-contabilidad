@@ -4,6 +4,7 @@ import { getProductos, getFamilias } from '@/lib/db/productos'
 import { formatCOP } from '@/utils/cn'
 import { LayoutGrid, Printer } from 'lucide-react'
 import Link from 'next/link'
+import { hasLowStock } from '@/lib/utils/stock'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; familia_id?: string }>
@@ -70,7 +71,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
           {productos.map(p => {
             const stocks = (p as any).stock as { cantidad: number; cantidad_minima: number }[] ?? []
             const stockTotal = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
-            const stockBajo  = stocks.some(st => st.cantidad_minima > 0 && st.cantidad <= st.cantidad_minima)
+            const stockBajo  = hasLowStock(stocks)
 
             return (
               <Link key={p.id} href={`/productos/${p.id}`}

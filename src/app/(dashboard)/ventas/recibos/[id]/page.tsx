@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import { getReciboById } from '@/lib/db/ventas'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { Receipt, CreditCard, FileText, User } from 'lucide-react'
+import { Receipt, CreditCard, FileText, User, Printer } from 'lucide-react'
 import Link from 'next/link'
 
 interface PageProps { params: Promise<{ id: string }> }
@@ -47,8 +47,14 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto">
-      <div className="flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/ventas/recibos" className="hover:text-gray-700">← Recibos de caja</Link>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Link href="/ventas/recibos" className="hover:text-gray-700">← Recibos de caja</Link>
+        </div>
+        <Link href={`/print/recibo/${id}`} target="_blank"
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+          <Printer className="h-4 w-4" /> Imprimir
+        </Link>
       </div>
 
       {/* Encabezado */}

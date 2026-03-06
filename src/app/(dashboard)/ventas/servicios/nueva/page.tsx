@@ -5,7 +5,7 @@ import { FormServicio } from '@/components/servicios/FormServicio'
 import { Wrench } from 'lucide-react'
 
 export default async function NuevoServicioPage() {
-  const { clientes } = await getClientes({ activo: true, limit: 500 })
+  const { clientes } = await getClientes({ activo: true, limit: 500, select_mode: 'selector', include_total: false })
 
   return (
     <div className="flex flex-col gap-6">

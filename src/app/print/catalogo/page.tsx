@@ -3,14 +3,15 @@ export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP } from '@/utils/cn'
 import { PrintButton } from '@/components/print/PrintButton'
+import Link from 'next/link'
 
 export default async function PrintCatalogoPage() {
   const supabase = await createClient()
 
-  const [{ data: productos }, { data: empresa }] = await Promise.all([
+  const [{ data: productosRaw }, { data: empresa }] = await Promise.all([
     supabase
       .from('productos')
-      .select('id, codigo, descripcion, precio_venta, precio_venta2, stock_actual, unidad, familia:familia_id(descripcion)')
+      .select('id, codigo, descripcion, precio_venta, precio_venta2, unidad_medida, familia:familia_id(nombre, descripcion), stock(cantidad)')
       .eq('activo', true)
       .order('descripcion'),
     supabase
@@ -20,10 +21,17 @@ export default async function PrintCatalogoPage() {
       .single(),
   ])
 
+  const productos = (productosRaw ?? []).map((p) => {
+    const stocks = Array.isArray(p.stock) ? p.stock : []
+    const stock_actual = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
+    return { ...p, stock_actual }
+  })
+
   // Agrupar por familia
   const grupos: Record<string, typeof productos> = {}
-  for (const p of productos ?? []) {
-    const familia = (p.familia as { descripcion?: string } | null)?.descripcion ?? 'Sin familia'
+  for (const p of productos) {
+    const fam = p.familia as { nombre?: string; descripcion?: string } | null
+    const familia = fam?.descripcion ?? fam?.nombre ?? 'Sin familia'
     if (!grupos[familia]) grupos[familia] = []
     grupos[familia].push(p)
   }
@@ -32,8 +40,8 @@ export default async function PrintCatalogoPage() {
     <div className="min-h-screen bg-white">
       <div className="print:hidden flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200">
         <PrintButton />
-        <a href="/productos/catalogo" className="text-sm text-gray-500 hover:text-gray-700">← Volver</a>
-        <span className="text-xs text-gray-400">{productos?.length ?? 0} productos</span>
+        <Link href="/productos/catalogo" className="text-sm text-gray-500 hover:text-gray-700">← Volver</Link>
+        <span className="text-xs text-gray-400">{productos.length} productos</span>
       </div>
 
       <div className="px-8 py-8 print:px-4 print:py-4">
@@ -49,7 +57,7 @@ export default async function PrintCatalogoPage() {
           <div className="text-right">
             <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Lista de precios</p>
             <p className="text-sm text-gray-600">{new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            <p className="text-xs text-gray-400 mt-1">{productos?.length ?? 0} productos</p>
+            <p className="text-xs text-gray-400 mt-1">{productos.length} productos</p>
           </div>
         </div>
 
@@ -73,7 +81,7 @@ export default async function PrintCatalogoPage() {
                       <p className="text-xs text-gray-500">Mayorista: {formatCOP(p.precio_venta2)}</p>
                     )}
                     <p className="text-xs text-gray-400 mt-0.5">
-                      Stock: {p.stock_actual ?? 0} {p.unidad ?? 'und'}
+                      Stock: {p.stock_actual ?? 0} {p.unidad_medida ?? 'UND'}
                     </p>
                   </div>
                 </div>

@@ -14,8 +14,8 @@ export default async function ListaPreciosPage() {
       .from('listas_precios')
       .select('*, producto:producto_id(codigo, descripcion), cliente:cliente_id(razon_social), grupo:grupo_id(nombre)')
       .order('nombre'),
-    getProductos({ activo: true, limit: 500 }),
-    getClientes({ activo: true, limit: 500 }),
+    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
+    getClientes({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
     getGruposClientes(),
   ])
 
