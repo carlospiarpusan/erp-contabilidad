@@ -34,7 +34,7 @@ export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorN
   const filtradas = inicial.filter(c => {
     const matchEstado = estado === 'todos' || c.estado === estado
     const matchBusqueda = !busqueda ||
-      c.numero_externo.toLowerCase().includes(busqueda.toLowerCase()) ||
+      (c.numero_externo ?? '').toLowerCase().includes(busqueda.toLowerCase()) ||
       (c.proveedor?.razon_social ?? '').toLowerCase().includes(busqueda.toLowerCase())
     return matchEstado && matchBusqueda
   })
