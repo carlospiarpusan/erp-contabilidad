@@ -142,13 +142,15 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
       const res = await fetch(`/api/compras/proveedores/${confirmBorrar.id}`, { method: 'DELETE' })
       if (!res.ok) {
         const payload = await parseResponseBody(res)
-        throw new Error(getErrorMessage(payload, 'No se pudo eliminar el proveedor'))
+        const msg = getErrorMessage(payload, 'No se pudo eliminar el proveedor')
+        setError(msg)
+        return
       }
       setProveedores(prev => prev.filter(p => p.id !== confirmBorrar.id))
       setConfirmBorrar(null)
       router.refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error inesperado al eliminar proveedor')
+      setError(e instanceof Error ? e.message : String(e))
     } finally {
       setBorrando(false)
     }
