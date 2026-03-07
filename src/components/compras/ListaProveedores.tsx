@@ -33,26 +33,25 @@ const EMPTY: Partial<Proveedor> = {
   numero_documento: '', email: '', telefono: '', ciudad: '',
 }
 
-function isProveedor(data: unknown): data is Proveedor {
-  if (!data || typeof data !== 'object') return false
-  const row = data as Record<string, unknown>
-  return typeof row.id === 'string'
+function extractError(res: unknown): string {
+  if (!res || typeof res !== 'object') return ''
+  const obj = res as Record<string, unknown>
+  if (typeof obj.error === 'string') return obj.error
+  return ''
 }
 
-function getErrorMessage(data: unknown, fallback: string) {
-  if (data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string') {
-    return (data as { error: string }).error
-  }
-  return fallback
-}
-
-async function parseResponseBody(res: Response) {
-  const text = await res.text()
-  if (!text) return null
+async function apiCall(url: string, opts?: RequestInit): Promise<{ ok: boolean; data: unknown; error: string }> {
   try {
-    return JSON.parse(text) as unknown
-  } catch {
-    return { error: text }
+    const res = await fetch(url, opts)
+    const text = await res.text()
+    let data: unknown = null
+    try { data = JSON.parse(text) } catch { data = { error: text || 'Sin respuesta' } }
+    if (!res.ok) {
+      return { ok: false, data, error: extractError(data) || `Error ${res.status}` }
+    }
+    return { ok: true, data, error: '' }
+  } catch (e) {
+    return { ok: false, data: null, error: e instanceof Error ? e.message : 'Error de conexión' }
   }
 }
 
@@ -64,7 +63,8 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
   const [editando, setEditando] = useState<Proveedor | null>(null)
   const [form, setForm] = useState<Partial<Proveedor>>(EMPTY)
   const [guardando, setGuardando] = useState(false)
-  const [error, setError] = useState('')
+  const [errorGuardar, setErrorGuardar] = useState('')
+  const [errorTabla, setErrorTabla] = useState('')
   const [confirmBorrar, setConfirmBorrar] = useState<Proveedor | null>(null)
   const [borrando, setBorrando] = useState(false)
   const [errorBorrar, setErrorBorrar] = useState('')
@@ -79,57 +79,49 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
   function abrirNuevo() {
     setEditando(null)
     setForm(EMPTY)
-    setError('')
+    setErrorGuardar('')
     setModal(true)
   }
 
   function abrirEditar(p: Proveedor) {
     setEditando(p)
     setForm({ ...p })
-    setError('')
+    setErrorGuardar('')
     setModal(true)
   }
 
   async function guardar() {
     if (!form.razon_social?.trim()) return
     setGuardando(true)
-    setError('')
+    setErrorGuardar('')
     try {
       if (editando) {
-        const res = await fetch(`/api/compras/proveedores/${editando.id}`, {
+        const { ok, data, error } = await apiCall(`/api/compras/proveedores/${editando.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         })
-        const payload = await parseResponseBody(res)
-        if (!res.ok) {
-          throw new Error(getErrorMessage(payload, 'No se pudo actualizar el proveedor'))
+        if (!ok) { setErrorGuardar(error); return }
+        const updated = data as Proveedor
+        if (updated?.id) {
+          setProveedores(prev => prev.map(p => p.id === editando.id ? updated : p))
         }
-        if (!isProveedor(payload)) {
-          throw new Error('Respuesta inválida al actualizar proveedor')
-        }
-        const updated = payload
-        setProveedores(prev => prev.map(p => p.id === editando.id ? updated : p))
       } else {
-        const res = await fetch('/api/compras/proveedores', {
+        const { ok, data, error } = await apiCall('/api/compras/proveedores', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         })
-        const payload = await parseResponseBody(res)
-        if (!res.ok) {
-          throw new Error(getErrorMessage(payload, 'No se pudo crear el proveedor'))
+        if (!ok) { setErrorGuardar(error); return }
+        const created = data as Proveedor
+        if (created?.id) {
+          setProveedores(prev => [created, ...prev])
         }
-        if (!isProveedor(payload)) {
-          throw new Error('Respuesta inválida al crear proveedor')
-        }
-        const created = payload
-        setProveedores(prev => [created, ...prev])
       }
       setModal(false)
       router.refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error inesperado al guardar proveedor')
+      setErrorGuardar(e instanceof Error ? e.message : 'Error inesperado')
     } finally {
       setGuardando(false)
     }
@@ -140,41 +132,31 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
     setBorrando(true)
     setErrorBorrar('')
     try {
-      const res = await fetch(`/api/compras/proveedores/${confirmBorrar.id}`, { method: 'DELETE' })
-      if (!res.ok) {
-        const payload = await parseResponseBody(res)
-        setErrorBorrar(getErrorMessage(payload, 'No se pudo eliminar el proveedor'))
-        return
-      }
+      const { ok, error } = await apiCall(`/api/compras/proveedores/${confirmBorrar.id}`, {
+        method: 'DELETE',
+      })
+      if (!ok) { setErrorBorrar(error); return }
       setProveedores(prev => prev.filter(p => p.id !== confirmBorrar.id))
       setConfirmBorrar(null)
       router.refresh()
     } catch (e) {
-      setErrorBorrar(e instanceof Error ? e.message : String(e))
+      setErrorBorrar(e instanceof Error ? e.message : 'Error inesperado')
     } finally {
       setBorrando(false)
     }
   }
 
   async function toggleActivo(p: Proveedor) {
-    setError('')
-    try {
-      const res = await fetch(`/api/compras/proveedores/${p.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activo: !p.activo }),
-      })
-      const payload = await parseResponseBody(res)
-      if (!res.ok) {
-        throw new Error(getErrorMessage(payload, 'No se pudo actualizar el estado del proveedor'))
-      }
-      if (!isProveedor(payload)) {
-        throw new Error('Respuesta inválida al actualizar estado de proveedor')
-      }
-      const updated = payload
+    setErrorTabla('')
+    const { ok, data, error } = await apiCall(`/api/compras/proveedores/${p.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activo: !p.activo }),
+    })
+    if (!ok) { setErrorTabla(error); return }
+    const updated = data as Proveedor
+    if (updated?.id) {
       setProveedores(prev => prev.map(x => x.id === p.id ? updated : x))
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error inesperado al actualizar el estado')
     }
   }
 
@@ -218,12 +200,14 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
         </Button>
       </div>
 
-      {/* Tabla */}
-      {error && (
+      {/* Error de tabla / toggle */}
+      {errorTabla && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
+          {errorTabla}
         </div>
       )}
+
+      {/* Tabla */}
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
@@ -313,17 +297,17 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
         </div>
       </Modal>
 
-      {/* Modal */}
+      {/* Modal crear/editar */}
       <Modal
         open={modal}
-        onClose={() => {
-          setModal(false)
-          setError('')
-        }}
+        onClose={() => { setModal(false); setErrorGuardar('') }}
         titulo={editando ? 'Editar proveedor' : 'Nuevo proveedor'}
         size="md"
       >
         <div className="flex flex-col gap-4">
+          {errorGuardar && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{errorGuardar}</div>
+          )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">{field('razon_social', 'Razón social *')}</div>
             {field('tipo_documento', 'Tipo documento', 'text', ['NIT', 'CC', 'CE', 'PAS'])}
@@ -354,14 +338,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setModal(false)
-                setError('')
-              }}
-            >
+            <Button variant="outline" size="sm" onClick={() => { setModal(false); setErrorGuardar('') }}>
               Cancelar
             </Button>
             <Button size="sm" onClick={guardar} disabled={guardando || !form.razon_social?.trim()}>
