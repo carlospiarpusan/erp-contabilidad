@@ -93,17 +93,23 @@ export async function createProveedor(proveedor: {
 }
 
 export async function updateProveedor(id: string, fields: Record<string, unknown>) {
-  const { id: _, ...rest } = fields
+  const { id: _id, empresa_id: _eid, created_at: _ca, updated_at: _ua, ...rest } = fields as Record<string, unknown>
   const payload = cleanUUIDs(rest)
 
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('proveedores')
     .update({ ...payload, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .select()
-    .single()
   if (error) throw error
+
+  // Leer el registro actualizado en una query separada para evitar problemas con RLS en .single()
+  const { data, error: fetchError } = await supabase
+    .from('proveedores')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (fetchError) throw fetchError
   return data
 }
 

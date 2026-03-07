@@ -36,7 +36,7 @@ const EMPTY: Partial<Proveedor> = {
 function isProveedor(data: unknown): data is Proveedor {
   if (!data || typeof data !== 'object') return false
   const row = data as Record<string, unknown>
-  return typeof row.id === 'string' && typeof row.razon_social === 'string'
+  return typeof row.id === 'string'
 }
 
 function getErrorMessage(data: unknown, fallback: string) {
@@ -67,6 +67,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
   const [error, setError] = useState('')
   const [confirmBorrar, setConfirmBorrar] = useState<Proveedor | null>(null)
   const [borrando, setBorrando] = useState(false)
+  const [errorBorrar, setErrorBorrar] = useState('')
 
   const filtrados = proveedores.filter(p =>
     p && typeof p === 'object' && (
@@ -137,20 +138,19 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
   async function borrar() {
     if (!confirmBorrar) return
     setBorrando(true)
-    setError('')
+    setErrorBorrar('')
     try {
       const res = await fetch(`/api/compras/proveedores/${confirmBorrar.id}`, { method: 'DELETE' })
       if (!res.ok) {
         const payload = await parseResponseBody(res)
-        const msg = getErrorMessage(payload, 'No se pudo eliminar el proveedor')
-        setError(msg)
+        setErrorBorrar(getErrorMessage(payload, 'No se pudo eliminar el proveedor'))
         return
       }
       setProveedores(prev => prev.filter(p => p.id !== confirmBorrar.id))
       setConfirmBorrar(null)
       router.refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setErrorBorrar(e instanceof Error ? e.message : String(e))
     } finally {
       setBorrando(false)
     }
@@ -273,7 +273,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                     <Button size="sm" variant="ghost" onClick={() => abrirEditar(p)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setError(''); setConfirmBorrar(p) }}>
+                    <Button size="sm" variant="ghost" onClick={() => { setErrorBorrar(''); setConfirmBorrar(p) }}>
                       <Trash2 className="h-3.5 w-3.5 text-red-500" />
                     </Button>
                   </div>
@@ -290,19 +290,19 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
       {/* Modal confirmar borrar */}
       <Modal
         open={!!confirmBorrar}
-        onClose={() => setConfirmBorrar(null)}
+        onClose={() => { setConfirmBorrar(null); setErrorBorrar('') }}
         titulo="Eliminar proveedor"
         size="sm"
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-700">
-            ¿Seguro que deseas eliminar <strong>{confirmBorrar?.razon_social}</strong>? Esta acción no se puede deshacer.
+            ¿Seguro que deseas eliminar <strong>{confirmBorrar?.razon_social ?? 'este proveedor'}</strong>? Esta acción no se puede deshacer.
           </p>
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+          {errorBorrar && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{errorBorrar}</div>
           )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setConfirmBorrar(null)} disabled={borrando}>
+            <Button variant="outline" size="sm" onClick={() => { setConfirmBorrar(null); setErrorBorrar('') }} disabled={borrando}>
               Cancelar
             </Button>
             <Button size="sm" onClick={borrar} disabled={borrando}
