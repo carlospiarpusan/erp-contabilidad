@@ -20,7 +20,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const data = await updateProveedor(id, filtered)
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+    const msg = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
 
@@ -30,6 +31,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     await deleteProveedor(id)
     return NextResponse.json({ ok: true })
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+    const msg = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
