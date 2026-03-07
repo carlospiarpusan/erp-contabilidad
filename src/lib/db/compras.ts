@@ -101,15 +101,14 @@ export async function updateProveedor(id: string, fields: Record<string, unknown
     .from('proveedores')
     .update({ ...payload, updated_at: new Date().toISOString() })
     .eq('id', id)
-  if (error) throw error
+  if (error) throw new Error(error.message ?? 'Error al actualizar proveedor')
 
-  // Leer el registro actualizado en una query separada para evitar problemas con RLS en .single()
   const { data, error: fetchError } = await supabase
     .from('proveedores')
     .select('*')
     .eq('id', id)
     .single()
-  if (fetchError) throw fetchError
+  if (fetchError) throw new Error(fetchError.message ?? 'Error al obtener proveedor actualizado')
   return data
 }
 
@@ -119,7 +118,7 @@ export async function deleteProveedor(id: string) {
     .from('proveedores')
     .update({ activo: false, updated_at: new Date().toISOString() })
     .eq('id', id)
-  if (error) throw error
+  if (error) throw new Error(error.message ?? 'Error al eliminar proveedor')
 }
 
 export async function getResumenProveedor(proveedor_id: string) {
