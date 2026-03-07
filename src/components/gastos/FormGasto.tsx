@@ -55,7 +55,7 @@ export function FormGasto({ acreedores, tiposGasto, formasPago }: Props) {
       if (!res.ok) return setError(data.error ?? 'Error al registrar el gasto')
       router.push('/gastos')
     } catch (e) {
-      setError(String(e))
+      setError(e instanceof Error ? e.message : 'Error inesperado')
     } finally {
       setEnviando(false)
     }

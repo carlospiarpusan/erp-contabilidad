@@ -1,3 +1,4 @@
+import { toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { updateAcreedor } from '@/lib/db/gastos'
 
@@ -10,6 +11,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const data = await updateAcreedor(id, body)
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

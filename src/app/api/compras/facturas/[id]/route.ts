@@ -1,3 +1,4 @@
+import { toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompraById, cancelarCompra, pagarCompra } from '@/lib/db/compras'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
@@ -10,7 +11,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     const data = await getCompraById(id)
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -45,6 +46,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
     return NextResponse.json({ error: 'accion desconocida' }, { status: 400 })
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

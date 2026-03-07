@@ -110,7 +110,7 @@ export function FormCompra({ proveedores, productos, impuestos, bodegas }: Props
       if (!res.ok) return setError(data.error ?? 'Error al crear la factura')
       router.push(`/compras/facturas/${data.id}`)
     } catch (e) {
-      setError(String(e))
+      setError(e instanceof Error ? e.message : 'Error inesperado')
     } finally {
       setEnviando(false)
     }

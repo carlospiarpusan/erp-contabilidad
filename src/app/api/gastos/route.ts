@@ -1,3 +1,4 @@
+import { toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { getGastos, createGasto } from '@/lib/db/gastos'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(result)
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -40,6 +41,6 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ id }, { status: 201 })
   } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

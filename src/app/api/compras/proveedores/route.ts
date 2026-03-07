@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProveedores, createProveedor } from '@/lib/db/compras'
-
-function toMsg(e: unknown): string {
-  if (e instanceof Error) return e.message
-  if (e && typeof e === 'object') {
-    const obj = e as Record<string, unknown>
-    if (typeof obj.message === 'string') return obj.message
-  }
-  return 'Error inesperado'
-}
+import { toErrorMsg } from '@/lib/utils/errors'
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,7 +13,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(result)
   } catch (e) {
-    return NextResponse.json({ error: toMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -32,6 +24,6 @@ export async function POST(req: NextRequest) {
     const data = await createProveedor(body)
     return NextResponse.json(data, { status: 201 })
   } catch (e) {
-    return NextResponse.json({ error: toMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
