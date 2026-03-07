@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Truck, Plus, Pencil, ToggleLeft, ToggleRight, Search } from 'lucide-react'
+import { Truck, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Search } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 
 interface Proveedor {
@@ -33,6 +33,29 @@ const EMPTY: Partial<Proveedor> = {
   numero_documento: '', email: '', telefono: '', ciudad: '',
 }
 
+function isProveedor(data: unknown): data is Proveedor {
+  if (!data || typeof data !== 'object') return false
+  const row = data as Record<string, unknown>
+  return typeof row.id === 'string' && typeof row.razon_social === 'string'
+}
+
+function getErrorMessage(data: unknown, fallback: string) {
+  if (data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string') {
+    return (data as { error: string }).error
+  }
+  return fallback
+}
+
+async function parseResponseBody(res: Response) {
+  const text = await res.text()
+  if (!text) return null
+  try {
+    return JSON.parse(text) as unknown
+  } catch {
+    return { error: text }
+  }
+}
+
 export function ListaProveedores({ proveedores: inicial, total }: Props) {
   const router = useRouter()
   const [proveedores, setProveedores] = useState(inicial)
@@ -41,27 +64,35 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
   const [editando, setEditando] = useState<Proveedor | null>(null)
   const [form, setForm] = useState<Partial<Proveedor>>(EMPTY)
   const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState('')
+  const [confirmBorrar, setConfirmBorrar] = useState<Proveedor | null>(null)
+  const [borrando, setBorrando] = useState(false)
 
   const filtrados = proveedores.filter(p =>
-    p.razon_social.toLowerCase().includes(busqueda.toLowerCase()) ||
-    (p.numero_documento ?? '').includes(busqueda)
+    p && typeof p === 'object' && (
+      (p.razon_social ?? '').toLowerCase().includes(busqueda.toLowerCase()) ||
+      (p.numero_documento ?? '').includes(busqueda)
+    )
   )
 
   function abrirNuevo() {
     setEditando(null)
     setForm(EMPTY)
+    setError('')
     setModal(true)
   }
 
   function abrirEditar(p: Proveedor) {
     setEditando(p)
     setForm({ ...p })
+    setError('')
     setModal(true)
   }
 
   async function guardar() {
     if (!form.razon_social?.trim()) return
     setGuardando(true)
+    setError('')
     try {
       if (editando) {
         const res = await fetch(`/api/compras/proveedores/${editando.id}`, {
@@ -69,7 +100,14 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         })
-        const updated = await res.json()
+        const payload = await parseResponseBody(res)
+        if (!res.ok) {
+          throw new Error(getErrorMessage(payload, 'No se pudo actualizar el proveedor'))
+        }
+        if (!isProveedor(payload)) {
+          throw new Error('Respuesta inválida al actualizar proveedor')
+        }
+        const updated = payload
         setProveedores(prev => prev.map(p => p.id === editando.id ? updated : p))
       } else {
         const res = await fetch('/api/compras/proveedores', {
@@ -77,24 +115,65 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(form),
         })
-        const created = await res.json()
+        const payload = await parseResponseBody(res)
+        if (!res.ok) {
+          throw new Error(getErrorMessage(payload, 'No se pudo crear el proveedor'))
+        }
+        if (!isProveedor(payload)) {
+          throw new Error('Respuesta inválida al crear proveedor')
+        }
+        const created = payload
         setProveedores(prev => [created, ...prev])
       }
       setModal(false)
       router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado al guardar proveedor')
     } finally {
       setGuardando(false)
     }
   }
 
+  async function borrar() {
+    if (!confirmBorrar) return
+    setBorrando(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/compras/proveedores/${confirmBorrar.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const payload = await parseResponseBody(res)
+        throw new Error(getErrorMessage(payload, 'No se pudo eliminar el proveedor'))
+      }
+      setProveedores(prev => prev.filter(p => p.id !== confirmBorrar.id))
+      setConfirmBorrar(null)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado al eliminar proveedor')
+    } finally {
+      setBorrando(false)
+    }
+  }
+
   async function toggleActivo(p: Proveedor) {
-    const res = await fetch(`/api/compras/proveedores/${p.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ activo: !p.activo }),
-    })
-    const updated = await res.json()
-    setProveedores(prev => prev.map(x => x.id === p.id ? updated : x))
+    setError('')
+    try {
+      const res = await fetch(`/api/compras/proveedores/${p.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activo: !p.activo }),
+      })
+      const payload = await parseResponseBody(res)
+      if (!res.ok) {
+        throw new Error(getErrorMessage(payload, 'No se pudo actualizar el estado del proveedor'))
+      }
+      if (!isProveedor(payload)) {
+        throw new Error('Respuesta inválida al actualizar estado de proveedor')
+      }
+      const updated = payload
+      setProveedores(prev => prev.map(x => x.id === p.id ? updated : x))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error inesperado al actualizar el estado')
+    }
   }
 
   const field = (k: keyof Proveedor, label: string, type = 'text', opts?: string[]) => (
@@ -138,6 +217,11 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
       </div>
 
       {/* Tabla */}
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
@@ -164,7 +248,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
                       <Truck className="h-4 w-4 text-orange-600" />
                     </div>
-                    <span className="font-medium text-gray-900">{p.razon_social}</span>
+                    <span className="font-medium text-gray-900">{p.razon_social || 'Proveedor sin nombre'}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-gray-600">
@@ -183,9 +267,14 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                  <Button size="sm" variant="ghost" onClick={() => abrirEditar(p)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center justify-end gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => abrirEditar(p)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setError(''); setConfirmBorrar(p) }}>
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -196,10 +285,39 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
         </div>
       </div>
 
+      {/* Modal confirmar borrar */}
+      <Modal
+        open={!!confirmBorrar}
+        onClose={() => setConfirmBorrar(null)}
+        titulo="Eliminar proveedor"
+        size="sm"
+      >
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-gray-700">
+            ¿Seguro que deseas eliminar <strong>{confirmBorrar?.razon_social}</strong>? Esta acción no se puede deshacer.
+          </p>
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setConfirmBorrar(null)} disabled={borrando}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={borrar} disabled={borrando}
+              className="bg-red-600 hover:bg-red-700 text-white">
+              {borrando ? 'Eliminando…' : 'Eliminar'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Modal */}
       <Modal
         open={modal}
-        onClose={() => setModal(false)}
+        onClose={() => {
+          setModal(false)
+          setError('')
+        }}
         titulo={editando ? 'Editar proveedor' : 'Nuevo proveedor'}
         size="md"
       >
@@ -234,7 +352,16 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setModal(false)}>Cancelar</Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setModal(false)
+                setError('')
+              }}
+            >
+              Cancelar
+            </Button>
             <Button size="sm" onClick={guardar} disabled={guardando || !form.razon_social?.trim()}>
               {guardando ? 'Guardando…' : 'Guardar'}
             </Button>

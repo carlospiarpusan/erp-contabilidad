@@ -3,11 +3,21 @@ import { updateProveedor, deleteProveedor } from '@/lib/db/compras'
 
 interface Ctx { params: Promise<{ id: string }> }
 
+const CAMPOS_EDITABLES = [
+  'razon_social', 'contacto', 'tipo_documento', 'numero_documento', 'dv',
+  'email', 'telefono', 'whatsapp', 'ciudad', 'departamento', 'direccion',
+  'observaciones', 'activo',
+]
+
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
     const { id } = await params
     const body = await req.json()
-    const data = await updateProveedor(id, body)
+    // Solo permite campos editables para evitar conflictos RLS/schema
+    const filtered = Object.fromEntries(
+      Object.entries(body).filter(([k]) => CAMPOS_EDITABLES.includes(k))
+    )
+    const data = await updateProveedor(id, filtered)
     return NextResponse.json(data)
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 })
