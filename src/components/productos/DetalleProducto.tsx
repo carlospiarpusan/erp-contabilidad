@@ -139,7 +139,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
               <Pencil className="h-4 w-4 mr-1" /> Editar
             </Button>
             <Button variant="destructive" size="sm" onClick={handleEliminar} disabled={eliminando}>
-              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar o desactivar
             </Button>
           </div>
         )}
