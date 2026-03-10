@@ -13,8 +13,10 @@ export async function GET(req: NextRequest) {
     await getBalanceSituacion({ fecha_corte })
 
   const header = 'Tipo,Código,Descripción,Saldo'
+  const getSaldo = (row: { debe: number; haber: number; naturaleza: string }) =>
+    row.naturaleza === 'credito' ? row.haber - row.debe : row.debe - row.haber
   const toLines = (tipo: string, rows: typeof activos) =>
-    rows.map(r => [tipo, r.codigo, `"${r.descripcion}"`, r.saldo].join(','))
+    rows.map((row) => [tipo, row.codigo, `"${row.descripcion}"`, getSaldo(row)].join(','))
 
   const lines = [
     ...toLines('Activo', activos),

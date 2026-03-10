@@ -16,8 +16,12 @@ export async function GET(req: NextRequest) {
     await getPyG({ desde, hasta })
 
   const header = 'Tipo,Código,Descripción,Debe,Haber,Saldo'
+  const getSaldo = (row: { debe: number; haber: number; naturaleza: string }) =>
+    row.naturaleza === 'credito' ? row.haber - row.debe : row.debe - row.haber
   const toLines = (tipo: string, rows: typeof ingresos) =>
-    rows.map(r => [tipo, r.codigo, `"${r.descripcion}"`, r.debe, r.haber, r.saldo].join(','))
+    rows.map((row) =>
+      [tipo, row.codigo, `"${row.descripcion}"`, row.debe, row.haber, getSaldo(row)].join(',')
+    )
 
   const lines = [
     ...toLines('Ingreso', ingresos),
