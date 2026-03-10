@@ -118,10 +118,10 @@ function formatMonthLabel(monthKey: string) {
 
 export async function getEstadisticasVentas() {
   const empresaId = await getEmpresaId()
+  const supabase = await createClient()
 
   return unstable_cache(
     async () => {
-      const supabase = await createClient()
       const hoy = new Date()
       const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`
 

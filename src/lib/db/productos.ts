@@ -117,11 +117,10 @@ export async function getProductoById(id: string) {
 
 export async function getEstadisticasInventario() {
   const empresaId = await getEmpresaId()
+  const supabase = await createClient()
 
   return unstable_cache(
     async () => {
-      const supabase = await createClient()
-
       const [totalRes, activosRes, stockBajoRes, stockRes] = await Promise.all([
         supabase.from('productos').select('*', { count: 'exact', head: true }),
         supabase.from('productos').select('*', { count: 'exact', head: true }).eq('activo', true),
@@ -310,10 +309,10 @@ export async function getBodegas() {
 
 export async function getStockBajo() {
   const empresaId = await getEmpresaId()
+  const supabase = await createClient()
 
   return unstable_cache(
     async () => {
-      const supabase = await createClient()
       const { data, error } = await supabase
         .from('stock_bajo')
         .select('id, producto_id, bodega_id, cantidad, cantidad_minima, codigo, descripcion, bodega_nombre')

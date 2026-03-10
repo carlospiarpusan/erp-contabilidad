@@ -1,25 +1,30 @@
 import { createClient } from '@/lib/supabase/server'
-import { getSession } from '@/lib/auth/session'
-import { getEmpresaId } from '@/lib/db/maestros'
+import { getSession, type UserSession } from '@/lib/auth/session'
 import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 import { unstable_cache } from 'next/cache'
 import { getReportScopeTag, getReportTag } from '@/lib/cache/empresa-tags'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+type ReportContext = {
+  supabase: Awaited<ReturnType<typeof createClient>>
+  session: UserSession
+}
+
 async function withReportCache<T>(
   _scope: string,
   _params: Record<string, unknown>,
-  query: () => Promise<T>
+  query: (context: ReportContext) => Promise<T>
 ) {
   const session = await getSession()
   if (!session) throw new Error('No autenticado')
+  const supabase = await createClient()
 
   const scope = _scope
   const key = JSON.stringify(_params)
 
   return unstable_cache(
-    async () => query(),
+    async () => query({ supabase, session }),
     ['report', session.empresa_id, scope, key],
     {
       revalidate: 300,
@@ -72,9 +77,7 @@ function getDeudorCartera(
 // ── Sumas y Saldos ────────────────────────────────────────────────────────────
 
 export async function getSumasYSaldos(params: { desde: string; hasta: string }) {
-  return withReportCache('sumas-saldos', params, async () => {
-    const supabase = await createClient()
-
+  return withReportCache('sumas-saldos', params, async ({ supabase }) => {
     const { data: lineas, error } = await supabase
       .from('asientos_lineas')
       .select(`
@@ -168,9 +171,7 @@ export async function getLibroMayor(params: { cuenta_id: string; desde: string; 
     return { cuenta: null, movimientos: [] }
   }
 
-  return withReportCache('libro-mayor', params, async () => {
-    const supabase = await createClient()
-
+  return withReportCache('libro-mayor', params, async ({ supabase }) => {
     const { data: lineas, error } = await supabase
       .from('asientos_lineas')
       .select(`
@@ -221,9 +222,7 @@ export async function getInformeFacturas(params: {
   const estado = params.estado || ''
   const cliente_id = params.cliente_id || ''
 
-  return withReportCache('informe-facturas', { desde, hasta, estado, cliente_id }, async () => {
-    const supabase = await createClient()
-
+  return withReportCache('informe-facturas', { desde, hasta, estado, cliente_id }, async ({ supabase }) => {
     let q = supabase
       .from('documentos')
       .select('id, numero, prefijo, fecha, fecha_vencimiento, estado, subtotal, total_iva, total_descuento, total, total_costo, cliente:cliente_id(id, razon_social, numero_documento)', { count: 'exact' })
@@ -259,9 +258,7 @@ export async function getInformeVentasPorMedioPago(params?: { desde?: string; ha
   const hasta = params?.hasta || hoy
   const forma_pago_id = params?.forma_pago_id || ''
 
-  return withReportCache('ventas-por-medio-pago', { desde, hasta, forma_pago_id }, async () => {
-    const supabase = await createClient()
-
+  return withReportCache('ventas-por-medio-pago', { desde, hasta, forma_pago_id }, async ({ supabase }) => {
     let query = supabase
       .from('documentos')
       .select('id, numero, prefijo, fecha, estado, total, cliente:cliente_id(id, razon_social), forma_pago:forma_pago_id(id, descripcion)')
@@ -352,8 +349,7 @@ export async function getInformeVentasPorMedioPago(params?: { desde?: string; ha
 // ── Informe de Clientes (Cartera) ─────────────────────────────────────────────
 
 export async function getInformeCartera() {
-  return withReportCache('informe-cartera', {}, async () => {
-    const [supabase, empresa_id] = await Promise.all([createClient(), getEmpresaId()])
+  return withReportCache('informe-cartera', {}, async ({ supabase, session }) => {
     const hoy = new Date()
 
     const { data, error } = await supabase
@@ -364,7 +360,7 @@ export async function getInformeCartera() {
         forma_pago:forma_pago_id(id, descripcion),
         recibos(valor)
       `)
-      .eq('empresa_id', empresa_id)
+      .eq('empresa_id', session.empresa_id)
       .eq('tipo', 'factura_venta')
       .in('estado', ['pendiente', 'vencida'])
       .order('fecha_vencimiento', { ascending: true })
@@ -438,8 +434,7 @@ export async function getInformeClientes(params?: { desde?: string; hasta?: stri
   const desde = params?.desde || `${new Date().getFullYear()}-01-01`
   const hasta  = params?.hasta  || hoy
 
-  return withReportCache('informe-clientes', { desde, hasta }, async () => {
-    const supabase = await createClient()
+  return withReportCache('informe-clientes', { desde, hasta }, async ({ supabase }) => {
     const { data: fRows, error } = await supabase
       .from('documentos')
       .select(`
@@ -490,9 +485,7 @@ export async function getInformeArticulos(params?: { familia_id?: string; con_st
   const familia_id = params?.familia_id || ''
   const con_stock = Boolean(params?.con_stock)
 
-  return withReportCache('informe-articulos', { familia_id, con_stock }, async () => {
-    const supabase = await createClient()
-
+  return withReportCache('informe-articulos', { familia_id, con_stock }, async ({ supabase }) => {
     let q = supabase
       .from('productos')
       .select('id, codigo, descripcion, precio_venta, precio_compra, activo, familia:familia_id(nombre, descripcion), stock(cantidad, cantidad_minima)')
@@ -529,9 +522,7 @@ export async function getInformeBalances(params?: { anio?: number }) {
   const desde = `${anio}-01-01`
   const hasta  = `${anio}-12-31`
 
-  return withReportCache('informe-balances', { anio }, async () => {
-    const supabase = await createClient()
-
+  return withReportCache('informe-balances', { anio }, async ({ supabase }) => {
     const [ventas, compras, gastos, cobros] = await Promise.all([
       supabase.from('documentos').select('fecha, total, total_costo, estado')
         .eq('tipo', 'factura_venta').neq('estado', 'cancelada').gte('fecha', desde).lte('fecha', hasta),
@@ -932,8 +923,7 @@ export async function getSugeridoCompra(params?: {
     lead_time,
     max_items,
     incluir_sin_movimiento,
-  }, async () => {
-    const supabase = await createClient()
+  }, async ({ supabase }) => {
     const hoy = new Date()
     const hasta = hoy.toISOString().slice(0, 10)
 
