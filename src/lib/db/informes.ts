@@ -603,6 +603,21 @@ export interface SugeridoCompraItem {
   motivo: string
 }
 
+export interface SugeridoCompraDiagnostico {
+  facturas_venta: number
+  lineas_producto: number
+  agregados_producto: number
+  productos_con_stock_negativo: number
+  productos_con_stock_minimo: number
+  productos_bajo_minimo: number
+  sin_historial_producto: boolean
+}
+
+export interface SugeridoCompraResult {
+  items: SugeridoCompraItem[]
+  diagnostico: SugeridoCompraDiagnostico
+}
+
 type VentasPorProducto = Record<string, number>
 type VentasHistoricasPorProducto = Record<string, Record<number, number>>
 
@@ -654,6 +669,7 @@ function construirSugeridosCompra(params: {
   ventanaDias: number
   leadTime: number
   incluirSinMovimiento: boolean
+  sinHistorialProducto: boolean
   maxItems: number
   diasMesActual: number
   diaActualMes: number
@@ -731,6 +747,11 @@ function construirSugeridosCompra(params: {
       factor_estacional >= 1.1 ? 'Mes estacionalmente alto' : null,
     ].filter(Boolean).join(' · ')
 
+    const motivoFinal =
+      params.sinHistorialProducto && !motivo
+        ? 'Sin historial por producto; sugerido basado en stock actual y mínimo.'
+        : motivo || 'Reposición por proyección de demanda'
+
     return {
       id: producto.id,
       codigo: producto.codigo,
@@ -747,18 +768,23 @@ function construirSugeridosCompra(params: {
       cantidad_sugerida,
       valor_pedido: cantidad_sugerida * Number(producto.precio_compra ?? 0),
       prioridad,
-      motivo: motivo || 'Reposición por proyección de demanda',
+      motivo: motivoFinal,
     }
   })
 
   return resultados
     .filter((row) => row.cantidad_sugerida > 0)
-    .filter((row) =>
-      params.incluirSinMovimiento ||
-      row.ventas_ventana > 0 ||
-      row.ventas_mes_actual > 0 ||
-      row.ventas_mes_historico_prom > 0
-    )
+    .filter((row) => {
+      const tieneActividad =
+        row.ventas_ventana > 0 ||
+        row.ventas_mes_actual > 0 ||
+        row.ventas_mes_historico_prom > 0
+      const tieneFaltanteStock = row.stock_actual < row.stock_minimo || row.stock_actual < 0
+
+      return params.incluirSinMovimiento ||
+        tieneActividad ||
+        (params.sinHistorialProducto && tieneFaltanteStock)
+    })
     .sort((a, b) => {
       const orden = { urgente: 0, media: 1, baja: 2, sin_movimiento: 3 }
       const diff = orden[a.prioridad] - orden[b.prioridad]
@@ -911,12 +937,11 @@ export async function getSugeridoCompra(params?: {
   lead_time?: number
   max_items?: number
   incluir_sin_movimiento?: boolean
-}): Promise<SugeridoCompraItem[]> {
+}): Promise<SugeridoCompraResult> {
   const ventana_dias = Math.max(30, Math.min(params?.dias ?? 90, 365))
   const lead_time = Math.max(7, Math.min(params?.lead_time ?? 30, 120))
   const max_items = Math.max(50, Math.min(params?.max_items ?? 500, 2000))
   const incluir_sin_movimiento = Boolean(params?.incluir_sin_movimiento)
-  const seg_dias = 15
 
   return withReportCache('sugerido-compra', {
     ventana_dias,
@@ -945,15 +970,70 @@ export async function getSugeridoCompra(params?: {
       hasta: `${anio}-${mesActualStr}-${String(new Date(anio, mesActual, 0).getDate()).padStart(2, '0')}`,
     }))
 
-    const { data: productos, error: productosError } = await supabase
-      .from('productos')
-      .select('id, codigo, descripcion, precio_compra, familia:familia_id(nombre), stock(cantidad, cantidad_minima)')
-      .eq('activo', true)
-      .order('descripcion')
+    const [
+      productosRes,
+      facturasVentaRes,
+      lineasProductoRes,
+      agregadosProductoRes,
+    ] = await Promise.all([
+      supabase
+        .from('productos')
+        .select('id, codigo, descripcion, precio_compra, familia:familia_id(nombre), stock(cantidad, cantidad_minima)')
+        .eq('activo', true)
+        .order('descripcion'),
+      supabase
+        .from('documentos')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'factura_venta')
+        .neq('estado', 'cancelada'),
+      supabase
+        .from('documentos_lineas')
+        .select('id, documento:documentos!inner(id)', { count: 'exact', head: true })
+        .eq('documento.tipo', 'factura_venta')
+        .neq('documento.estado', 'cancelada')
+        .not('producto_id', 'is', null),
+      supabase
+        .from('ventas_producto_diarias')
+        .select('producto_id', { count: 'exact', head: true }),
+    ])
 
-    if (productosError) throw productosError
+    if (productosRes.error) throw productosRes.error
+    if (facturasVentaRes.error) throw facturasVentaRes.error
+    if (lineasProductoRes.error) throw lineasProductoRes.error
+    if (agregadosProductoRes.error) throw agregadosProductoRes.error
 
-    if (!(productos ?? []).length) return []
+    const productos = (productosRes.data ?? []) as ProductoSugeridoRow[]
+
+    const diagnosticoBase = productos.reduce((acc, producto) => {
+      const stocks = Array.isArray(producto.stock) ? producto.stock : []
+      const stockActual = stocks.reduce((sum, stock) => sum + Number(stock.cantidad ?? 0), 0)
+      const stockMinimo = stocks.reduce((sum, stock) => sum + Number(stock.cantidad_minima ?? 0), 0)
+
+      if (stockActual < 0) acc.productos_con_stock_negativo += 1
+      if (stockMinimo > 0) acc.productos_con_stock_minimo += 1
+      if (stockActual < stockMinimo) acc.productos_bajo_minimo += 1
+
+      return acc
+    }, {
+      productos_con_stock_negativo: 0,
+      productos_con_stock_minimo: 0,
+      productos_bajo_minimo: 0,
+    })
+
+    const diagnostico: SugeridoCompraDiagnostico = {
+      facturas_venta: Number(facturasVentaRes.count ?? 0),
+      lineas_producto: Number(lineasProductoRes.count ?? 0),
+      agregados_producto: Number(agregadosProductoRes.count ?? 0),
+      ...diagnosticoBase,
+      sin_historial_producto:
+        Number(facturasVentaRes.count ?? 0) > 0 &&
+        Number(lineasProductoRes.count ?? 0) === 0 &&
+        Number(agregadosProductoRes.count ?? 0) === 0,
+    }
+
+    if (!productos.length) {
+      return { items: [], diagnostico }
+    }
 
     const ventasParams = {
       supabase,
@@ -976,17 +1056,20 @@ export async function getSugeridoCompra(params?: {
       ventasData = await getVentasSugeridoDesdeLineas(ventasParams)
     }
 
-    return construirSugeridosCompra({
-      productos: (productos ?? []) as ProductoSugeridoRow[],
+    const items = construirSugeridosCompra({
+      productos,
       ventasVentana: ventasData.ventasVentana,
       ventasMesActual: ventasData.ventasMesActual,
       ventasMismoMesHistorico: ventasData.ventasMismoMesHistorico,
       ventanaDias: ventana_dias,
       leadTime: lead_time,
       incluirSinMovimiento: incluir_sin_movimiento,
+      sinHistorialProducto: diagnostico.sin_historial_producto,
       maxItems: max_items,
       diasMesActual,
       diaActualMes,
     })
+
+    return { items, diagnostico }
   })
 }

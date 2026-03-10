@@ -27,7 +27,7 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
   const incluirSinMovimiento = parseBooleanParam(sp.sin_movimiento)
   const q = (sp.q ?? '').trim().toLowerCase()
 
-  const sugeridos = await getSugeridoCompra({
+  const { items: sugeridos, diagnostico } = await getSugeridoCompra({
     dias,
     lead_time: lead,
     incluir_sin_movimiento: incluirSinMovimiento,
@@ -48,6 +48,7 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
   }), { productos: 0, urgentes: 0, unidades: 0, valor: 0 })
   const hayFiltroBusqueda = q.length > 0
   const sinResultadosPorBusqueda = hayFiltroBusqueda && sugeridos.length > 0 && filas.length === 0
+  const sinHistorialProducto = diagnostico.sin_historial_producto
 
   const badgePorPrioridad: Record<string, 'danger' | 'warning' | 'info' | 'outline'> = {
     urgente: 'danger',
@@ -147,9 +148,28 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
         </div>
       </div>
 
+      {sinHistorialProducto && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100">
+          <p className="font-medium">No hay historial de ventas por producto para calcular rotación.</p>
+          <p className="mt-1">
+            Esta empresa tiene <strong>{diagnostico.facturas_venta.toLocaleString('es-CO')}</strong> facturas de venta,
+            pero <strong>{diagnostico.lineas_producto.toLocaleString('es-CO')}</strong> líneas asociadas a producto y
+            <strong> {diagnostico.agregados_producto.toLocaleString('es-CO')}</strong> filas agregadas para sugeridos.
+            Por ahora se muestran solo faltantes basados en stock actual y mínimos configurados.
+          </p>
+          {diagnostico.productos_con_stock_minimo === 0 && (
+            <p className="mt-1">
+              Además, no hay productos con stock mínimo configurado. Define mínimos para obtener sugeridos útiles aun sin histórico detallado.
+            </p>
+          )}
+        </div>
+      )}
+
       {!incluirSinMovimiento && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
-          Se ocultan por defecto los productos sin ventas ni histórico. Activa <strong>Incluir sin movimiento</strong> si quieres ver faltantes por stock negativo o mínimos no configurados.
+          {sinHistorialProducto
+            ? <>No existe histórico por producto. Activa <strong>Incluir sin movimiento</strong> para revisar también artículos sin faltante, o configura stock mínimo para que el sugerido sea más útil.</>
+            : <>Se ocultan por defecto los productos sin ventas ni histórico. Activa <strong>Incluir sin movimiento</strong> si quieres ver faltantes por stock negativo o mínimos no configurados.</>}
         </div>
       )}
 
@@ -157,12 +177,18 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
         <div className="rounded-xl border-2 border-dashed border-gray-200 p-16 text-center dark:border-gray-700">
           <PackageCheck className="mx-auto mb-3 h-12 w-12 text-green-400" />
           <p className="text-lg font-medium text-gray-700 dark:text-gray-200">
-            {sinResultadosPorBusqueda ? 'No hay productos que coincidan con la búsqueda' : 'No hay sugeridos para pedir'}
+            {sinResultadosPorBusqueda
+              ? 'No hay productos que coincidan con la búsqueda'
+              : sinHistorialProducto
+                ? 'No hay faltantes detectables sin historial por producto'
+                : 'No hay sugeridos para pedir'}
           </p>
           <p className="text-sm text-gray-400">
             {sinResultadosPorBusqueda
               ? 'Ajusta el texto buscado o limpia el filtro para ver todos los sugeridos.'
-              : 'Con los parámetros actuales no se detectan faltantes de reposición.'}
+              : sinHistorialProducto
+                ? 'Las facturas actuales no tienen detalle por producto. Configura stock mínimo o importa líneas de venta para calcular rotación.'
+                : 'Con los parámetros actuales no se detectan faltantes de reposición.'}
           </p>
         </div>
       ) : (
@@ -227,12 +253,25 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
           <Truck className="h-4 w-4" />
           Cálculo aplicado
         </p>
-        <p className="mt-1">
-          Se recomienda compra para cubrir <strong>{lead + 15} días</strong> (lead time {lead} + 15 de seguridad), considerando ventas recientes, estacionalidad del mes y stock actual.
-        </p>
-        <p className="mt-0.5">
-          Puedes ajustar la ventana de ventas y lead time para escenarios conservadores o agresivos.
-        </p>
+        {sinHistorialProducto ? (
+          <>
+            <p className="mt-1">
+              Modo degradado: sin ventas por producto, el sugerido solo puede apoyarse en <strong>stock actual</strong>, <strong>stock mínimo</strong> y faltantes detectados.
+            </p>
+            <p className="mt-0.5">
+              Para usar rotación y estacionalidad necesitas facturas con `documentos_lineas.producto_id` o una reimportación con detalle.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="mt-1">
+              Se recomienda compra para cubrir <strong>{lead + 15} días</strong> (lead time {lead} + 15 de seguridad), considerando ventas recientes, estacionalidad del mes y stock actual.
+            </p>
+            <p className="mt-0.5">
+              Puedes ajustar la ventana de ventas y lead time para escenarios conservadores o agresivos.
+            </p>
+          </>
+        )}
       </div>
 
       <Link href="/compras/ordenes" className="inline-flex w-fit items-center gap-2 text-sm text-blue-600 hover:underline dark:text-blue-300">
