@@ -331,28 +331,73 @@ export async function cancelarFactura(id: string) {
 
 export async function getRecibos(params?: {
   documento_id?: string
+  busqueda?: string
   desde?: string
   hasta?: string
   limit?: number
   offset?: number
 }) {
   const supabase = await createClient()
-  const { documento_id, desde, hasta, limit = 50, offset = 0 } = params ?? {}
+  const { documento_id, busqueda, desde, hasta, limit = 50, offset = 0 } = params ?? {}
+  const safeLimit = Math.max(1, Math.min(limit, 200))
+  const safeOffset = Math.max(0, offset)
+  const searchTerm = busqueda?.trim()
 
   let q = supabase
     .from('recibos')
     .select(`
       *,
-      documento:documentos(id, numero, prefijo, total, cliente:clientes(razon_social)),
+      documento:documentos(id, numero, prefijo, total, cliente:clientes(razon_social, numero_documento)),
       forma_pago:formas_pago(descripcion)
     `, { count: 'exact' })
     .eq('tipo', 'venta')
     .order('fecha', { ascending: false })
-    .range(offset, offset + limit - 1)
+    .range(safeOffset, safeOffset + safeLimit - 1)
 
   if (documento_id) q = q.eq('documento_id', documento_id)
   if (desde) q = q.gte('fecha', desde)
   if (hasta) q = q.lte('fecha', hasta)
+
+  if (searchTerm) {
+    const parsed = parseDocumentSearchTerm(searchTerm)
+    const textTerm = sanitizeSearchTerm(searchTerm)
+    const searchClauses: string[] = []
+
+    if (textTerm) {
+      const { data: clientesData, error: clientesError } = await supabase
+        .from('clientes')
+        .select('id')
+        .or(`razon_social.ilike.%${textTerm}%,numero_documento.ilike.%${textTerm}%,email.ilike.%${textTerm}%,telefono.ilike.%${textTerm}%`)
+        .limit(200)
+      if (clientesError) throw clientesError
+
+      const clienteIds = (clientesData ?? []).map((row) => row.id).filter(Boolean)
+      if (clienteIds.length > 0) {
+        const { data: documentosData, error: documentosError } = await supabase
+          .from('documentos')
+          .select('id')
+          .eq('tipo', 'factura_venta')
+          .in('cliente_id', clienteIds)
+          .limit(500)
+        if (documentosError) throw documentosError
+
+        const documentoIds = (documentosData ?? []).map((row) => row.id).filter(Boolean)
+        if (documentoIds.length > 0) {
+          searchClauses.push(`documento_id.in.(${documentoIds.join(',')})`)
+        }
+      }
+    }
+
+    if (parsed.numericValue !== null) {
+      searchClauses.push(`numero.eq.${parsed.numericValue}`)
+    }
+
+    if (!searchClauses.length) {
+      return { recibos: [], total: 0 }
+    }
+
+    q = q.or(searchClauses.join(','))
+  }
 
   const { data, error, count } = await q
   if (error) throw error
