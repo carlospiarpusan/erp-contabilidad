@@ -311,6 +311,8 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
           familias={familias}
           fabricantes={fabricantes}
           impuestos={impuestos}
+          bodegas={bodegas}
+          canSetInitialStock={false}
           onGuardar={handleGuardar}
           onCancelar={() => setModalEditar(false)}
           cargando={cargando}

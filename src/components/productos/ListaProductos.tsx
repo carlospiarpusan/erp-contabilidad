@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { Paginacion } from '@/components/ui/paginacion'
 import { FormProducto } from './FormProducto'
-import type { Producto, Familia, Fabricante, Impuesto } from '@/types'
+import type { Producto, Familia, Fabricante, Impuesto, Bodega } from '@/types'
 import { formatCOP } from '@/utils/cn'
 import { hasLowStock } from '@/lib/utils/stock'
 import { Search, Plus, Pencil, Layers, AlertTriangle, Eye, SlidersHorizontal, Trash2 } from 'lucide-react'
@@ -31,6 +31,7 @@ interface ListaProductosProps {
   familias:        Familia[]
   fabricantes:     Fabricante[]
   impuestos:       Impuesto[]
+  bodegas:         Bodega[]
   busqueda:        string
   familiaFiltro?:  string
   fabricanteFiltro?: string
@@ -38,13 +39,14 @@ interface ListaProductosProps {
   offset:          number
   limit:           number
   canManage:       boolean
+  canSetInitialStock: boolean
 }
 
 export function ListaProductos({
-  productos, total, familias, fabricantes, impuestos,
+  productos, total, familias, fabricantes, impuestos, bodegas,
   busqueda: busqInicial, familiaFiltro: familiaInicial = '',
   fabricanteFiltro: fabricanteInicial = '', soloInactivos: soloInactivosInicial = false,
-  offset: offsetInicial, limit, canManage,
+  offset: offsetInicial, limit, canManage, canSetInitialStock,
 }: ListaProductosProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -322,6 +324,8 @@ export function ListaProductos({
           familias={familias}
           fabricantes={fabricantes}
           impuestos={impuestos}
+          bodegas={bodegas}
+          canSetInitialStock={canSetInitialStock}
           onGuardar={handleGuardar}
           onCancelar={() => { setModal(false); setEditar(null) }}
           cargando={cargando}

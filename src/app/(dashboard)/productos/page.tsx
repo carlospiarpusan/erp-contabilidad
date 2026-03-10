@@ -1,4 +1,4 @@
-import { getProductos, getFamilias, getFabricantes, getImpuestos, getEstadisticasInventario } from '@/lib/db/productos'
+import { getProductos, getFamilias, getFabricantes, getImpuestos, getEstadisticasInventario, getBodegas } from '@/lib/db/productos'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { ListaProductos } from '@/components/productos/ListaProductos'
 import { Package, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react'
@@ -19,15 +19,17 @@ export default async function ProductosPage({ searchParams }: PageProps) {
   const limit        = 50
   const activo       = sp.inactivos === '1' ? false : true
 
-  const [session, { productos, total }, familias, fabricantes, impuestos, stats] = await Promise.all([
+  const [session, { productos, total }, familias, fabricantes, impuestos, stats, bodegas] = await Promise.all([
     getSession(),
     getProductos({ busqueda, familia_id, fabricante_id, activo, offset, limit }),
     getFamilias(),
     getFabricantes(),
     getImpuestos(),
     getEstadisticasInventario(),
+    getBodegas(),
   ])
   const canManage = session ? puedeAcceder(session.rol, 'productos', 'manage') : false
+  const canSetInitialStock = session ? puedeAcceder(session.rol, 'inventario', 'manage') : false
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,6 +74,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
         familias={familias}
         fabricantes={fabricantes}
         impuestos={impuestos}
+        bodegas={bodegas}
         busqueda={busqueda}
         familiaFiltro={familia_id ?? ''}
         fabricanteFiltro={fabricante_id ?? ''}
@@ -79,6 +82,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
         offset={offset}
         limit={limit}
         canManage={canManage}
+        canSetInitialStock={canSetInitialStock}
       />
     </div>
   )

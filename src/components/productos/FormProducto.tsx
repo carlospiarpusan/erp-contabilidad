@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Plus, Trash2 } from 'lucide-react'
-import type { Producto, Familia, Fabricante, Impuesto } from '@/types'
+import type { Producto, Familia, Fabricante, Impuesto, Bodega } from '@/types'
 import { formatCOP } from '@/utils/cn'
 
 const varianteSchema = z.object({
@@ -32,7 +32,17 @@ const schema = z.object({
   activo: z.boolean(),
   tiene_variantes: z.boolean(),
   tiene_vencimiento: z.boolean(),
+  inventario_inicial: z.coerce.number().min(0, 'No puede ser negativo').default(0),
+  bodega_inicial_id: z.string().optional(),
   variantes: z.array(varianteSchema).optional(),
+}).superRefine((data, ctx) => {
+  if (Number(data.inventario_inicial ?? 0) > 0 && !data.bodega_inicial_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['bodega_inicial_id'],
+      message: 'Selecciona la bodega del inventario inicial',
+    })
+  }
 })
 
 type FormData = z.infer<typeof schema>
@@ -42,6 +52,8 @@ interface FormProductoProps {
   familias: Familia[]
   fabricantes: Fabricante[]
   impuestos: Impuesto[]
+  bodegas?: Bodega[]
+  canSetInitialStock?: boolean
   onGuardar: (datos: FormData) => Promise<void>
   onCancelar: () => void
   cargando?: boolean
@@ -50,7 +62,19 @@ interface FormProductoProps {
 const TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '32', '34', '36', '38', '40', '42', '44']
 const COLORES = ['Negro', 'Beige', 'Blanco', 'Rojo', 'Azul', 'Rosado', 'Gris', 'Café']
 
-export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuardar, onCancelar, cargando }: FormProductoProps) {
+export function FormProducto({
+  inicial,
+  familias,
+  fabricantes,
+  impuestos,
+  bodegas = [],
+  canSetInitialStock = false,
+  onGuardar,
+  onCancelar,
+  cargando,
+}: FormProductoProps) {
+  const bodegaInicialDefault = bodegas.find((bodega) => bodega.principal)?.id ?? bodegas[0]?.id ?? ''
+
   const { register, handleSubmit, control, formState: { errors } } = useForm<FormData>({
 
     resolver: zodResolver(schema) as any,
@@ -69,6 +93,8 @@ export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuar
       activo: inicial?.activo ?? true,
       tiene_variantes: inicial?.tiene_variantes ?? false,
       tiene_vencimiento: inicial?.tiene_vencimiento ?? false,
+      inventario_inicial: 0,
+      bodega_inicial_id: bodegaInicialDefault,
       variantes: [],
     },
   })
@@ -78,8 +104,10 @@ export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuar
   const tieneVariantes = useWatch({ control, name: 'tiene_variantes' })
   const precioVenta = useWatch({ control, name: 'precio_venta' })
   const precioCompra = useWatch({ control, name: 'precio_compra' })
+  const inventarioInicial = useWatch({ control, name: 'inventario_inicial' })
   const ganancia = (Number(precioVenta) - Number(precioCompra))
   const margen = precioVenta > 0 ? ((ganancia / Number(precioVenta)) * 100).toFixed(1) : '0'
+  const isCreateMode = !inicial?.id
 
   return (
     <form onSubmit={handleSubmit(onGuardar)} className="flex flex-col gap-4">
@@ -179,6 +207,57 @@ export function FormProducto({ inicial, familias, fabricantes, impuestos, onGuar
           </div>
         )}
       </fieldset>
+
+      {isCreateMode && (
+        <fieldset className="rounded-lg border border-gray-200 p-4">
+          <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Inventario Inicial
+          </legend>
+          {canSetInitialStock ? (
+            <div className="mt-2 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Input
+                label="Cantidad inicial"
+                type="number"
+                min="0"
+                step="1"
+                {...register('inventario_inicial', { valueAsNumber: true })}
+                error={errors.inventario_inicial?.message}
+                placeholder="0"
+              />
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700">Bodega inicial</label>
+                <select
+                  {...register('bodega_inicial_id')}
+                  disabled={Number(inventarioInicial ?? 0) <= 0 || bodegas.length === 0}
+                  className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+                >
+                  <option value="">Selecciona una bodega</option>
+                  {bodegas.map((bodega) => (
+                    <option key={bodega.id} value={bodega.id}>
+                      {bodega.nombre}{bodega.principal ? ' (Principal)' : ''}
+                    </option>
+                  ))}
+                </select>
+                {errors.bodega_inicial_id?.message && (
+                  <p className="text-xs text-red-600">{errors.bodega_inicial_id.message}</p>
+                )}
+              </div>
+              <p className="md:col-span-2 text-sm text-gray-500">
+                Si no registras existencias o dejas la cantidad en `0`, el producto se crea con inventario en `0`.
+              </p>
+              {bodegas.length === 0 && (
+                <p className="md:col-span-2 text-sm text-amber-700">
+                  No hay bodegas configuradas. Si ingresas inventario inicial primero debes crear una bodega.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="mt-2 text-sm text-gray-500">
+              El producto se creará con inventario en `0`. El inventario inicial solo lo puede registrar un usuario con permisos de inventario.
+            </p>
+          )}
+        </fieldset>
+      )}
 
       {/* Opciones */}
       <fieldset className="rounded-lg border border-gray-200 p-4">
