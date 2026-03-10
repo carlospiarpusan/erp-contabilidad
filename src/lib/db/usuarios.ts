@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { getSupabaseServiceEnv } from '@/lib/supabase/config'
 import { cleanUUIDs } from '@/lib/utils/db'
+import { TENANT_ROLE_OPTIONS } from '@/lib/auth/permissions'
 
 export interface UsuarioRow {
   id: string
@@ -54,18 +56,37 @@ export async function updateUsuario(id: string, values: Partial<UsuarioRow>) {
   return data
 }
 
-export async function invitarUsuario(email: string, nombre: string, rol_id: string) {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Falta configurar SUPABASE_SERVICE_ROLE_KEY en el entorno')
+export async function updatePerfilPropio(
+  id: string,
+  values: Partial<Pick<UsuarioRow, 'nombre' | 'telefono'>>
+) {
+  const payload = {
+    ...(values.nombre !== undefined ? { nombre: values.nombre } : {}),
+    ...(values.telefono !== undefined ? { telefono: values.telefono ?? null } : {}),
   }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('usuarios')
+    .update(payload)
+    .eq('id', id)
+    .select('id, empresa_id, rol_id, nombre, email, telefono, activo, created_at')
+    .single()
+
+  if (error) throw error
+  return data as UsuarioRow
+}
+
+export async function invitarUsuario(email: string, nombre: string, rol_id: string) {
+  const { url, serviceRoleKey } = getSupabaseServiceEnv()
   // Crea usuario vía Supabase Admin Auth (service_role)
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`,
+    `${url}/auth/v1/admin/users`,
     {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -90,10 +111,5 @@ export async function invitarUsuario(email: string, nombre: string, rol_id: stri
 
 // Roles estáticos — UUIDs fijos en la DB, sin query para evitar bloqueos RLS
 export async function getRoles() {
-  return [
-    { id: '10000000-0000-0000-0000-000000000001', nombre: 'admin',        descripcion: 'Acceso completo al ERP' },
-    { id: '10000000-0000-0000-0000-000000000003', nombre: 'contador',     descripcion: 'Contabilidad e informes' },
-    { id: '10000000-0000-0000-0000-000000000002', nombre: 'vendedor',     descripcion: 'Ventas y clientes' },
-    { id: '10000000-0000-0000-0000-000000000004', nombre: 'solo_lectura', descripcion: 'Solo consultas' },
-  ]
+  return [...TENANT_ROLE_OPTIONS]
 }
