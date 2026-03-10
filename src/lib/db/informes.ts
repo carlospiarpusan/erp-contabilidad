@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getSession, type UserSession } from '@/lib/auth/session'
 import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
-import { unstable_cache } from 'next/cache'
-import { getReportScopeTag, getReportTag } from '@/lib/cache/empresa-tags'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -19,21 +17,7 @@ async function withReportCache<T>(
   const session = await getSession()
   if (!session) throw new Error('No autenticado')
   const supabase = await createClient()
-
-  const scope = _scope
-  const key = JSON.stringify(_params)
-
-  return unstable_cache(
-    async () => query({ supabase, session }),
-    ['report', session.empresa_id, scope, key],
-    {
-      revalidate: 300,
-      tags: [
-        getReportTag(session.empresa_id),
-        getReportScopeTag(session.empresa_id, scope),
-      ],
-    }
-  )()
+  return query({ supabase, session })
 }
 
 function isValidUUID(value: string) {

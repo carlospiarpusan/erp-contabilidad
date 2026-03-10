@@ -2,8 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { getEjercicioActivo, getEmpresaId, getFormasPago } from '@/lib/db/maestros'
 import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 import { parseDocumentSearchTerm, sanitizeSearchTerm } from '@/lib/utils/search'
-import { unstable_cache } from 'next/cache'
-import { getVentasStatsTag } from '@/lib/cache/empresa-tags'
 
 export interface FormaPagoRecaudoVenta {
   id: string
@@ -117,37 +115,26 @@ function formatMonthLabel(monthKey: string) {
 // ── Estadísticas ─────────────────────────────────────────────
 
 export async function getEstadisticasVentas() {
-  const empresaId = await getEmpresaId()
   const supabase = await createClient()
+  const hoy = new Date()
+  const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`
 
-  return unstable_cache(
-    async () => {
-      const hoy = new Date()
-      const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`
+  const [totRes, pendRes, pagRes, mesRes] = await Promise.all([
+    supabase.from('documentos').select('total', { count: 'exact' }).eq('tipo', 'factura_venta').neq('estado', 'cancelada'),
+    supabase.from('documentos').select('total').eq('tipo', 'factura_venta').eq('estado', 'pendiente'),
+    supabase.from('documentos').select('total').eq('tipo', 'factura_venta').eq('estado', 'pagada'),
+    supabase.from('documentos').select('total').eq('tipo', 'factura_venta').neq('estado', 'cancelada').gte('fecha', inicioMes),
+  ])
 
-      const [totRes, pendRes, pagRes, mesRes] = await Promise.all([
-        supabase.from('documentos').select('total', { count: 'exact' }).eq('tipo', 'factura_venta').neq('estado', 'cancelada'),
-        supabase.from('documentos').select('total').eq('tipo', 'factura_venta').eq('estado', 'pendiente'),
-        supabase.from('documentos').select('total').eq('tipo', 'factura_venta').eq('estado', 'pagada'),
-        supabase.from('documentos').select('total').eq('tipo', 'factura_venta').neq('estado', 'cancelada').gte('fecha', inicioMes),
-      ])
+  const sumar = (rows: { total: number }[] | null) =>
+    (rows ?? []).reduce((s, r) => s + (r.total ?? 0), 0)
 
-      const sumar = (rows: { total: number }[] | null) =>
-        (rows ?? []).reduce((s, r) => s + (r.total ?? 0), 0)
-
-      return {
-        total: totRes.count ?? 0,
-        pendiente: sumar(pendRes.data as { total: number }[]),
-        pagada: sumar(pagRes.data as { total: number }[]),
-        este_mes: sumar(mesRes.data as { total: number }[]),
-      }
-    },
-    ['ventas-stats', empresaId],
-    {
-      revalidate: 120,
-      tags: [getVentasStatsTag(empresaId)],
-    }
-  )()
+  return {
+    total: totRes.count ?? 0,
+    pendiente: sumar(pendRes.data as { total: number }[]),
+    pagada: sumar(pagRes.data as { total: number }[]),
+    este_mes: sumar(mesRes.data as { total: number }[]),
+  }
 }
 
 // ── Listado ───────────────────────────────────────────────────

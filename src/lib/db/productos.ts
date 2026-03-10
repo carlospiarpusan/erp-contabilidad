@@ -3,8 +3,6 @@ import type { Producto, Familia, Fabricante } from '@/types'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
 import { hasLowStock } from '@/lib/utils/stock'
-import { unstable_cache } from 'next/cache'
-import { getInventarioStatsTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
 
 // ── Productos ────────────────────────────────────────────────
 
@@ -116,47 +114,36 @@ export async function getProductoById(id: string) {
 }
 
 export async function getEstadisticasInventario() {
-  const empresaId = await getEmpresaId()
   const supabase = await createClient()
+  const [totalRes, activosRes, stockBajoRes, stockRes] = await Promise.all([
+    supabase.from('productos').select('*', { count: 'exact', head: true }),
+    supabase.from('productos').select('*', { count: 'exact', head: true }).eq('activo', true),
+    supabase.from('stock_bajo').select('producto_id'),
+    supabase
+      .from('stock')
+      .select('cantidad, producto:producto_id!inner(activo)')
+      .eq('producto.activo', true),
+  ])
 
-  return unstable_cache(
-    async () => {
-      const [totalRes, activosRes, stockBajoRes, stockRes] = await Promise.all([
-        supabase.from('productos').select('*', { count: 'exact', head: true }),
-        supabase.from('productos').select('*', { count: 'exact', head: true }).eq('activo', true),
-        supabase.from('stock_bajo').select('producto_id'),
-        supabase
-          .from('stock')
-          .select('cantidad, producto:producto_id!inner(activo)')
-          .eq('producto.activo', true),
-      ])
+  if (stockBajoRes.error) throw stockBajoRes.error
+  if (stockRes.error) throw stockRes.error
 
-      if (stockBajoRes.error) throw stockBajoRes.error
-      if (stockRes.error) throw stockRes.error
+  const stockBajo = new Set(
+    (stockBajoRes.data ?? [])
+      .map((row) => row.producto_id)
+      .filter(Boolean)
+  ).size
 
-      const stockBajo = new Set(
-        (stockBajoRes.data ?? [])
-          .map((row) => row.producto_id)
-          .filter(Boolean)
-      ).size
+  const unidades = Math.round(
+    (stockRes.data ?? []).reduce((sum, row) => sum + Number(row.cantidad ?? 0), 0)
+  )
 
-      const unidades = Math.round(
-        (stockRes.data ?? []).reduce((sum, row) => sum + Number(row.cantidad ?? 0), 0)
-      )
-
-      return {
-        total: totalRes.count ?? 0,
-        activos: activosRes.count ?? 0,
-        stockBajo,
-        unidades,
-      }
-    },
-    ['inventario-stats', empresaId],
-    {
-      revalidate: 120,
-      tags: [getInventarioStatsTag(empresaId)],
-    }
-  )()
+  return {
+    total: totalRes.count ?? 0,
+    activos: activosRes.count ?? 0,
+    stockBajo,
+    unidades,
+  }
 }
 
 export async function getMovimientosProducto(producto_id: string, limit = 15) {
@@ -308,55 +295,44 @@ export async function getBodegas() {
 }
 
 export async function getStockBajo() {
-  const empresaId = await getEmpresaId()
   const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('stock_bajo')
+    .select('id, producto_id, bodega_id, cantidad, cantidad_minima, codigo, descripcion, bodega_nombre')
+    .order('cantidad', { ascending: true })
 
-  return unstable_cache(
-    async () => {
-      const { data, error } = await supabase
-        .from('stock_bajo')
-        .select('id, producto_id, bodega_id, cantidad, cantidad_minima, codigo, descripcion, bodega_nombre')
-        .order('cantidad', { ascending: true })
+  if (error) throw error
 
-      if (error) throw error
+  const productoIds = Array.from(
+    new Set((data ?? []).map((row) => row.producto_id).filter(Boolean))
+  )
 
-      const productoIds = Array.from(
-        new Set((data ?? []).map((row) => row.producto_id).filter(Boolean))
-      )
+  const { data: productosMeta, error: productosError } = productoIds.length > 0
+    ? await supabase
+      .from('productos')
+      .select('id, precio_venta, familia:familia_id(nombre)')
+      .in('id', productoIds)
+    : { data: [], error: null }
 
-      const { data: productosMeta, error: productosError } = productoIds.length > 0
-        ? await supabase
-          .from('productos')
-          .select('id, precio_venta, familia:familia_id(nombre)')
-          .in('id', productoIds)
-        : { data: [], error: null }
+  if (productosError) throw productosError
 
-      if (productosError) throw productosError
+  const metaByProductoId = new Map(
+    (productosMeta ?? []).map((producto) => [producto.id, producto])
+  )
 
-      const metaByProductoId = new Map(
-        (productosMeta ?? []).map((producto) => [producto.id, producto])
-      )
-
-      return (data ?? []).map((row) => {
-        const meta = metaByProductoId.get(row.producto_id)
-        return {
-          id: row.id,
-          producto_id: row.producto_id,
-          bodega_id: row.bodega_id,
-          cantidad: row.cantidad,
-          cantidad_minima: row.cantidad_minima,
-          codigo: row.codigo,
-          descripcion: row.descripcion,
-          bodega: { nombre: row.bodega_nombre },
-          precio_venta: Number((meta as { precio_venta?: number } | undefined)?.precio_venta ?? 0),
-          familia: (meta as { familia?: { nombre?: string } | null } | undefined)?.familia ?? null,
-        }
-      })
-    },
-    ['stock-bajo', empresaId],
-    {
-      revalidate: 120,
-      tags: [getStockBajoTag(empresaId)],
+  return (data ?? []).map((row) => {
+    const meta = metaByProductoId.get(row.producto_id)
+    return {
+      id: row.id,
+      producto_id: row.producto_id,
+      bodega_id: row.bodega_id,
+      cantidad: row.cantidad,
+      cantidad_minima: row.cantidad_minima,
+      codigo: row.codigo,
+      descripcion: row.descripcion,
+      bodega: { nombre: row.bodega_nombre },
+      precio_venta: Number((meta as { precio_venta?: number } | undefined)?.precio_venta ?? 0),
+      familia: (meta as { familia?: { nombre?: string } | null } | undefined)?.familia ?? null,
     }
-  )()
+  })
 }
