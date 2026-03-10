@@ -159,7 +159,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
         <CheckCircle className="h-12 w-12 text-green-500" />
         <p className="text-lg font-semibold text-gray-800 dark:text-white">{resultado}</p>
         <div className="flex gap-3">
-          <button onClick={() => router.push('/productos')} className="rounded-lg border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50 dark:border-gray-700">
+          <button onClick={() => router.push('/productos')} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800/70">
             Ver productos
           </button>
           <button onClick={() => setResultado(null)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700">
@@ -195,7 +195,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
             value={busqueda}
             onChange={(event) => setBusqueda(event.target.value)}
             placeholder="Buscar por codigo o nombre..."
-            className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
+            className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
           {(loadingBusqueda || productosFiltrados.length > 0) && (
             <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
@@ -207,7 +207,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
                     key={producto.id}
                     type="button"
                     onClick={() => agregarProducto(producto)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
                     <span className="mr-2 text-xs font-mono text-gray-400">{producto.codigo}</span>
                     {producto.descripcion}
@@ -254,7 +254,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
                       <button
                         type="button"
                         onClick={() => actualizarFila(idx, 'cantidad_fisica', String((parseFloat(fila.cantidad_fisica) || 0) - 1))}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/35"
                       >
                         <Minus className="h-3 w-3" />
                       </button>
@@ -263,12 +263,12 @@ export function AjusteInventarioForm({ bodegas }: Props) {
                         value={fila.cantidad_fisica}
                         onChange={(event) => actualizarFila(idx, 'cantidad_fisica', event.target.value)}
                         placeholder="0"
-                        className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-center text-sm focus:outline-none dark:border-gray-700 dark:bg-gray-800"
+                        className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-center text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                       />
                       <button
                         type="button"
                         onClick={() => actualizarFila(idx, 'cantidad_fisica', String((parseFloat(fila.cantidad_fisica) || 0) + 1))}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-100"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-300 dark:hover:bg-green-900/35"
                       >
                         <Plus className="h-3 w-3" />
                       </button>
@@ -285,11 +285,11 @@ export function AjusteInventarioForm({ bodegas }: Props) {
                       value={fila.notas}
                       onChange={(event) => actualizarFila(idx, 'notas', event.target.value)}
                       placeholder="Motivo (opcional)"
-                      className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm focus:outline-none dark:border-gray-700 dark:bg-gray-800"
+                      className="w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <button type="button" onClick={() => eliminarFila(idx)} className="text-gray-300 hover:text-red-500">X</button>
+                    <button type="button" onClick={() => eliminarFila(idx)} className="text-gray-300 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-300">X</button>
                   </td>
                 </tr>
               )})}
@@ -300,7 +300,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
 
       {filas.length > 0 && (
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={() => setFilas([])} className="rounded-lg border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50 dark:border-gray-700">
+          <button type="button" onClick={() => setFilas([])} className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800/70">
             Limpiar
           </button>
           <button

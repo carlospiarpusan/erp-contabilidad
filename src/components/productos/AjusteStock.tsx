@@ -52,17 +52,17 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="rounded-lg bg-gray-50 px-4 py-3">
-        <p className="text-sm font-medium text-gray-700">{producto.descripcion}</p>
-        <p className="text-xs text-gray-500 font-mono">{producto.codigo}</p>
+      <div className="rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-800/70">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{producto.descripcion}</p>
+        <p className="text-xs font-mono text-gray-500 dark:text-gray-400">{producto.codigo}</p>
       </div>
 
       {/* Tipo de ajuste */}
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-2 block">Tipo de movimiento</label>
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">Tipo de movimiento</label>
         <div className="flex flex-col gap-2">
           {TIPOS.map(t => (
-            <label key={t.value} className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${tipo === t.value ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950'}`}>
+            <label key={t.value} className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${tipo === t.value ? 'border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20' : 'border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-800/50'}`}>
               <input
                 type="radio"
                 name="tipo"
@@ -72,7 +72,7 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
                 className="accent-blue-600"
               />
               <t.icon className={`h-4 w-4 ${t.color}`} />
-              <span className="text-sm text-gray-700">{t.label}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-200">{t.label}</span>
             </label>
           ))}
         </div>
@@ -81,21 +81,21 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
       {/* Bodega */}
       {bodegas.length > 1 && (
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-gray-700">Bodega</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Bodega</label>
           <select
             value={bodega_id}
             onChange={e => setBodega(e.target.value)}
-            className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
           >
             {bodegas.map(b => <option key={b.id} value={b.id}>{b.nombre}</option>)}
           </select>
-          <p className="text-xs text-gray-400">Stock actual en esta bodega: <strong>{stockActual}</strong> {producto.unidad_medida ?? 'UND'}</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Stock actual en esta bodega: <strong className="text-gray-600 dark:text-gray-200">{stockActual}</strong> {producto.unidad_medida ?? 'UND'}</p>
         </div>
       )}
 
       {/* Cantidad */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">Cantidad</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Cantidad</label>
         <input
           type="number"
           min="0.01"
@@ -104,23 +104,23 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
           onChange={e => setCantidad(e.target.value)}
           placeholder="0"
           required
-          className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-blue-400"
         />
       </div>
 
       {/* Notas */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">Notas (opcional)</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Notas (opcional)</label>
         <textarea
           value={notas}
           onChange={e => setNotas(e.target.value)}
           rows={2}
           placeholder="Motivo del ajuste..."
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-blue-400"
         />
       </div>
 
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-500 dark:text-red-300">{error}</p>}
 
       <div className="flex gap-2 pt-1">
         <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>Cancelar</Button>

@@ -61,6 +61,8 @@ interface FormProductoProps {
 
 const TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '32', '34', '36', '38', '40', '42', '44']
 const COLORES = ['Negro', 'Beige', 'Blanco', 'Rojo', 'Azul', 'Rosado', 'Gris', 'Café']
+const SELECT_CLS = 'h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400'
+const SELECT_SM_CLS = 'h-8 rounded border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400'
 
 export function FormProducto({
   inicial,
@@ -112,8 +114,8 @@ export function FormProducto({
   return (
     <form onSubmit={handleSubmit(onGuardar)} className="flex flex-col gap-4">
       {/* Información básica */}
-      <fieldset className="rounded-lg border border-gray-200 p-4">
-        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <fieldset className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
           Información del Producto
         </legend>
         <div className="mt-2 grid grid-cols-2 gap-4">
@@ -137,30 +139,30 @@ export function FormProducto({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Familia / Categoría</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Familia / Categoría</label>
             <select
               {...register('familia_id')}
-              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={SELECT_CLS}
             >
               <option value="">Sin categoría</option>
               {familias.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Fabricante / Marca</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Fabricante / Marca</label>
             <select
               {...register('fabricante_id')}
-              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={SELECT_CLS}
             >
               <option value="">Sin marca</option>
               {fabricantes.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">IVA</label>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">IVA</label>
             <select
               {...register('impuesto_id')}
-              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={SELECT_CLS}
             >
               <option value="">Sin IVA</option>
               {impuestos.map(i => (
@@ -173,8 +175,8 @@ export function FormProducto({
       </fieldset>
 
       {/* Precios */}
-      <fieldset className="rounded-lg border border-gray-200 p-4">
-        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <fieldset className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
           Precios
         </legend>
         <div className="mt-2 grid grid-cols-3 gap-4">
@@ -201,16 +203,16 @@ export function FormProducto({
         </div>
         {/* Indicador de margen */}
         {Number(precioVenta) > 0 && (
-          <div className="mt-3 flex gap-6 rounded-lg bg-blue-50 px-4 py-2 text-sm">
-            <span>Ganancia: <strong className="text-green-700">{formatCOP(ganancia)}</strong></span>
-            <span>Margen: <strong className="text-blue-700">{margen}%</strong></span>
+          <div className="mt-3 flex gap-6 rounded-lg bg-blue-50 px-4 py-2 text-sm text-gray-700 dark:bg-blue-900/20 dark:text-gray-200">
+            <span>Ganancia: <strong className="text-green-700 dark:text-green-300">{formatCOP(ganancia)}</strong></span>
+            <span>Margen: <strong className="text-blue-700 dark:text-blue-300">{margen}%</strong></span>
           </div>
         )}
       </fieldset>
 
       {isCreateMode && (
-        <fieldset className="rounded-lg border border-gray-200 p-4">
-          <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <fieldset className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Inventario Inicial
           </legend>
           {canSetInitialStock ? (
@@ -225,11 +227,11 @@ export function FormProducto({
                 placeholder="0"
               />
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Bodega inicial</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Bodega inicial</label>
                 <select
                   {...register('bodega_inicial_id')}
                   disabled={Number(inventarioInicial ?? 0) <= 0 || bodegas.length === 0}
-                  className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+                  className={`${SELECT_CLS} disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800/70 dark:disabled:text-gray-500`}
                 >
                   <option value="">Selecciona una bodega</option>
                   {bodegas.map((bodega) => (
@@ -242,17 +244,17 @@ export function FormProducto({
                   <p className="text-xs text-red-600">{errors.bodega_inicial_id.message}</p>
                 )}
               </div>
-              <p className="md:col-span-2 text-sm text-gray-500">
+              <p className="md:col-span-2 text-sm text-gray-500 dark:text-gray-400">
                 Si no registras existencias o dejas la cantidad en `0`, el producto se crea con inventario en `0`.
               </p>
               {bodegas.length === 0 && (
-                <p className="md:col-span-2 text-sm text-amber-700">
+                <p className="md:col-span-2 text-sm text-amber-700 dark:text-amber-300">
                   No hay bodegas configuradas. Si ingresas inventario inicial primero debes crear una bodega.
                 </p>
               )}
             </div>
           ) : (
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               El producto se creará con inventario en `0`. El inventario inicial solo lo puede registrar un usuario con permisos de inventario.
             </p>
           )}
@@ -260,20 +262,20 @@ export function FormProducto({
       )}
 
       {/* Opciones */}
-      <fieldset className="rounded-lg border border-gray-200 p-4">
-        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <fieldset className="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
           Opciones
         </legend>
         <div className="mt-2 flex flex-wrap gap-6">
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
             <input type="checkbox" {...register('activo')} className="h-4 w-4 rounded border-gray-300 accent-green-600" />
             Producto activo
           </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
             <input type="checkbox" {...register('tiene_variantes')} className="h-4 w-4 rounded border-gray-300 accent-blue-600" />
             Tiene variantes (talla / color)
           </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
             <input type="checkbox" {...register('tiene_vencimiento')} className="h-4 w-4 rounded border-gray-300 accent-blue-600" />
             Controlar fecha de vencimiento
           </label>
@@ -282,28 +284,28 @@ export function FormProducto({
 
       {/* Variantes (talla × color) */}
       {tieneVariantes && (
-        <fieldset className="rounded-lg border border-blue-200 bg-blue-50/30 p-4">
-          <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-blue-600">
+        <fieldset className="rounded-lg border border-blue-200 bg-blue-50/30 p-4 dark:border-blue-900/50 dark:bg-blue-950/20">
+          <legend className="px-2 text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-300">
             Variantes de Producto
           </legend>
           <div className="mt-3 flex flex-col gap-3">
             {fields.map((field, idx) => (
-              <div key={field.id} className="grid grid-cols-5 gap-2 items-end rounded-lg border border-gray-200 bg-white p-3">
+              <div key={field.id} className="grid grid-cols-5 items-end gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900/80">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-600">Talla</label>
+                  <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Talla</label>
                   <select
                     {...register(`variantes.${idx}.talla`)}
-                    className="h-8 rounded border border-gray-300 bg-white px-2 text-sm"
+                    className={SELECT_SM_CLS}
                   >
                     <option value="">Talla</option>
                     {TALLAS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-gray-600">Color</label>
+                  <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Color</label>
                   <select
                     {...register(`variantes.${idx}.color`)}
-                    className="h-8 rounded border border-gray-300 bg-white px-2 text-sm"
+                    className={SELECT_SM_CLS}
                   >
                     <option value="">Color</option>
                     {COLORES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -323,7 +325,7 @@ export function FormProducto({
                 <button
                   type="button"
                   onClick={() => remove(idx)}
-                  className="mb-0.5 rounded p-2 text-red-400 hover:bg-red-50 hover:text-red-600"
+                  className="mb-0.5 rounded p-2 text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-300"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -343,7 +345,7 @@ export function FormProducto({
       )}
 
       {/* Acciones */}
-      <div className="flex justify-end gap-3 border-t border-gray-100 pt-4">
+      <div className="flex justify-end gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
         <Button type="button" variant="outline" onClick={onCancelar} disabled={cargando}>
           Cancelar
         </Button>

@@ -139,7 +139,7 @@ export function ListaProductos({
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
               placeholder="Buscar por código, nombre, barras..."
-              className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-blue-400"
             />
           </div>
           <Button type="submit" variant="outline" size="sm">Buscar</Button>
@@ -147,7 +147,7 @@ export function ListaProductos({
 
         <button
           onClick={() => setFiltros(p => !p)}
-          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors ${showFiltros ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950'}`}
+          className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors ${showFiltros ? 'border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/70'}`}
         >
           <SlidersHorizontal className="h-4 w-4" /> Filtros
           {(familia_id || fabricante_id) && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-bold">!</span>}
@@ -161,39 +161,39 @@ export function ListaProductos({
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* Panel filtros */}
       {showFiltros && (
-        <div className="flex flex-wrap gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
+        <div className="flex flex-wrap gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600">Familia / Categoría</label>
+            <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Familia / Categoría</label>
             <select
               value={familia_id}
               onChange={e => setFamiliaId(e.target.value)}
-              className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
             >
               <option value="">Todas</option>
               {familias.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-600">Fabricante / Marca</label>
+            <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Fabricante / Marca</label>
             <select
               value={fabricante_id}
               onChange={e => setFabricanteId(e.target.value)}
-              className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
             >
               <option value="">Todos</option>
               {fabricantes.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1 justify-center">
-            <label className="text-xs font-medium text-gray-600">Estado</label>
-            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer h-8">
+            <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Estado</label>
+            <label className="flex h-8 cursor-pointer items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
               <input
                 type="checkbox"
                 checked={soloInactivos}
@@ -219,7 +219,7 @@ export function ListaProductos({
       <Tabla columnas={COLUMNAS}>
         {productos.length === 0 ? (
           <tr>
-            <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+            <td colSpan={8} className="px-4 py-12 text-center text-gray-400 dark:text-gray-500">
               No se encontraron productos
             </td>
           </tr>
@@ -230,11 +230,11 @@ export function ListaProductos({
           return (
             <FilaTabla key={p.id}>
               <CeldaTabla>
-                <span className="font-mono text-xs font-medium text-gray-600">{p.codigo}</span>
+                <span className="font-mono text-xs font-medium text-gray-600 dark:text-gray-300">{p.codigo}</span>
               </CeldaTabla>
               <CeldaTabla>
                 <Link href={`/productos/${p.id}`} className="group">
-                  <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{p.descripcion}</p>
+                  <p className="font-medium text-gray-900 transition-colors group-hover:text-blue-600 dark:text-gray-100 dark:group-hover:text-blue-300">{p.descripcion}</p>
                   <div className="flex gap-1 mt-0.5">
                     {!p.activo && (
                       <Badge variant="danger">Inactivo</Badge>
@@ -256,18 +256,18 @@ export function ListaProductos({
               <CeldaTabla className="text-right font-medium text-gray-900">
                 {formatCOP(p.precio_venta)}
               </CeldaTabla>
-              <CeldaTabla className="text-right text-gray-500">
+              <CeldaTabla className="text-right text-gray-500 dark:text-gray-400">
                 {formatCOP(p.precio_compra)}
               </CeldaTabla>
               <CeldaTabla className="text-right">
-                <span className={margen >= 30 ? 'text-green-600 font-medium' : margen >= 15 ? 'text-yellow-600' : 'text-red-600'}>
+                <span className={margen >= 30 ? 'font-medium text-green-600 dark:text-green-300' : margen >= 15 ? 'text-yellow-600 dark:text-yellow-300' : 'text-red-600 dark:text-red-300'}>
                   {margen}%
                 </span>
               </CeldaTabla>
               <CeldaTabla className="text-center">
                 <div className="flex items-center justify-center gap-1">
                   {stockBajo && <AlertTriangle className="h-3.5 w-3.5 text-orange-500" />}
-                  <span className={stockBajo ? 'text-orange-600 font-medium' : ''}>
+                  <span className={stockBajo ? 'font-medium text-orange-600 dark:text-orange-300' : 'dark:text-gray-200'}>
                     {stockTotal.toLocaleString('es-CO')}
                   </span>
                 </div>
@@ -276,7 +276,7 @@ export function ListaProductos({
                 <div className="flex items-center gap-1">
                   <Link
                     href={`/productos/${p.id}`}
-                    className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    className="rounded p-1.5 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-gray-500 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
                     title="Ver detalle"
                   >
                     <Eye className="h-3.5 w-3.5" />
@@ -285,7 +285,7 @@ export function ListaProductos({
                     <>
                       <button
                         onClick={() => { setEditar(p); setModal(true) }}
-                        className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        className="rounded p-1.5 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-gray-500 dark:hover:bg-blue-900/20 dark:hover:text-blue-300"
                         title="Editar"
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -293,7 +293,7 @@ export function ListaProductos({
                       <button
                         onClick={() => handleEliminar(p)}
                         disabled={eliminandoId === p.id}
-                        className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                        className="rounded p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:text-gray-500 dark:hover:bg-red-900/20 dark:hover:text-red-300"
                         title="Eliminar o desactivar"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -318,7 +318,7 @@ export function ListaProductos({
         titulo={editar ? 'Editar producto' : 'Nuevo producto'}
         size="xl"
       >
-        {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
+        {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{error}</div>}
         <FormProducto
           inicial={editar ?? undefined}
           familias={familias}
