@@ -11,7 +11,11 @@
     "check": "npm run lint && npm run typecheck",
     "test": "npm run typecheck",
     "qa:empresa": "node scripts/qa_empresa_prueba.mjs",
-    "bench:app": "node scripts/bench_app.mjs"
+    "bench:app": "node scripts/bench_app.mjs",
+    "extract:facturas-coinin": "node scripts/extraer_facturas_coinin.mjs",
+    "sync:compras-coinin": "node scripts/sincronizar_compras_coinin.mjs",
+    "import:facturas": "node scripts/importar_facturas.mjs",
+    "repair:facturas-importadas": "node scripts/reparar_lineas_facturas_importadas.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

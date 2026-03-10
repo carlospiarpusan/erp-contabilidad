@@ -1,78 +1,91 @@
-import { createClient } from '@supabase/supabase-js'
-import { readFileSync } from 'fs'
+import {
+  bootstrapEnv,
+  buildDetalleMap,
+  buildDocumentoPayload,
+  buildLineasFactura,
+  chunk,
+  createAdminClient,
+  loadFacturaImportContext,
+  readFacturasPayload,
+} from './facturas_importadas_utils.mjs'
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY
+const log = (...args) => console.log('[facturas]', ...args)
+const warn = (...args) => console.warn('[warn]', ...args)
 
-const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
-const log  = (...a) => console.log('[facturas]', ...a)
-const warn = (...a) => console.warn('[warn]', ...a)
+bootstrapEnv()
 
-const EID = '948ce6fc-6337-4f39-9e80-7b2c0ce0166c'
+const admin = createAdminClient()
+const EID = process.env.EMPRESA_ID ?? '948ce6fc-6337-4f39-9e80-7b2c0ce0166c'
+const FACTURAS_PATH = process.env.FACTURAS_JSON_PATH ?? '/tmp/facturas.json'
+const DEFAULT_PREFIX = process.env.FACTURAS_PREFIJO ?? 'F'
 
 async function main() {
-  const facturas = JSON.parse(readFileSync('/tmp/facturas.json', 'utf-8'))
-  log(`${facturas.length} facturas a importar`)
+  const facturas = readFacturasPayload(FACTURAS_PATH)
+  log(`${facturas.length} facturas a importar desde ${FACTURAS_PATH}`)
 
-  // Obtener recursos de la empresa
-  const { data: serie }    = await admin.from('consecutivos').select('id').eq('empresa_id', EID).eq('tipo', 'factura_venta').limit(1).single()
-  const { data: bodega }   = await admin.from('bodegas').select('id').eq('empresa_id', EID).limit(1).single()
-  const { data: ejercicios } = await admin.from('ejercicios').select('id, año').eq('empresa_id', EID)
-  const { data: formaPago } = await admin.from('formas_pago').select('id').eq('empresa_id', EID).eq('descripcion', 'Efectivo').limit(1).single()
+  const context = await loadFacturaImportContext(admin, EID)
+  const detalleMap = buildDetalleMap(facturas, DEFAULT_PREFIX)
 
-  const ejercicioMap = Object.fromEntries((ejercicios ?? []).map(e => [e.año, e.id]))
+  let totalFacturas = 0
+  let totalLineas = 0
+  let totalSinProducto = 0
 
-  // Crear o buscar cliente "CONSUMIDOR FINAL"
-  let { data: cf } = await admin.from('clientes').select('id').eq('empresa_id', EID).ilike('razon_social', '%CONSUMIDOR FINAL%').limit(1).single()
-  if (!cf) {
-    const { data: nuevo } = await admin.from('clientes').insert({
-      empresa_id:   EID,
-      razon_social: 'CONSUMIDOR FINAL',
-      tipo_documento: 'CC',
-      numero_documento: '222222222',
-      activo: true,
-    }).select('id').single()
-    cf = nuevo
-    log('Cliente CONSUMIDOR FINAL creado:', cf?.id)
-  } else {
-    log('Cliente CONSUMIDOR FINAL existente:', cf.id)
-  }
+  for (const facturasChunk of chunk(facturas, 100)) {
+    const docsPayload = facturasChunk.map((factura) =>
+      buildDocumentoPayload(factura, context, EID, DEFAULT_PREFIX)
+    )
 
-  // Importar facturas en chunks
-  const docs = facturas.map(f => {
-    const anio = parseInt(f.fecha?.split('-')[0] ?? '2025')
-    return {
-      empresa_id:       EID,
-      tipo:             'factura_venta',
-      numero:           f.numero,
-      prefijo:          'F',
-      serie_id:         serie?.id ?? null,
-      cliente_id:       cf.id,
-      bodega_id:        bodega?.id ?? null,
-      ejercicio_id:     ejercicioMap[anio] ?? ejercicioMap[2025] ?? null,
-      forma_pago_id:    formaPago?.id ?? null,
-      fecha:            f.fecha || '2025-01-01',
-      fecha_vencimiento: f.vence || null,
-      total:            f.total,
-      subtotal:         f.total,
-      total_iva:        0,
-      total_descuento:  0,
-      total_costo:      0,
-      estado:           f.estado,
-      observaciones:    'Importado desde Coin In ERP',
+    const { data: docsInsertados, error: docsError } = await admin
+      .from('documentos')
+      .insert(docsPayload)
+      .select('id, numero, prefijo, total, subtotal, total_iva, total_descuento, total_costo')
+
+    if (docsError) {
+      warn(`chunk facturas: ${docsError.message}`)
+      continue
     }
-  })
 
-  let total = 0
-  for (let i = 0; i < docs.length; i += 100) {
-    const chunk = docs.slice(i, i + 100)
-    const { data, error } = await admin.from('documentos').insert(chunk).select('id')
-    if (error) { warn(`chunk ${i}: ${error.message}`); continue }
-    total += data.length
-    log(`Chunk ${i}: ${data.length} insertadas (total: ${total})`)
+    totalFacturas += docsInsertados.length
+
+    const documentosPorKey = new Map(
+      docsInsertados.map((documento) => [
+        `${String(documento.prefijo ?? '').trim().toUpperCase()}|${String(documento.numero ?? '').trim()}`,
+        documento,
+      ])
+    )
+
+    const lineasChunk = []
+    for (const factura of facturasChunk) {
+      const key = `${String(factura.prefijo ?? DEFAULT_PREFIX).trim().toUpperCase()}|${String(factura.numero ?? '').trim()}`
+      const documento = documentosPorKey.get(key)
+      if (!documento) {
+        warn(`No se pudo ubicar el documento insertado para ${key}`)
+        continue
+      }
+
+      const detalle = detalleMap.get(key) ?? factura
+      const lineas = buildLineasFactura(detalle, documento, context)
+      totalSinProducto += lineas.filter((linea) => !linea.producto_id).length
+      totalLineas += lineas.length
+      lineasChunk.push(...lineas)
+    }
+
+    if (lineasChunk.length > 0) {
+      const { error: lineasError } = await admin.from('documentos_lineas').insert(lineasChunk)
+      if (lineasError) {
+        warn(`chunk líneas: ${lineasError.message}`)
+      }
+    }
+
+    log(`Chunk: ${docsInsertados.length} facturas, ${lineasChunk.length} líneas`)
   }
 
-  log(`\n✓ Total facturas importadas: ${total}`)
+  log(`✓ Total facturas importadas: ${totalFacturas}`)
+  log(`✓ Total líneas creadas: ${totalLineas}`)
+  log(`✓ Líneas sin producto mapeado: ${totalSinProducto}`)
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error(error)
+  process.exitCode = 1
+})
