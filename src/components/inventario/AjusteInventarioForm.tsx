@@ -8,6 +8,11 @@ interface ProductoSimple {
   id: string
   codigo: string
   descripcion: string
+  unidad_medida?: string
+  stock?: Array<{
+    bodega_id: string
+    cantidad: number
+  }>
 }
 
 interface Bodega {
@@ -23,6 +28,11 @@ interface FilaAjuste {
   producto_id: string
   codigo: string
   descripcion: string
+  unidad_medida?: string
+  stock: Array<{
+    bodega_id: string
+    cantidad: number
+  }>
   cantidad_fisica: string
   notas: string
 }
@@ -53,7 +63,6 @@ export function AjusteInventarioForm({ bodegas }: Props) {
           q,
           limit: '10',
           activo: 'true',
-          select_mode: 'selector',
           include_total: 'false',
         })
         const res = await fetch(`/api/productos?${params.toString()}`, {
@@ -84,6 +93,8 @@ export function AjusteInventarioForm({ bodegas }: Props) {
       producto_id: producto.id,
       codigo: producto.codigo,
       descripcion: producto.descripcion,
+      unidad_medida: producto.unidad_medida,
+      stock: Array.isArray(producto.stock) ? producto.stock : [],
       cantidad_fisica: '',
       notas: '',
     }])
@@ -101,6 +112,12 @@ export function AjusteInventarioForm({ bodegas }: Props) {
 
   const eliminarFila = (idx: number) => {
     setFilas((prev) => prev.filter((_, index) => index !== idx))
+  }
+
+  const getStockActual = (fila: FilaAjuste) => {
+    return fila.stock
+      .filter((stock) => stock.bodega_id === bodegaId)
+      .reduce((sum, stock) => sum + Number(stock.cantidad ?? 0), 0)
   }
 
   const handleGuardar = async () => {
@@ -208,17 +225,29 @@ export function AjusteInventarioForm({ bodegas }: Props) {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Producto</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500">Stock actual</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500">Cantidad ajuste</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Notas</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-              {filas.map((fila, idx) => (
+              {filas.map((fila, idx) => {
+                const stockActual = getStockActual(fila)
+
+                return (
                 <tr key={fila.producto_id}>
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-800 dark:text-gray-200">{fila.descripcion}</p>
                     <p className="font-mono text-xs text-gray-400">{fila.codigo}</p>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <p className="font-semibold text-gray-800 dark:text-gray-200">
+                      {stockActual.toLocaleString('es-CO')}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {fila.unidad_medida ?? 'UND'} en {bodegas.find((bodega) => bodega.id === bodegaId)?.nombre ?? 'bodega'}
+                    </p>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
@@ -263,7 +292,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
                     <button type="button" onClick={() => eliminarFila(idx)} className="text-gray-300 hover:text-red-500">X</button>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
