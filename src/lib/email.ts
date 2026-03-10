@@ -254,3 +254,53 @@ export function htmlRemision(params: {
   </div>
 </body></html>`
 }
+
+export function htmlRecordatorioCobro(params: {
+  empresa: string; nit: string; cliente: string
+  facturas: Array<{ numero: string; fecha_vencimiento: string; saldo: string; link: string }>
+  total: string
+}) {
+  const filasHTML = params.facturas.map(f =>
+    `<div style="padding:10px 0;border-bottom:1px solid #f3f4f6">
+      <div style="display:flex;justify-content:space-between;font-size:14px">
+        <span style="font-weight:600">${f.numero}</span>
+        <span style="font-weight:700;color:#dc2626;font-family:monospace">${f.saldo}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#9ca3af;margin-top:2px">
+        <span>Vencida: ${f.fecha_vencimiento}</span>
+        <a href="${f.link}" style="color:#dc2626">Ver factura →</a>
+      </div>
+    </div>`
+  ).join('')
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><style>
+  body { font-family: Arial, sans-serif; color: #1f2937; margin: 0; padding: 0; background: #f9fafb; }
+  .wrap { max-width: 560px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; }
+  .header { background: #dc2626; color: #fff; padding: 24px 32px; }
+  .header h1 { margin: 0; font-size: 20px; }
+  .header p { margin: 4px 0 0; font-size: 13px; opacity: .85; }
+  .body { padding: 32px; }
+  .footer { padding: 16px 32px; font-size: 12px; color: #9ca3af; border-top: 1px solid #f3f4f6; text-align: center; }
+</style></head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>${params.empresa}</h1>
+      <p>NIT: ${params.nit} — Recordatorio de pago</p>
+    </div>
+    <div class="body">
+      <p style="font-size:15px;margin-top:0">Estimado(a) <strong>${params.cliente}</strong>,</p>
+      <p style="font-size:14px;color:#6b7280">Le recordamos que tiene facturas vencidas pendientes de pago:</p>
+      ${filasHTML}
+      <div style="display:flex;justify-content:space-between;padding:12px 0;font-size:16px;font-weight:700;border-top:2px solid #dc2626;margin-top:8px">
+        <span>TOTAL PENDIENTE</span>
+        <span style="color:#dc2626;font-family:monospace">${params.total}</span>
+      </div>
+      <p style="font-size:13px;color:#6b7280;margin-top:16px">Para ponerse al día, contáctenos o realice su pago a la brevedad. Gracias por su preferencia.</p>
+    </div>
+    <div class="footer">Este correo fue enviado automáticamente desde el sistema ERP.</div>
+  </div>
+</body></html>`
+}

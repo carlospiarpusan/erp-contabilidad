@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 // ── Parsea XML DIAN UBL 2.1 y devuelve cabecera + líneas + estado de productos ──
 
@@ -23,7 +24,6 @@ function extractBlocks(xml: string, tag: string): string[] {
   const blocks: string[] = []
   const openRe  = new RegExp(`<[^:>]*:?${tag}[\\s>]`, 'gi')
   const closeRe = new RegExp(`</[^:>]*:?${tag}>`, 'gi')
-  let pos = 0
   let depth = 0
   let start = -1
 
@@ -46,13 +46,14 @@ function extractBlocks(xml: string, tag: string): string[] {
       }
       i = closeMatch.index + closeMatch[0].length - 2
     }
-    void pos
   }
   return blocks
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const formData = await req.formData()
     const file = formData.get('archivo') as File | null
     if (!file) return NextResponse.json({ error: 'No se recibió archivo' }, { status: 400 })
@@ -146,7 +147,7 @@ export async function POST(req: NextRequest) {
 
     const lineas_resultado = lineas_raw.map(l => {
       const producto_encontrado = l.codigo
-        ? productos?.find(p => p.codigo.toUpperCase() === l.codigo.toUpperCase()) ?? null
+        ? productos?.find(p => (p.codigo ?? '').toUpperCase() === l.codigo.toUpperCase()) ?? null
         : null
 
       return {

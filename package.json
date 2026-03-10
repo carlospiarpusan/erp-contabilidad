@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck",
+    "test": "npm run typecheck",
+    "qa:empresa": "node scripts/qa_empresa_prueba.mjs",
+    "bench:app": "node scripts/bench_app.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -25,6 +30,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.576.0",
     "next": "16.1.6",
+    "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",

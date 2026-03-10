@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getBalanceSituacion } from '@/lib/db/informes'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
+  const session = await getSession()
+  if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
   const sp         = req.nextUrl.searchParams
   const fecha_corte = sp.get('fecha') || new Date().toISOString().split('T')[0]
 

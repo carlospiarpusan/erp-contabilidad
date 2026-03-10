@@ -11,26 +11,74 @@ const SELECT_LINEA = `
   impuesto:impuesto_id(id, descripcion, porcentaje)
 `
 
+type PedidosFilters = {
+  estado?: string
+  desde?: string
+  hasta?: string
+}
+
+function applyPedidosFilters<T>(query: T, params: PedidosFilters) {
+  let nextQuery = query as any
+  if (params.estado) nextQuery = nextQuery.eq('estado', params.estado)
+  if (params.desde) nextQuery = nextQuery.gte('fecha', params.desde)
+  if (params.hasta) nextQuery = nextQuery.lte('fecha', params.hasta)
+  return nextQuery as T
+}
+
 export async function getPedidos(params?: {
   estado?: string; desde?: string; hasta?: string; limit?: number; offset?: number
 }) {
   const supabase = await createClient()
   const { estado, desde, hasta, limit = 50, offset = 0 } = params ?? {}
 
-  let q = supabase
-    .from('documentos')
-    .select(SELECT_PEDIDO, { count: 'exact' })
-    .eq('tipo', 'pedido')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (estado) q = q.eq('estado', estado)
-  if (desde) q = q.gte('fecha', desde)
-  if (hasta) q = q.lte('fecha', hasta)
+  const q = applyPedidosFilters(
+    supabase
+      .from('documentos')
+      .select(SELECT_PEDIDO, { count: 'exact' })
+      .eq('tipo', 'pedido')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1),
+    { estado, desde, hasta }
+  )
 
   const { data, count, error } = await q
   if (error) throw error
   return { pedidos: data ?? [], total: count ?? 0 }
+}
+
+export async function getResumenPedidos(params?: PedidosFilters) {
+  const supabase = await createClient()
+  const filters = params ?? {}
+
+  const [countRes, rowsRes] = await Promise.all([
+    applyPedidosFilters(
+      supabase
+        .from('documentos')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'pedido'),
+      filters
+    ),
+    applyPedidosFilters(
+      supabase
+        .from('documentos')
+        .select('estado, total')
+        .eq('tipo', 'pedido'),
+      filters
+    ),
+  ])
+
+  if (countRes.error) throw countRes.error
+  if (rowsRes.error) throw rowsRes.error
+
+  const rows = rowsRes.data ?? []
+  const aprobados = rows.filter((row) => row.estado === 'aprobado')
+
+  return {
+    total: countRes.count ?? 0,
+    total_valor: rows.reduce((sum, row) => sum + Number(row.total ?? 0), 0),
+    aprobados: aprobados.length,
+    valor_aprobados: aprobados.reduce((sum, row) => sum + Number(row.total ?? 0), 0),
+  }
 }
 
 export async function getPedidoById(id: string) {

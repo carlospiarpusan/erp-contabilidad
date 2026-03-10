@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Cliente, GrupoCliente } from '@/types'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
+import { isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 
 const CLIENTES_SELECT_FULL = '*, grupo:grupos_clientes(id, nombre), colaborador:colaboradores(id, nombre)'
 const CLIENTES_SELECT_SELECTOR = 'id, razon_social, numero_documento, email, telefono, activo'
@@ -255,39 +256,37 @@ export async function deleteGrupo(id: string) {
 
 export async function getResumenCliente(cliente_id: string) {
   const supabase = await createClient()
+  const { data: facturas, error, count } = await supabase
+    .from('documentos')
+    .select(`
+      id, numero, prefijo, total, fecha, estado,
+      forma_pago:forma_pago_id(descripcion),
+      recibos(valor)
+    `, { count: 'exact' })
+    .eq('tipo', 'factura_venta')
+    .eq('cliente_id', cliente_id)
+    .order('fecha', { ascending: false })
 
-  const [facturasRes, recibosRes, ultimasRes] = await Promise.all([
-    supabase
-      .from('documentos')
-      .select('id, total, estado', { count: 'exact' })
-      .eq('tipo', 'factura_venta')
-      .eq('cliente_id', cliente_id),
-    supabase
-      .from('recibos')
-      .select('valor')
-      .eq('tipo', 'venta')
-      .eq('cliente_id', cliente_id),
-    supabase
-      .from('documentos')
-      .select('id, numero, prefijo, total, fecha, estado')
-      .eq('tipo', 'factura_venta')
-      .eq('cliente_id', cliente_id)
-      .order('fecha', { ascending: false })
-      .limit(5),
-  ])
+  if (error) throw error
 
-  const facturas = facturasRes.data ?? []
-  const total_facturas = facturasRes.count ?? 0
-  const total_compras = facturas.reduce((s: number, f: any) => s + (f.total ?? 0), 0)
-  const total_cobrado = (recibosRes.data ?? []).reduce((s: number, r: any) => s + (r.valor ?? 0), 0)
-  const saldo_pendiente = total_compras - total_cobrado
+  const rows = facturas ?? []
+  const total_facturas = count ?? 0
+  const total_compras = rows.reduce((s: number, f: any) => s + (f.total ?? 0), 0)
+  const total_cobrado = rows.reduce((s: number, f: any) =>
+    s + (f.recibos ?? []).reduce((acc: number, r: any) => acc + (r.valor ?? 0), 0), 0)
+  const saldo_pendiente = rows.reduce((s: number, f: any) => {
+    if (!['pendiente', 'vencida'].includes(f.estado)) return s
+    if (isSistecreditoFormaPago(f.forma_pago as { descripcion?: string } | null)) return s
+    const cobrado = (f.recibos ?? []).reduce((acc: number, r: any) => acc + (r.valor ?? 0), 0)
+    return s + Math.max(0, (f.total ?? 0) - cobrado)
+  }, 0)
 
   return {
     total_facturas,
     total_compras,
     total_cobrado,
     saldo_pendiente: Math.max(0, saldo_pendiente),
-    ultimas_facturas: ultimasRes.data ?? [],
+    ultimas_facturas: rows.slice(0, 5),
   }
 }
 
@@ -301,6 +300,7 @@ export async function getClienteDeudores(limit = 10) {
       cliente_id,
       cliente:clientes(id, razon_social, telefono, email),
       total,
+      forma_pago:forma_pago_id(descripcion),
       fecha_vencimiento
     `)
     .eq('tipo', 'factura_venta')
@@ -310,5 +310,5 @@ export async function getClienteDeudores(limit = 10) {
     .limit(limit)
 
   if (error) throw error
-  return data ?? []
+  return (data ?? []).filter((row) => !isSistecreditoFormaPago(row.forma_pago as { descripcion?: string } | null))
 }

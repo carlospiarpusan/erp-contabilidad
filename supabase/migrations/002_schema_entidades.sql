@@ -91,7 +91,8 @@ CREATE TABLE proveedores (
   departamento     TEXT,
   observaciones    TEXT,
   activo           BOOLEAN DEFAULT TRUE,
-  created_at       TIMESTAMPTZ DEFAULT NOW()
+  created_at       TIMESTAMPTZ DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ──────────────────────────────────────────────────────────────
@@ -219,6 +220,10 @@ CREATE TRIGGER set_updated_at_clientes
 
 CREATE TRIGGER set_updated_at_productos
   BEFORE UPDATE ON productos
+  FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+CREATE TRIGGER set_updated_at_proveedores
+  BEFORE UPDATE ON proveedores
   FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
 
 CREATE TRIGGER set_updated_at_stock

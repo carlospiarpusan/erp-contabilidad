@@ -1,17 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-import { getProveedores } from '@/lib/db/compras'
-import { getProductos, getImpuestos, getBodegas } from '@/lib/db/productos'
+import { getImpuestos, getBodegas } from '@/lib/db/productos'
 import { FormOrdenCompra } from '@/components/compras/FormOrdenCompra'
 import { ShoppingCart } from 'lucide-react'
 
 export default async function NuevaOrdenCompraPage() {
-  const [{ proveedores }, { productos }, impuestos, bodegas] = await Promise.all([
-    getProveedores({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getImpuestos(),
-    getBodegas(),
-  ])
+  const [impuestos, bodegas] = await Promise.all([getImpuestos(), getBodegas()])
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,12 +19,7 @@ export default async function NuevaOrdenCompraPage() {
         </div>
       </div>
 
-      <FormOrdenCompra
-        proveedores={proveedores as unknown as Parameters<typeof FormOrdenCompra>[0]['proveedores']}
-        productos={productos as unknown as Parameters<typeof FormOrdenCompra>[0]['productos']}
-        impuestos={impuestos as unknown as Parameters<typeof FormOrdenCompra>[0]['impuestos']}
-        bodegas={bodegas as unknown as Parameters<typeof FormOrdenCompra>[0]['bodegas']}
-      />
+      <FormOrdenCompra impuestos={impuestos as any} bodegas={bodegas as any} />
     </div>
   )
 }

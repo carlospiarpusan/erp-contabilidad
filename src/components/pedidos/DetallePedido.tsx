@@ -9,6 +9,7 @@ import { formatCOP, formatFecha } from '@/utils/cn'
 import { ClipboardList, CheckCircle, XCircle, Truck, FileText, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
+import { DuplicarButton } from '@/components/shared/DuplicarButton'
 
 interface FormaPago { id: string; descripcion: string }
 interface Linea {
@@ -59,8 +60,8 @@ export function DetallePedido({ pedido, formasPago }: Props) {
       } else {
         router.refresh()
       }
-    } catch (e: any) {
-      alert(e.message)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
     } finally {
       setAccionando(false)
       setModalFact(false)
@@ -107,6 +108,7 @@ export function DetallePedido({ pedido, formasPago }: Props) {
               </Button>
             )}
             <EnviarEmailButton apiPath="/api/email/pedido" docId={pedido.id} emailCliente={pedido.cliente?.email ?? null} />
+            <DuplicarButton documentoId={pedido.id} tipo="pedido" />
             <Link href={`/print/pedido/${pedido.id}`} target="_blank"
               className="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
               <Printer className="h-4 w-4" /> Imprimir

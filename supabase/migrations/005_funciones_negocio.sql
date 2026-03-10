@@ -15,11 +15,11 @@ DECLARE
   v_serie RECORD;
 BEGIN
   -- Bloquear la fila para evitar duplicados concurrentes
-  SELECT id, prefijo, consecutivo_actual
+  SELECT c.id, c.prefijo, c.consecutivo_actual
   INTO v_serie
-  FROM consecutivos
-  WHERE empresa_id = p_empresa_id AND tipo = p_tipo AND activo = TRUE
-  ORDER BY created_at
+  FROM consecutivos c
+  WHERE c.empresa_id = p_empresa_id AND c.tipo = p_tipo AND c.activo = TRUE
+  ORDER BY c.id
   LIMIT 1
   FOR UPDATE;
 
@@ -54,24 +54,63 @@ CREATE OR REPLACE FUNCTION actualizar_stock(
   p_numero_lote  TEXT DEFAULT NULL
 ) RETURNS VOID AS $$
 DECLARE
-  v_stock_antes DECIMAL;
+  v_stock_antes DECIMAL := 0;
   v_stock_despues DECIMAL;
   v_empresa_id UUID;
+  v_stock_id UUID;
+  v_stock_extra_ids UUID[] := ARRAY[]::UUID[];
+  v_stock_row RECORD;
+  v_cantidad_minima DECIMAL := 0;
 BEGIN
   -- Obtener empresa_id del producto
   SELECT empresa_id INTO v_empresa_id FROM productos WHERE id = p_producto_id;
+  IF v_empresa_id IS NULL THEN
+    RAISE EXCEPTION 'Producto no encontrado: %', p_producto_id;
+  END IF;
 
-  -- Obtener stock actual (crea registro si no existe)
-  INSERT INTO stock (producto_id, variante_id, bodega_id, cantidad)
-  VALUES (p_producto_id, p_variante_id, p_bodega_id, 0)
-  ON CONFLICT (producto_id, variante_id, bodega_id) DO NOTHING;
+  -- Crear stock si no existe. Variante NULL requiere manejo especial
+  -- porque UNIQUE(producto_id, variante_id, bodega_id) permite múltiples NULL.
+  IF p_variante_id IS NULL THEN
+    INSERT INTO stock (producto_id, variante_id, bodega_id, cantidad)
+    SELECT p_producto_id, NULL, p_bodega_id, 0
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM stock s
+      WHERE s.producto_id = p_producto_id
+        AND s.variante_id IS NULL
+        AND s.bodega_id = p_bodega_id
+    );
+  ELSE
+    INSERT INTO stock (producto_id, variante_id, bodega_id, cantidad)
+    VALUES (p_producto_id, p_variante_id, p_bodega_id, 0)
+    ON CONFLICT (producto_id, variante_id, bodega_id) DO NOTHING;
+  END IF;
 
-  SELECT cantidad INTO v_stock_antes
-  FROM stock
-  WHERE producto_id = p_producto_id
-    AND (variante_id = p_variante_id OR (variante_id IS NULL AND p_variante_id IS NULL))
-    AND bodega_id = p_bodega_id
-  FOR UPDATE;
+  -- Consolidar filas duplicadas de stock (caso variante_id NULL)
+  FOR v_stock_row IN
+    SELECT s.id, s.cantidad, s.cantidad_minima
+    FROM stock s
+    WHERE s.producto_id = p_producto_id
+      AND (s.variante_id = p_variante_id OR (s.variante_id IS NULL AND p_variante_id IS NULL))
+      AND s.bodega_id = p_bodega_id
+    ORDER BY s.updated_at NULLS LAST, s.id
+    FOR UPDATE
+  LOOP
+    v_stock_antes := v_stock_antes + COALESCE(v_stock_row.cantidad, 0);
+    v_cantidad_minima := GREATEST(v_cantidad_minima, COALESCE(v_stock_row.cantidad_minima, 0));
+
+    IF v_stock_id IS NULL THEN
+      v_stock_id := v_stock_row.id;
+    ELSE
+      v_stock_extra_ids := array_append(v_stock_extra_ids, v_stock_row.id);
+    END IF;
+  END LOOP;
+
+  IF v_stock_id IS NULL THEN
+    INSERT INTO stock (producto_id, variante_id, bodega_id, cantidad)
+    VALUES (p_producto_id, p_variante_id, p_bodega_id, 0)
+    RETURNING id INTO v_stock_id;
+  END IF;
 
   v_stock_despues := v_stock_antes + p_cantidad;
 
@@ -81,12 +120,18 @@ BEGIN
       v_stock_antes, ABS(p_cantidad);
   END IF;
 
-  -- Actualizar stock
+  -- Actualizar stock en una sola fila consolidada
   UPDATE stock
-  SET cantidad = v_stock_despues, updated_at = NOW()
-  WHERE producto_id = p_producto_id
-    AND (variante_id = p_variante_id OR (variante_id IS NULL AND p_variante_id IS NULL))
-    AND bodega_id = p_bodega_id;
+  SET
+    cantidad = v_stock_despues,
+    cantidad_minima = GREATEST(cantidad_minima, v_cantidad_minima),
+    updated_at = NOW()
+  WHERE id = v_stock_id;
+
+  -- Limpiar filas duplicadas antiguas (si existen).
+  IF array_length(v_stock_extra_ids, 1) IS NOT NULL THEN
+    DELETE FROM stock WHERE id = ANY(v_stock_extra_ids);
+  END IF;
 
   -- Registrar movimiento (trazabilidad)
   INSERT INTO stock_movimientos (
@@ -99,11 +144,8 @@ BEGIN
     p_precio_costo, p_numero_lote, auth.uid()
   );
 
-  -- Verificar si quedó por debajo del mínimo → crear notificación
-  IF v_stock_despues <= (
-    SELECT cantidad_minima FROM stock
-    WHERE producto_id = p_producto_id AND bodega_id = p_bodega_id
-  ) THEN
+  -- Verificar si quedó por debajo del mínimo y crear notificación.
+  IF v_cantidad_minima > 0 AND v_stock_despues <= v_cantidad_minima THEN
     INSERT INTO notificaciones (empresa_id, tipo, titulo, mensaje, datos)
     VALUES (
       v_empresa_id,
@@ -130,7 +172,7 @@ DECLARE
   v_num         INTEGER;
   v_cuenta      RECORD;
 BEGIN
-  SELECT d.*, c.codigo AS serie_codigo
+  SELECT d.*, c.prefijo AS serie_codigo
   INTO v_doc
   FROM documentos d
   LEFT JOIN consecutivos c ON c.id = d.serie_id

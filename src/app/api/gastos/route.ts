@@ -2,12 +2,16 @@ import { toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { getGastos, createGasto } from '@/lib/db/gastos'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { searchParams } = req.nextUrl
     const result = await getGastos({
-      busqueda: searchParams.get('busqueda') ?? undefined,
+      busqueda: searchParams.get('q') ?? searchParams.get('busqueda') ?? undefined,
       desde:    searchParams.get('desde')    ?? undefined,
       hasta:    searchParams.get('hasta')    ?? undefined,
       limit:    searchParams.has('limit')  ? Number(searchParams.get('limit'))  : undefined,
@@ -21,6 +25,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const body = await req.json()
     const { tipo_gasto_id, forma_pago_id, descripcion, valor } = body
     if (!tipo_gasto_id) return NextResponse.json({ error: 'tipo_gasto_id requerido' }, { status: 400 })

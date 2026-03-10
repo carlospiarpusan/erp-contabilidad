@@ -38,7 +38,7 @@ export function FormCuentasEspeciales({ tipos, mapaActual, cuentas }: Props) {
         setGuardados(prev => { const s = new Set(prev); s.delete(tipo); return s })
         router.refresh()
       }, 1500)
-    } catch (e: any) { alert(e.message) }
+    } catch (e) { alert(e instanceof Error ? e.message : 'Error') }
     finally { setGuardando(null) }
   }
 

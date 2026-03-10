@@ -78,8 +78,8 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
       }
       router.push('/clientes')
       router.refresh()
-    } catch (e: any) {
-      alert(e.message)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
     }
   }
 
@@ -94,7 +94,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white text-xl font-bold shadow-md">
-            {cliente.razon_social.charAt(0).toUpperCase()}
+            {(cliente.razon_social ?? '?').charAt(0).toUpperCase()}
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{cliente.razon_social}</h1>

@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getConsecutivos } from '@/lib/db/contabilidad'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
+import { toErrorMsg } from '@/lib/utils/errors'
 
-function errorMessage(e: unknown) {
-  return e instanceof Error ? e.message : 'Error'
-}
 
 async function requireContabilidadAccess() {
   const session = await getSession()
@@ -24,6 +22,6 @@ export async function GET() {
     const data = await getConsecutivos()
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

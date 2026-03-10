@@ -4,6 +4,7 @@ import { getAsientos } from '@/lib/db/contabilidad'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
+import { RevertirAsientoButton } from '@/components/contabilidad/RevertirAsientoButton'
 
 const TIPOS_DOC = [
   { value: '', label: 'Todos los tipos' },
@@ -45,6 +46,14 @@ export default async function AsientosPage({ searchParams }: PageProps) {
           <h1 className="text-xl font-bold text-gray-900">Libro de asientos</h1>
           <p className="text-sm text-gray-500">{total} asiento{total !== 1 ? 's' : ''} registrado{total !== 1 ? 's' : ''}</p>
         </div>
+      </div>
+      <div className="flex justify-end">
+        <Link
+          href="/contabilidad/asientos/nuevo"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Nuevo asiento manual
+        </Link>
       </div>
 
       {/* Filtros */}
@@ -96,6 +105,22 @@ export default async function AsientosPage({ searchParams }: PageProps) {
                   <p className="text-xs text-gray-400">{formatFecha(a.fecha as string)}</p>
                   <p className="font-mono font-bold text-blue-700">{formatCOP(a.importe as number)}</p>
                 </div>
+              </div>
+              <div className="flex items-center justify-end gap-2 px-5 pt-3">
+                {(a as { tipo?: string }).tipo === 'manual' && (
+                  <Link
+                    href={`/contabilidad/asientos/${a.id}/editar`}
+                    className="rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Editar
+                  </Link>
+                )}
+                {(a as { tipo?: string }).tipo === 'manual' && (
+                  <RevertirAsientoButton
+                    asientoId={a.id as string}
+                    disabled={(a as { tipo_doc?: string }).tipo_doc === 'reversion_manual'}
+                  />
+                )}
               </div>
               {/* Líneas */}
               <div className="px-5 py-3">

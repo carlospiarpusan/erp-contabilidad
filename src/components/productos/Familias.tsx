@@ -54,7 +54,8 @@ export function Familias({ familias: init }: Props) {
       return
     }
     if (!confirm(`¿Eliminar la familia "${f.nombre}"?`)) return
-    await fetch(`/api/productos/familias/${f.id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/productos/familias/${f.id}`, { method: 'DELETE' })
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Error al eliminar'); return }
     setFamilias(prev => prev.filter(x => x.id !== f.id))
   }
 
@@ -82,7 +83,7 @@ export function Familias({ familias: init }: Props) {
               <div key={f.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 hover:shadow-sm transition-shadow">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-100 text-orange-700 font-bold text-sm">
-                    {f.nombre.charAt(0).toUpperCase()}
+                    {(f.nombre ?? '?').charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">{f.nombre}</p>

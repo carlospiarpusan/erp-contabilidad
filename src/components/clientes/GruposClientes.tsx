@@ -106,7 +106,8 @@ export function GruposClientes({ grupos: init }: Props) {
       return
     }
     if (!confirm(`¿Eliminar el grupo "${g.nombre}"?`)) return
-    await fetch(`/api/clientes/grupos/${g.id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/clientes/grupos/${g.id}`, { method: 'DELETE' })
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Error al eliminar'); return }
     setGrupos(prev => prev.filter(x => x.id !== g.id))
   }
 
@@ -144,7 +145,7 @@ export function GruposClientes({ grupos: init }: Props) {
                       className="h-10 w-10 rounded-xl flex items-center justify-center text-white font-bold text-lg"
                       style={{ backgroundColor: g.color ?? '#3B82F6' }}
                     >
-                      {g.nombre.charAt(0).toUpperCase()}
+                      {(g.nombre ?? '?').charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">{g.nombre}</p>

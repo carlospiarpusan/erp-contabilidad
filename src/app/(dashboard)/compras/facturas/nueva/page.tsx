@@ -1,22 +1,16 @@
 export const dynamic = 'force-dynamic'
 
-import { getProveedores } from '@/lib/db/compras'
-import { getProductos, getImpuestos, getBodegas } from '@/lib/db/productos'
+import { getImpuestos, getBodegas } from '@/lib/db/productos'
 import { FormCompra } from '@/components/compras/FormCompra'
 import { ShoppingCart, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function NuevaCompraPage() {
-  const [{ proveedores }, { productos }, impuestos, bodegas] = await Promise.all([
-    getProveedores({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getImpuestos(),
-    getBodegas(),
-  ])
+  const [impuestos, bodegas] = await Promise.all([getImpuestos(), getBodegas()])
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/compras/facturas" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 w-fit">
+      <Link href="/compras/facturas" className="flex w-fit items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
         <ChevronLeft className="h-4 w-4" /> Volver a compras
       </Link>
 
@@ -30,12 +24,7 @@ export default async function NuevaCompraPage() {
         </div>
       </div>
 
-      <FormCompra
-        proveedores={proveedores}
-        productos={productos}
-        impuestos={impuestos}
-        bodegas={bodegas}
-      />
+      <FormCompra impuestos={impuestos} bodegas={bodegas} />
     </div>
   )
 }

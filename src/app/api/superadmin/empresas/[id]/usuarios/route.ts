@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { getSession } from '@/lib/auth/session'
+import { createServiceClient } from '@/lib/supabase/service'
+import { getSupabaseServiceEnv, hasSupabaseServiceEnv } from '@/lib/supabase/config'
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return createServiceClient()
 }
 
 function superadminConfigError() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!hasSupabaseServiceEnv()) {
     return NextResponse.json(
       { error: 'Falta configurar SUPABASE_SERVICE_ROLE_KEY en el entorno' },
       { status: 500 }
@@ -49,13 +47,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!email || !nombre || !rol_id) return NextResponse.json({ error: 'Faltan campos' }, { status: 400 })
 
   const admin = adminClient()
+  const { url, serviceRoleKey } = getSupabaseServiceEnv()
   const authRes = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`,
+    `${url}/auth/v1/admin/users`,
     {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

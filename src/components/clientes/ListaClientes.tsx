@@ -86,7 +86,7 @@ export function ListaClientes({
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
       if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? 'Error') }
       setModal(false); setEditar(null); router.refresh()
-    } catch (e: any) {
+    } catch (e) {
       setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setCargando(false)
@@ -105,8 +105,8 @@ export function ListaClientes({
       }
 
       router.refresh()
-    } catch (e: any) {
-      alert(e.message || 'Error al eliminar cliente')
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error al eliminar cliente')
     } finally {
       setCargando(false)
     }

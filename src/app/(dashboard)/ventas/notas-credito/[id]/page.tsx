@@ -6,6 +6,7 @@ import { formatCOP, formatFecha } from '@/utils/cn'
 import { RotateCcw, Printer, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
+import { AnularNotaButton } from '@/components/ventas/AnularNotaButton'
 
 export default async function NotaCreditoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -53,6 +54,9 @@ export default async function NotaCreditoDetailPage({ params }: { params: Promis
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {nc.estado !== 'cancelada' && (
+            <AnularNotaButton apiPath={`/api/ventas/notas-credito/${nc.id}`} tipoLabel={`la nota crédito ${nc.prefijo}${nc.numero}`} />
+          )}
           <EnviarEmailButton apiPath="/api/email/nota-credito" docId={nc.id} emailCliente={cliente?.email ?? null} />
           <Link href={`/print/nota-credito/${nc.id}`} target="_blank"
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50">

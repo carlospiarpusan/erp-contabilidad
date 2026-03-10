@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Truck, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Search } from 'lucide-react'
@@ -27,6 +27,10 @@ interface Props {
   proveedores: Proveedor[]
   total: number
 }
+
+type DeleteProveedorResponse =
+  | { mode: 'deleted' }
+  | { mode: 'deactivated'; proveedor: Proveedor; message?: string }
 
 const EMPTY: Partial<Proveedor> = {
   razon_social: '', contacto: '', tipo_documento: 'NIT',
@@ -65,9 +69,14 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
   const [guardando, setGuardando] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
   const [errorTabla, setErrorTabla] = useState('')
+  const [mensajeTabla, setMensajeTabla] = useState('')
   const [confirmBorrar, setConfirmBorrar] = useState<Proveedor | null>(null)
   const [borrando, setBorrando] = useState(false)
   const [errorBorrar, setErrorBorrar] = useState('')
+
+  useEffect(() => {
+    setProveedores(inicial)
+  }, [inicial])
 
   const filtrados = proveedores.filter(p =>
     p && typeof p === 'object' && (
@@ -80,6 +89,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
     setEditando(null)
     setForm(EMPTY)
     setErrorGuardar('')
+    setMensajeTabla('')
     setModal(true)
   }
 
@@ -87,6 +97,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
     setEditando(p)
     setForm({ ...p })
     setErrorGuardar('')
+    setMensajeTabla('')
     setModal(true)
   }
 
@@ -131,12 +142,21 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
     if (!confirmBorrar) return
     setBorrando(true)
     setErrorBorrar('')
+    setMensajeTabla('')
     try {
-      const { ok, error } = await apiCall(`/api/compras/proveedores/${confirmBorrar.id}`, {
+      const { ok, data, error } = await apiCall(`/api/compras/proveedores/${confirmBorrar.id}`, {
         method: 'DELETE',
       })
       if (!ok) { setErrorBorrar(error); return }
-      setProveedores(prev => prev.filter(p => p.id !== confirmBorrar.id))
+
+      const result = data as DeleteProveedorResponse
+      if (result.mode === 'deleted') {
+        setProveedores(prev => prev.filter(p => p.id !== confirmBorrar.id))
+      } else if (result.mode === 'deactivated' && result.proveedor?.id) {
+        setProveedores(prev => prev.map(p => p.id === confirmBorrar.id ? result.proveedor : p))
+        setMensajeTabla(result.message ?? 'El proveedor no se pudo eliminar y fue desactivado.')
+      }
+
       setConfirmBorrar(null)
       router.refresh()
     } catch (e) {
@@ -148,6 +168,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
 
   async function toggleActivo(p: Proveedor) {
     setErrorTabla('')
+    setMensajeTabla('')
     const { ok, data, error } = await apiCall(`/api/compras/proveedores/${p.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -204,6 +225,12 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
       {errorTabla && (
         <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {errorTabla}
+        </div>
+      )}
+
+      {mensajeTabla && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          {mensajeTabla}
         </div>
       )}
 
@@ -280,7 +307,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-700">
-            ¿Seguro que deseas eliminar <strong>{confirmBorrar?.razon_social ?? 'este proveedor'}</strong>? Esta acción no se puede deshacer.
+            ¿Seguro que deseas eliminar <strong>{confirmBorrar?.razon_social ?? 'este proveedor'}</strong>? Si tiene movimientos relacionados, se desactivará en lugar de borrarse.
           </p>
           {errorBorrar && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{errorBorrar}</div>

@@ -48,7 +48,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 text-xl font-bold shadow-sm">
-              {proveedor.razon_social.charAt(0).toUpperCase()}
+              {(proveedor.razon_social ?? '?').charAt(0).toUpperCase()}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{proveedor.razon_social}</h1>

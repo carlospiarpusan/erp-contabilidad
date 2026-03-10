@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getResend, emailFrom, htmlCotizacion } from '@/lib/email'
 import { formatCOP, formatFecha } from '@/utils/cn'
+import { getSession } from '@/lib/auth/session'
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const { id, email_destino } = await req.json()
     if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 })
 

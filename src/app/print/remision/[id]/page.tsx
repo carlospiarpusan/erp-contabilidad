@@ -5,6 +5,8 @@ import { getRemisionById } from '@/lib/db/remisiones'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { PrintButton } from '@/components/print/PrintButton'
+import { QRDocumento } from '@/components/print/QRDocumento'
+import { headers } from 'next/headers'
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -62,6 +64,11 @@ export default async function PrintRemisionPage({ params }: PageProps) {
   ])
 
   if (!remision) notFound()
+
+  const hdrs = await headers()
+  const host = hdrs.get('host') ?? 'localhost:3000'
+  const proto = host.includes('localhost') ? 'http' : 'https'
+  const docUrl = `${proto}://${host}/ventas/remisiones/${id}`
 
   const doc = remision as DocumentoImpresion
   const lineas = doc.lineas ?? []
@@ -181,8 +188,8 @@ export default async function PrintRemisionPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Firmas */}
-        <div className="grid grid-cols-2 gap-12 mt-12 pt-6 border-t border-gray-200 text-xs text-center text-gray-400">
+        {/* Firmas + QR */}
+        <div className="grid grid-cols-3 gap-8 mt-12 pt-6 border-t border-gray-200 text-xs text-center text-gray-400">
           <div>
             <div className="border-b border-gray-300 mb-1 pb-4"></div>
             <p>Firma despachador</p>
@@ -190,6 +197,9 @@ export default async function PrintRemisionPage({ params }: PageProps) {
           <div>
             <div className="border-b border-gray-300 mb-1 pb-4"></div>
             <p>Firma destinatario / recibí conforme</p>
+          </div>
+          <div className="flex justify-center">
+            <QRDocumento url={docUrl} size={72} />
           </div>
         </div>
 

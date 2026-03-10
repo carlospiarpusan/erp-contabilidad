@@ -6,6 +6,7 @@ import { Users, UserCheck, CreditCard, UserX, Trophy, AlertCircle } from 'lucide
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP } from '@/utils/cn'
+import { isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; offset?: string; grupo_id?: string; tipo_documento?: string; tab?: string }>
@@ -57,13 +58,14 @@ export default async function ClientesPage({ searchParams }: PageProps) {
   if (tab === 'deudores') {
     const { data } = await supabase
       .from('documentos')
-      .select('cliente_id, total, clientes(id, razon_social, telefono)')
+      .select('cliente_id, total, clientes(id, razon_social, telefono), forma_pago:forma_pago_id(descripcion)')
       .eq('tipo', 'factura_venta')
       .eq('estado', 'pendiente')
       .not('cliente_id', 'is', null)
 
     const mapa: Record<string, { razon_social: string; telefono: string | null; total: number; count: number }> = {}
     for (const d of data ?? []) {
+      if (isSistecreditoFormaPago(d.forma_pago as { descripcion?: string } | null)) continue
       const cid = d.cliente_id as string
       const cli = (Array.isArray(d.clientes) ? d.clientes[0] : d.clientes) as { id: string; razon_social: string; telefono: string | null } | null
       if (!cid || !cli) continue

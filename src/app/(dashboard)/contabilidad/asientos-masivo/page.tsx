@@ -5,12 +5,18 @@ import { Zap, RefreshCw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 interface Pendiente { tipo: string; pendientes: number }
 interface Generado  { tipo: string; documento: string; asiento_id: string }
+interface ResumenGeneracion {
+  total_antes: number
+  total_restantes: number
+  warning: string | null
+}
 
 export default function AsientosMasivoPage() {
   const [pendientes, setPendientes]   = useState<Pendiente[]>([])
   const [cargando, setCargando]       = useState(true)
   const [generando, setGenerando]     = useState(false)
   const [generados, setGenerados]     = useState<Generado[] | null>(null)
+  const [resumen, setResumen]         = useState<ResumenGeneracion | null>(null)
   const [error, setError]             = useState<string | null>(null)
 
   async function cargarPendientes() {
@@ -21,8 +27,8 @@ export default function AsientosMasivoPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setPendientes(data.pendientes ?? [])
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setCargando(false)
     }
@@ -32,14 +38,20 @@ export default function AsientosMasivoPage() {
     setGenerando(true)
     setError(null)
     setGenerados(null)
+    setResumen(null)
     try {
       const res = await fetch('/api/contabilidad/asientos-masivo', { method: 'POST' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       setGenerados(data.generados ?? [])
+      setResumen({
+        total_antes: data.total_antes ?? 0,
+        total_restantes: data.total_restantes ?? 0,
+        warning: data.warning ?? null,
+      })
       await cargarPendientes()
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setGenerando(false)
     }
@@ -152,6 +164,12 @@ export default function AsientosMasivoPage() {
             </h2>
           </div>
 
+          {resumen?.warning && (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              {resumen.warning}
+            </div>
+          )}
+
           {generados.length > 0 ? (
             <div className="overflow-x-auto max-h-64 overflow-y-auto">
               <table className="w-full text-xs">
@@ -179,6 +197,12 @@ export default function AsientosMasivoPage() {
             </div>
           ) : (
             <p className="text-sm text-gray-400">No había documentos pendientes.</p>
+          )}
+
+          {resumen && (
+            <p className="mt-4 text-xs text-gray-500">
+              Pendientes antes: {resumen.total_antes} · Pendientes restantes: {resumen.total_restantes}
+            </p>
           )}
         </div>
       )}

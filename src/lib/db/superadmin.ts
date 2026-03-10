@@ -1,5 +1,6 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { type SupabaseClient } from '@supabase/supabase-js'
 import { unstable_cache } from 'next/cache'
+import { createServiceClient } from '@/lib/supabase/service'
 
 const EMPRESA_BASE = '00000000-0000-0000-0000-000000000001'
 
@@ -88,15 +89,7 @@ function normalizeStats(value: unknown): SuperadminStats {
 }
 
 function adminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !serviceRole) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY for superadmin')
-  }
-  return createClient(
-    url,
-    serviceRole,
-  )
+  return createServiceClient()
 }
 
 async function getFallbackStats(admin: SupabaseClient): Promise<SuperadminStats> {

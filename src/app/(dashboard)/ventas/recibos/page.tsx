@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getRecibos } from '@/lib/db/ventas'
+import { getSession } from '@/lib/auth/session'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { Receipt } from 'lucide-react'
 import Link from 'next/link'
@@ -16,20 +17,34 @@ export default async function RecibosPage({ searchParams }: PageProps) {
   const desde = sp.desde || `${anio}-01-01`
   const hasta  = sp.hasta  || hoy
 
-  const { recibos, total } = await getRecibos({ limit: 200, desde, hasta })
+  const [session, { recibos, total }] = await Promise.all([
+    getSession(),
+    getRecibos({ limit: 200, desde, hasta }),
+  ])
 
   const totalCobrado = recibos.reduce((s, r) => s + (r.valor ?? 0), 0)
+  const puedeCerrarSistecredito = session?.rol === 'admin' || session?.rol === 'contador'
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
-          <Receipt className="h-5 w-5 text-green-600" />
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
+            <Receipt className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Recibos de caja</h1>
+            <p className="text-sm text-gray-500">Cobros recibidos de clientes</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Recibos de caja</h1>
-          <p className="text-sm text-gray-500">Cobros recibidos de clientes</p>
-        </div>
+        {puedeCerrarSistecredito && (
+          <Link
+            href="/ventas/recibos/sistecredito"
+            className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Pago mensual Sistecrédito
+          </Link>
+        )}
       </div>
 
       {/* Filtros */}

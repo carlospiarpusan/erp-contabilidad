@@ -28,8 +28,8 @@ export function NuevaEmpresaForm() {
       if (!res.ok) throw new Error(data.error)
       setForm({ nombre: '', nit: '', email_admin: '', nombre_admin: '', password_admin: '' })
       router.refresh()
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setGuardando(false)
     }

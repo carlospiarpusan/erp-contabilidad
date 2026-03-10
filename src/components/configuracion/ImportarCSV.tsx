@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Upload, CheckCircle, XCircle, FileText, Download } from 'lucide-react'
+import { parseCSVText } from '@/lib/utils/csv'
 
 type Entidad = 'clientes' | 'proveedores' | 'productos' | 'facturas-compra'
 
@@ -51,18 +52,6 @@ const COLUMNAS: Record<Entidad, { campo: string; label: string; requerido: boole
   ],
 }
 
-function parseCSV(texto: string): Record<string, string>[] {
-  const lineas = texto.trim().split('\n')
-  if (lineas.length < 2) return []
-  const headers = lineas[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase())
-  return lineas.slice(1).map(linea => {
-    const valores = linea.split(',').map(v => v.trim().replace(/^"|"$/g, ''))
-    const obj: Record<string, string> = {}
-    headers.forEach((h, i) => { obj[h] = valores[i] ?? '' })
-    return obj
-  })
-}
-
 function generarCSVEjemplo(entidad: Entidad): string {
   const cols = COLUMNAS[entidad]
   const header = cols.map(c => c.campo).join(',')
@@ -106,8 +95,15 @@ export function ImportarCSV() {
     reader.onload = (ev) => {
       try {
         const texto = ev.target?.result as string
-        const parsed = parseCSV(texto)
+        const parsedCsv = parseCSVText(texto)
+        const parsed = parsedCsv.rows
         if (parsed.length === 0) { setError('El archivo no contiene datos válidos'); return }
+        const requeridas = COLUMNAS[entidad].filter(c => c.requerido).map(c => c.campo.toLowerCase())
+        const faltantes = requeridas.filter(c => !parsedCsv.headers.includes(c))
+        if (faltantes.length > 0) {
+          setError(`Faltan columnas obligatorias: ${faltantes.join(', ')}`)
+          return
+        }
         setFilas(parsed)
       } catch {
         setError('Error al leer el archivo')
@@ -133,8 +129,8 @@ export function ImportarCSV() {
       setCompletado(true)
       setFilas([])
       if (fileRef.current) fileRef.current.value = ''
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setImportando(false)
     }

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getCuentasPUC } from '@/lib/db/contabilidad'
 import { BookOpen } from 'lucide-react'
+import Link from 'next/link'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; nivel?: string }>
@@ -39,6 +40,14 @@ export default async function CuentasPage({ searchParams }: PageProps) {
           <h1 className="text-xl font-bold text-gray-900">Plan Único de Cuentas (PUC)</h1>
           <p className="text-sm text-gray-500">{total} cuenta{total !== 1 ? 's' : ''}</p>
         </div>
+      </div>
+      <div className="flex justify-end">
+        <Link
+          href="/contabilidad/cuentas/nueva"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Nueva cuenta
+        </Link>
       </div>
 
       {/* Filtros */}
@@ -78,11 +87,12 @@ export default async function CuentasPage({ searchParams }: PageProps) {
               <th className="px-4 py-3 text-left font-semibold text-gray-600">Tipo</th>
               <th className="px-4 py-3 text-center font-semibold text-gray-600">Naturaleza</th>
               <th className="px-4 py-3 text-center font-semibold text-gray-600">Estado</th>
+              <th className="px-4 py-3 text-center font-semibold text-gray-600">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {cuentas.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No hay cuentas</td></tr>
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No hay cuentas</td></tr>
             ) : cuentas.map(c => (
               <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                 <td className="px-4 py-2 font-mono text-gray-700">{c.codigo}</td>
@@ -99,6 +109,14 @@ export default async function CuentasPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-2 text-center">
                   <span className={`inline-flex h-2 w-2 rounded-full ${(c as any).activa !== false ? 'bg-green-500' : 'bg-gray-300'}`} />
+                </td>
+                <td className="px-4 py-2 text-center">
+                  <Link
+                    href={`/contabilidad/cuentas/${c.id}/editar`}
+                    className="text-xs font-medium text-blue-600 hover:underline"
+                  >
+                    Editar
+                  </Link>
                 </td>
               </tr>
             ))}

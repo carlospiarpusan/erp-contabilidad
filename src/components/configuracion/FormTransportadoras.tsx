@@ -34,8 +34,8 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
       setAdding(false)
       setNuevo(EMPTY)
       router.refresh()
-    } catch (e: any) {
-      alert(e.message)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
     } finally {
       setSaving(false)
     }
@@ -57,8 +57,8 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
       if (!res.ok) throw new Error((await res.json()).error)
       setEditando(null)
       router.refresh()
-    } catch (e: any) {
-      alert(e.message)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
     } finally {
       setSaving(false)
     }

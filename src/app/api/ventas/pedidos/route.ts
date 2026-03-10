@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPedidos, createPedido } from '@/lib/db/pedidos'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const result = await getPedidos({
       estado: searchParams.get('estado') ?? undefined,
@@ -20,6 +24,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const body = await req.json()
     const { cliente_id, bodega_id, fecha, vencimiento, observaciones, lineas } = body
 

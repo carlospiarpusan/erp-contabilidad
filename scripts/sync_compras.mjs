@@ -7,9 +7,9 @@ const admin = createClient(
 )
 const EID = '948ce6fc-6337-4f39-9e80-7b2c0ce0166c'
 
-// 1. Cargar lo scraped de Coin In (75 únicos)
-const coinIn = JSON.parse(readFileSync('/tmp/compras_all.json', 'utf8'))
-console.log(`Coin In (únicos): ${coinIn.length}`)
+// 1. Cargar datos para sincronizar
+const externalData = JSON.parse(readFileSync('/tmp/compras_all.json', 'utf8'))
+console.log(`Datos externos (únicos): ${externalData.length}`)
 
 // 2. Cargar lo que hay en DB
 const { data: dbDocs } = await admin
@@ -59,7 +59,7 @@ const mapaProveedores = {}
 for (const p of proveedores ?? []) mapaProveedores[p.razon_social.toUpperCase().trim()] = p.id
 
 // 7. Insertar los que faltan
-const nuevas = coinIn.filter(f => !extantesSet.has((f.numero_externo || '').trim()))
+const nuevas = externalData.filter(f => !extantesSet.has((f.numero_externo || '').trim()))
 console.log(`A insertar (faltantes): ${nuevas.length}`)
 
 if (nuevas.length > 0) {
@@ -78,13 +78,13 @@ if (nuevas.length > 0) {
     tipo: 'factura_compra',
     numero: startNum + i,
     prefijo: 'C',
-    numero_externo: f.numero_externo || f.numero_coinin,
+    numero_externo: f.numero_externo || f.id_externo,
     proveedor_id: mapaProveedores[f.proveedor.toUpperCase().trim()] ?? null,
     fecha: f.fecha,
     total: f.total,
     subtotal: f.total,
     estado: f.estado,
-    observaciones: f.observaciones ?? 'Importado desde Coin In ERP',
+    observaciones: f.observaciones ?? 'Importado desde archivo externo',
   }))
 
   const { error } = await admin.from('documentos').insert(docs)
@@ -102,4 +102,4 @@ const { count } = await admin
   .eq('tipo', 'factura_compra')
 
 console.log(`\n📊 Total facturas de compra en DB: ${count}`)
-console.log(`   Coin In tiene: ${coinIn.length} únicas`)
+console.log(`   El archivo tiene: ${externalData.length} únicas`)

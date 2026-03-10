@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFormasPagoAll, createFormaPago } from '@/lib/db/contabilidad'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
+import { toErrorMsg } from '@/lib/utils/errors'
 
 const TIPOS_FORMA_PAGO = new Set(['contado', 'credito', 'anticipo', 'anticipado'])
 
-function errorMessage(e: unknown) {
-  return e instanceof Error ? e.message : 'Error'
-}
 
 async function requireContabilidadAccess() {
   const session = await getSession()
@@ -26,7 +24,7 @@ export async function GET() {
     const data = await getFormasPagoAll()
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -54,6 +52,6 @@ export async function POST(req: NextRequest) {
     const data = await createFormaPago({ descripcion, tipo, dias_vencimiento, cuenta_id })
     return NextResponse.json(data, { status: 201 })
   } catch (e) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

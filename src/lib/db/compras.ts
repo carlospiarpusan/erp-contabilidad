@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
+import { sanitizeSearchTerm } from '@/lib/utils/search'
 
 // ── Proveedores ──────────────────────────────────────────────────────────────
 
@@ -23,7 +24,14 @@ export async function getProveedores(params?: {
 
   const applyFilters = (query: any) => {
     if (activo !== undefined) query = query.eq('activo', activo)
-    if (busqueda) query = query.ilike('razon_social', `%${busqueda}%`)
+    if (busqueda) {
+      const term = sanitizeSearchTerm(busqueda)
+      if (term) {
+        query = query.or(
+          `razon_social.ilike.%${term}%,numero_documento.ilike.%${term}%,contacto.ilike.%${term}%,email.ilike.%${term}%,telefono.ilike.%${term}%`
+        )
+      }
+    }
     return query
   }
 
@@ -99,7 +107,7 @@ export async function updateProveedor(id: string, fields: Record<string, unknown
   const supabase = await createClient()
   const { error } = await supabase
     .from('proveedores')
-    .update({ ...payload, updated_at: new Date().toISOString() })
+    .update(payload)
     .eq('id', id)
   if (error) throw new Error(error.message ?? 'Error al actualizar proveedor')
 
@@ -114,11 +122,34 @@ export async function updateProveedor(id: string, fields: Record<string, unknown
 
 export async function deleteProveedor(id: string) {
   const supabase = await createClient()
-  const { error } = await supabase
+
+  const { error: deleteError } = await supabase
     .from('proveedores')
-    .update({ activo: false, updated_at: new Date().toISOString() })
+    .delete()
     .eq('id', id)
-  if (error) throw new Error(error.message ?? 'Error al eliminar proveedor')
+
+  if (!deleteError) {
+    return { mode: 'deleted' as const }
+  }
+
+  if (deleteError.code === '23503') {
+    const { data, error: updateError } = await supabase
+      .from('proveedores')
+      .update({ activo: false })
+      .eq('id', id)
+      .select('*')
+      .single()
+
+    if (updateError) throw new Error(updateError.message ?? 'Error al desactivar proveedor')
+
+    return {
+      mode: 'deactivated' as const,
+      proveedor: data,
+      message: 'El proveedor tiene movimientos relacionados y fue desactivado en lugar de eliminarse.',
+    }
+  }
+
+  throw new Error(deleteError.message ?? 'Error al eliminar proveedor')
 }
 
 export async function getResumenProveedor(proveedor_id: string) {

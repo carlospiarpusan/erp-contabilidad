@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getRemisionById, updateEstadoRemision } from '@/lib/db/remisiones'
 import { createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 interface Params { params: Promise<{ id: string }> }
 
 export async function GET(_: NextRequest, { params }: Params) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const data = await getRemisionById(id)
     return NextResponse.json(data)
@@ -17,6 +21,9 @@ export async function GET(_: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const { accion, forma_pago_id, vencimiento } = await req.json()
 

@@ -1,5 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 
+function ordenarFormasPago<T extends { descripcion?: string | null }>(formas: T[]) {
+  return [...formas].sort((a, b) => {
+    const descA = (a.descripcion ?? '').trim()
+    const descB = (b.descripcion ?? '').trim()
+    const esEfectivoA = descA.localeCompare('Efectivo', 'es', { sensitivity: 'base' }) === 0
+    const esEfectivoB = descB.localeCompare('Efectivo', 'es', { sensitivity: 'base' }) === 0
+
+    if (esEfectivoA !== esEfectivoB) return esEfectivoA ? -1 : 1
+    return descA.localeCompare(descB, 'es', { sensitivity: 'base' })
+  })
+}
+
 export async function getFormasPago() {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -8,7 +20,7 @@ export async function getFormasPago() {
     .eq('activa', true)
     .order('descripcion')
   if (error) throw error
-  return data ?? []
+  return ordenarFormasPago(data ?? [])
 }
 
 export async function getEjercicioActivo() {

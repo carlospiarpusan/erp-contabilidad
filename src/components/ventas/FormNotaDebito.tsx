@@ -62,7 +62,7 @@ export function FormNotaDebito({ impuestos }: { impuestos: Impuesto[] }) {
     e.preventDefault()
     if (!facturaBusqueda.trim()) return
     try {
-      const res = await fetch(`/api/ventas/facturas?busqueda=${encodeURIComponent(facturaBusqueda)}&limit=5`)
+      const res = await fetch(`/api/ventas/facturas?q=${encodeURIComponent(facturaBusqueda)}&limit=5`)
       const data = await res.json()
       const facturas = data.facturas ?? []
       if (facturas.length === 0) { setError('No se encontró la factura'); return }
@@ -134,8 +134,8 @@ export function FormNotaDebito({ impuestos }: { impuestos: Impuesto[] }) {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       router.push(`/ventas/notas-debito/${data.id}`)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setGuardando(false)
     }

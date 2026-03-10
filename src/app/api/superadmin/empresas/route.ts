@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { getSession } from '@/lib/auth/session'
+import { ROLE_IDS } from '@/lib/auth/permissions'
+import { createServiceClient } from '@/lib/supabase/service'
+import { getSupabaseServiceEnv, hasSupabaseServiceEnv } from '@/lib/supabase/config'
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return createServiceClient()
 }
 
 function superadminConfigError() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!hasSupabaseServiceEnv()) {
     return NextResponse.json(
       { error: 'Falta configurar SUPABASE_SERVICE_ROLE_KEY en el entorno' },
       { status: 500 }
@@ -54,6 +53,7 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = adminClient()
+  const { url, serviceRoleKey } = getSupabaseServiceEnv()
 
   // 1. Crear empresa
   const { data: empresa, error: eEmp } = await admin
@@ -65,12 +65,12 @@ export async function POST(req: NextRequest) {
 
   // 2. Crear usuario admin en auth
   const authRes = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`,
+    `${url}/auth/v1/admin/users`,
     {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
   await admin.from('usuarios').upsert({
     id: userId,
     empresa_id: empresa.id,
-    rol_id: '10000000-0000-0000-0000-000000000001', // admin
+    rol_id: ROLE_IDS.admin,
     nombre: nombre_admin,
     email: email_admin,
     activo: true,

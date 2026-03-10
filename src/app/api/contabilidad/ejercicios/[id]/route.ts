@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateEjercicio } from '@/lib/db/contabilidad'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
+import { toErrorMsg } from '@/lib/utils/errors'
 
 interface Ctx { params: Promise<{ id: string }> }
 
-function errorMessage(e: unknown) {
-  return e instanceof Error ? e.message : 'Error'
-}
 
 async function requireContabilidadAccess() {
   const session = await getSession()
@@ -44,6 +42,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const data = await updateEjercicio(id, payload)
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

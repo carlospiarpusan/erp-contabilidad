@@ -30,8 +30,8 @@ export function EnviarEmailButton({ apiPath, docId, emailCliente }: Props) {
       if (!res.ok) throw new Error(data.error)
       setResultado({ ok: true })
       setTimeout(() => { setOpen(false); setResultado(null) }, 2000)
-    } catch (e: any) {
-      setResultado({ error: e.message })
+    } catch (e) {
+      setResultado({ error: e instanceof Error ? e.message : 'Error' })
     } finally {
       setEnviando(false)
     }

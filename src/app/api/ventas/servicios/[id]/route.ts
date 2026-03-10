@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth/session'
 
 interface Params { params: Promise<{ id: string }> }
 
 export async function GET(_: NextRequest, { params }: Params) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const { id } = await params
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -20,6 +23,8 @@ export async function GET(_: NextRequest, { params }: Params) {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const { id } = await params
     const body = await req.json()
     const supabase = await createClient()

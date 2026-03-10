@@ -50,28 +50,30 @@ export function GestionUsuariosEmpresa({
       setForm({ email: '', nombre: '', rol_id: '', password: '' })
       setShowForm(false)
       router.refresh()
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setGuardando(false)
     }
   }
 
   async function cambiarRol(usuario_id: string, rol_id: string) {
-    await fetch(`/api/superadmin/empresas/${empresa_id}/usuarios`, {
+    const res = await fetch(`/api/superadmin/empresas/${empresa_id}/usuarios`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario_id, rol_id }),
     })
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Error al cambiar rol'); return }
     router.refresh()
   }
 
   async function toggleActivo(usuario_id: string, activo: boolean) {
-    await fetch(`/api/superadmin/empresas/${empresa_id}/usuarios`, {
+    const res = await fetch(`/api/superadmin/empresas/${empresa_id}/usuarios`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario_id, activo: !activo }),
     })
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Error al actualizar'); return }
     router.refresh()
   }
 

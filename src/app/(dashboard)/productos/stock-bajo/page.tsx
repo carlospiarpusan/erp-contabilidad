@@ -1,11 +1,10 @@
 export const dynamic = 'force-dynamic'
 
-import { getProductos } from '@/lib/db/productos'
 import { Tabla, FilaTabla, CeldaTabla } from '@/components/ui/tabla'
 import { AlertTriangle, Package } from 'lucide-react'
 import { formatCOP } from '@/utils/cn'
 import Link from 'next/link'
-import { isLowStock } from '@/lib/utils/stock'
+import { getStockBajo } from '@/lib/db/productos'
 
 const COLUMNAS = [
   { key: 'codigo',      label: 'Código' },
@@ -17,38 +16,17 @@ const COLUMNAS = [
 ]
 
 export default async function StockBajoPage() {
-  const { productos } = await getProductos({ stock_bajo: true, limit: 200 })
-
-  type StockFila = {
+  const filas = (await getStockBajo()) as Array<{
     id: string
+    producto_id: string
+    codigo: string
+    descripcion: string
     cantidad: number
     cantidad_minima: number
     bodega?: { nombre?: string } | null
-  }
-
-  const filas: Array<{ producto: typeof productos[number]; stock: StockFila }> = []
-  for (const p of productos) {
-    const stocks = p.stock ?? []
-    if (stocks.length === 0) {
-      filas.push({
-        producto: p,
-        stock: { id: `sin-stock-${p.id}`, cantidad: 0, cantidad_minima: 0, bodega: { nombre: 'Sin bodega' } },
-      })
-      continue
-    }
-    for (const s of stocks) {
-      if (!isLowStock(s)) continue
-      filas.push({
-        producto: p,
-        stock: {
-          id: s.id,
-          cantidad: s.cantidad,
-          cantidad_minima: s.cantidad_minima,
-          bodega: (s.bodega as { nombre?: string } | null) ?? null,
-        },
-      })
-    }
-  }
+    precio_venta?: number
+    familia?: { nombre?: string } | null
+  }>
 
   return (
     <div>
@@ -74,33 +52,33 @@ export default async function StockBajoPage() {
             {filas.length} producto{filas.length !== 1 ? 's' : ''} en stock crítico o bajo mínimo
           </p>
           <Tabla columnas={COLUMNAS}>
-            {filas.map(({ producto: p, stock: s }) => (
-              <FilaTabla key={`${p.id}-${s.id}`}>
+            {filas.map((f) => (
+              <FilaTabla key={`${f.producto_id}-${f.id}`}>
                 <CeldaTabla>
-                  <span className="font-mono text-xs text-gray-600">{p.codigo}</span>
+                  <span className="font-mono text-xs text-gray-600">{f.codigo}</span>
                 </CeldaTabla>
                 <CeldaTabla>
-                  <Link href={`/productos/${p.id}`} className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
-                    {p.descripcion}
+                  <Link href={`/productos/${f.producto_id}`} className="font-medium text-gray-900 hover:text-blue-600 transition-colors">
+                    {f.descripcion}
                   </Link>
-                  {(p.familia as { nombre?: string } | null)?.nombre && (
-                    <p className="text-xs text-gray-400">{(p.familia as { nombre: string }).nombre}</p>
+                  {(f.familia as { nombre?: string } | null)?.nombre && (
+                    <p className="text-xs text-gray-400">{(f.familia as { nombre: string }).nombre}</p>
                   )}
                 </CeldaTabla>
                 <CeldaTabla>
-                  <span className="text-sm text-gray-600">{(s.bodega as { nombre?: string } | null)?.nombre ?? '—'}</span>
+                  <span className="text-sm text-gray-600">{(f.bodega as { nombre?: string } | null)?.nombre ?? '—'}</span>
                 </CeldaTabla>
                 <CeldaTabla className="text-center">
                   <span className="flex items-center justify-center gap-1 font-mono font-medium text-orange-600">
                     <AlertTriangle className="h-3.5 w-3.5" />
-                    {s.cantidad.toLocaleString('es-CO')}
+                    {Number(f.cantidad ?? 0).toLocaleString('es-CO')}
                   </span>
                 </CeldaTabla>
                 <CeldaTabla className="text-center">
-                  <span className="font-mono text-gray-500">{s.cantidad_minima.toLocaleString('es-CO')}</span>
+                  <span className="font-mono text-gray-500">{Number(f.cantidad_minima ?? 0).toLocaleString('es-CO')}</span>
                 </CeldaTabla>
                 <CeldaTabla className="text-right font-medium text-gray-900">
-                  {formatCOP(p.precio_venta)}
+                  {formatCOP(Number(f.precio_venta ?? 0))}
                 </CeldaTabla>
               </FilaTabla>
             ))}

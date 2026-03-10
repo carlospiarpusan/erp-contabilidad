@@ -1,6 +1,6 @@
 # ERP Contable — Plataforma SaaS Multiempresa
 
-Plataforma SaaS colombiana para gestión comercial y contable, construida con **Next.js 15** y **Supabase**. Permite que múltiples empresas lleven su contabilidad de forma independiente: cada empresa tiene sus propios usuarios, datos y configuración completamente aislados del resto.
+Plataforma SaaS colombiana para gestión comercial y contable, construida con **Next.js 16** y **Supabase**. Permite que múltiples empresas lleven su contabilidad de forma independiente: cada empresa tiene sus propios usuarios, datos y configuración completamente aislados del resto.
 
 ---
 
@@ -8,7 +8,7 @@ Plataforma SaaS colombiana para gestión comercial y contable, construida con **
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | Next.js 15 (App Router, Server Components) |
+| Frontend | Next.js 16 (App Router, Server Components) |
 | Estilos | Tailwind CSS |
 | Base de datos | Supabase (PostgreSQL + RLS) |
 | Autenticación | Supabase Auth (JWT) |
@@ -50,6 +50,7 @@ Cada empresa es completamente independiente. Un usuario solo puede ver y modific
 ### Compras
 - **Facturas de compra** — registro de compras a proveedores
 - **Órdenes de compra** — solicitudes a proveedores
+- **Sugeridos de compra** — recomendación automática de qué pedir y cuánto
 - **Recibos de compra** — entrada de mercancía
 - **Proveedores** — directorio de proveedores
 
@@ -142,6 +143,19 @@ src/
 └── utils/
     └── cn.ts                 # Utilidades CSS + formatCOP
 ```
+
+---
+
+## Documentación completa
+
+Consulta la documentación funcional y técnica integral en:
+
+- [`docs/INDEX.md`](docs/INDEX.md)
+- [`docs/DOCUMENTACION_PLATAFORMA.md`](docs/DOCUMENTACION_PLATAFORMA.md)
+- [`AGENTS.md`](AGENTS.md)
+
+Tambien existe una vista interna de ayuda en la aplicacion:
+- `/documentacion`
 
 ---
 

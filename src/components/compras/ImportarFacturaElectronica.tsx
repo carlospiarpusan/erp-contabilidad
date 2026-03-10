@@ -118,8 +118,8 @@ export function ImportarFacturaElectronica() {
       })))
 
       setPaso('revisar')
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setCargando(false)
     }
@@ -171,8 +171,8 @@ export function ImportarFacturaElectronica() {
 
       setResultadoId(data.id)
       setPaso('resultado')
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
       setPaso('revisar')
     } finally {
       setCargando(false)

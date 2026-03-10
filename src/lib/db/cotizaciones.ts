@@ -12,30 +12,79 @@ const SELECT_LINEA = `
   impuesto:impuesto_id(id, descripcion, porcentaje)
 `
 
+type CotizacionesFilters = {
+  busqueda?: string
+  estado?: string
+  desde?: string
+  hasta?: string
+}
+
+function applyCotizacionesFilters<T>(query: T, params: CotizacionesFilters) {
+  let nextQuery = query as any
+  if (params.estado) nextQuery = nextQuery.eq('estado', params.estado)
+  if (params.desde) nextQuery = nextQuery.gte('fecha', params.desde)
+  if (params.hasta) nextQuery = nextQuery.lte('fecha', params.hasta)
+  if (params.busqueda) nextQuery = nextQuery.or(`numero::text.ilike.%${params.busqueda}%`)
+  return nextQuery as T
+}
+
 // ── Cotizaciones ─────────────────────────────────────────────────────────────
 
-export async function getCotizaciones(params?: {
-  busqueda?: string; estado?: string; desde?: string; hasta?: string
-  limit?: number; offset?: number
+export async function getCotizaciones(params?: CotizacionesFilters & {
+  limit?: number
+  offset?: number
 }) {
   const supabase = await createClient()
   const { busqueda, estado, desde, hasta, limit = 50, offset = 0 } = params ?? {}
 
-  let q = supabase
-    .from('documentos')
-    .select(SELECT_COTIZACION, { count: 'exact' })
-    .eq('tipo', 'cotizacion')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (estado) q = q.eq('estado', estado)
-  if (desde) q = q.gte('fecha', desde)
-  if (hasta) q = q.lte('fecha', hasta)
-  if (busqueda) q = q.or(`numero::text.ilike.%${busqueda}%`)
+  const q = applyCotizacionesFilters(
+    supabase
+      .from('documentos')
+      .select(SELECT_COTIZACION, { count: 'exact' })
+      .eq('tipo', 'cotizacion')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1),
+    { busqueda, estado, desde, hasta }
+  )
 
   const { data, count, error } = await q
   if (error) throw error
   return { cotizaciones: data ?? [], total: count ?? 0 }
+}
+
+export async function getResumenCotizaciones(params?: CotizacionesFilters) {
+  const supabase = await createClient()
+  const filters = params ?? {}
+
+  const [countRes, rowsRes] = await Promise.all([
+    applyCotizacionesFilters(
+      supabase
+        .from('documentos')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'cotizacion'),
+      filters
+    ),
+    applyCotizacionesFilters(
+      supabase
+        .from('documentos')
+        .select('estado, total')
+        .eq('tipo', 'cotizacion'),
+      filters
+    ),
+  ])
+
+  if (countRes.error) throw countRes.error
+  if (rowsRes.error) throw rowsRes.error
+
+  const rows = rowsRes.data ?? []
+  const aprobadas = rows.filter((row) => row.estado === 'aprobada')
+
+  return {
+    total: countRes.count ?? 0,
+    total_valor: rows.reduce((sum, row) => sum + Number(row.total ?? 0), 0),
+    aprobadas: aprobadas.length,
+    valor_aprobado: aprobadas.reduce((sum, row) => sum + Number(row.total ?? 0), 0),
+  }
 }
 
 export async function getCotizacionById(id: string) {

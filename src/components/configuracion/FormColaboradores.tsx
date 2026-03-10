@@ -9,6 +9,8 @@ import { formatCOP } from '@/utils/cn'
 interface Colaborador {
   id: string
   nombre: string
+  usuario_id: string | null
+  usuario_label?: string | null
   email: string | null
   telefono: string | null
   porcentaje_comision: number
@@ -16,17 +18,26 @@ interface Colaborador {
   activo: boolean
 }
 
-interface Props { colaboradores: Colaborador[] }
+interface UsuarioOption {
+  id: string
+  nombre: string
+  email: string
+}
 
-const EMPTY = { nombre: '', email: '', telefono: '', porcentaje_comision: '0', meta_mensual: '0' }
+interface Props {
+  colaboradores: Colaborador[]
+  usuarios: UsuarioOption[]
+}
 
-export function FormColaboradores({ colaboradores: inicial }: Props) {
+const EMPTY = { nombre: '', usuario_id: '', email: '', telefono: '', porcentaje_comision: '0', meta_mensual: '0' }
+
+export function FormColaboradores({ colaboradores: inicial, usuarios }: Props) {
   const router = useRouter()
   const [adding, setAdding]     = useState(false)
   const [editando, setEditando] = useState<string | null>(null)
   const [saving, setSaving]     = useState(false)
   const [nuevo, setNuevo]       = useState(EMPTY)
-  const [edit, setEdit]         = useState({ nombre: '', email: '', telefono: '', porcentaje_comision: '0', meta_mensual: '0', activo: true })
+  const [edit, setEdit]         = useState({ nombre: '', usuario_id: '', email: '', telefono: '', porcentaje_comision: '0', meta_mensual: '0', activo: true })
 
   async function guardarNuevo() {
     if (!nuevo.nombre.trim()) return
@@ -41,7 +52,7 @@ export function FormColaboradores({ colaboradores: inicial }: Props) {
       setAdding(false)
       setNuevo(EMPTY)
       router.refresh()
-    } catch (e: any) { alert(e.message) }
+    } catch (e) { alert(e instanceof Error ? e.message : 'Error') }
     finally { setSaving(false) }
   }
 
@@ -49,6 +60,7 @@ export function FormColaboradores({ colaboradores: inicial }: Props) {
     setEditando(c.id)
     setEdit({
       nombre: c.nombre,
+      usuario_id: c.usuario_id ?? '',
       email: c.email ?? '',
       telefono: c.telefono ?? '',
       porcentaje_comision: String(c.porcentaje_comision),
@@ -68,7 +80,7 @@ export function FormColaboradores({ colaboradores: inicial }: Props) {
       if (!res.ok) throw new Error((await res.json()).error)
       setEditando(null)
       router.refresh()
-    } catch (e: any) { alert(e.message) }
+    } catch (e) { alert(e instanceof Error ? e.message : 'Error') }
     finally { setSaving(false) }
   }
 
@@ -100,6 +112,7 @@ export function FormColaboradores({ colaboradores: inicial }: Props) {
         <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
           <tr>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Nombre</th>
+            <th className="px-4 py-3 text-left font-medium text-gray-500">Usuario ERP</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Email</th>
             <th className="px-4 py-3 text-left font-medium text-gray-500">Teléfono</th>
             <th className="px-4 py-3 text-center font-medium text-gray-500">Comisión %</th>
@@ -112,6 +125,14 @@ export function FormColaboradores({ colaboradores: inicial }: Props) {
           {adding && (
             <tr className="bg-orange-50 dark:bg-orange-900/10">
               <td className="px-4 py-2"><input value={nuevo.nombre} onChange={e => setNuevo(p => ({ ...p, nombre: e.target.value }))} placeholder="Nombre" autoFocus className={inp} /></td>
+              <td className="px-4 py-2">
+                <select value={nuevo.usuario_id} onChange={e => setNuevo(p => ({ ...p, usuario_id: e.target.value }))} className={inp}>
+                  <option value="">Sin vínculo</option>
+                  {usuarios.map((usuario) => (
+                    <option key={usuario.id} value={usuario.id}>{usuario.nombre} ({usuario.email})</option>
+                  ))}
+                </select>
+              </td>
               <td className="px-4 py-2"><input value={nuevo.email} onChange={e => setNuevo(p => ({ ...p, email: e.target.value }))} placeholder="email@..." className={inp} /></td>
               <td className="px-4 py-2"><input value={nuevo.telefono} onChange={e => setNuevo(p => ({ ...p, telefono: e.target.value }))} placeholder="+57..." className={inp} /></td>
               <td className="px-4 py-2"><input type="number" min="0" max="100" step="0.5" value={nuevo.porcentaje_comision} onChange={e => setNuevo(p => ({ ...p, porcentaje_comision: e.target.value }))} className={inp + ' text-center'} /></td>
@@ -127,12 +148,20 @@ export function FormColaboradores({ colaboradores: inicial }: Props) {
           )}
 
           {inicial.length === 0 && !adding ? (
-            <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400">No hay colaboradores</td></tr>
+            <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-400">No hay colaboradores</td></tr>
           ) : inicial.map(c => (
             <tr key={c.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${!c.activo ? 'opacity-50' : ''}`}>
               {editando === c.id ? (
                 <>
                   <td className="px-4 py-2"><input value={edit.nombre} onChange={e => setEdit(p => ({ ...p, nombre: e.target.value }))} autoFocus className={inp} /></td>
+                  <td className="px-4 py-2">
+                    <select value={edit.usuario_id} onChange={e => setEdit(p => ({ ...p, usuario_id: e.target.value }))} className={inp}>
+                      <option value="">Sin vínculo</option>
+                      {usuarios.map((usuario) => (
+                        <option key={usuario.id} value={usuario.id}>{usuario.nombre} ({usuario.email})</option>
+                      ))}
+                    </select>
+                  </td>
                   <td className="px-4 py-2"><input value={edit.email} onChange={e => setEdit(p => ({ ...p, email: e.target.value }))} className={inp} /></td>
                   <td className="px-4 py-2"><input value={edit.telefono} onChange={e => setEdit(p => ({ ...p, telefono: e.target.value }))} className={inp} /></td>
                   <td className="px-4 py-2"><input type="number" min="0" max="100" step="0.5" value={edit.porcentaje_comision} onChange={e => setEdit(p => ({ ...p, porcentaje_comision: e.target.value }))} className={inp + ' text-center'} /></td>
@@ -150,6 +179,7 @@ export function FormColaboradores({ colaboradores: inicial }: Props) {
               ) : (
                 <>
                   <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">{c.nombre}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{c.usuario_label ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{c.email ?? '—'}</td>
                   <td className="px-4 py-3 text-gray-500 text-xs font-mono">{c.telefono ?? '—'}</td>
                   <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300">{c.porcentaje_comision}%</td>

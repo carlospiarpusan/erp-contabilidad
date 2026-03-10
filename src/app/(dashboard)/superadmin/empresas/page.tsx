@@ -2,22 +2,20 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth/session'
-import { createClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase/service'
+import { hasSupabaseServiceEnv } from '@/lib/supabase/config'
 import Link from 'next/link'
 import { Building2, Users, Plus } from 'lucide-react'
 import { NuevaEmpresaForm } from '@/components/superadmin/NuevaEmpresaForm'
 
 function adminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  return createServiceClient()
 }
 
 export default async function SuperadminEmpresasPage() {
   const session = await getSession()
   if (!session || session.rol !== 'superadmin') redirect('/')
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) redirect('/')
+  if (!hasSupabaseServiceEnv()) redirect('/')
 
   const admin = adminClient()
   const { data: empresas } = await admin

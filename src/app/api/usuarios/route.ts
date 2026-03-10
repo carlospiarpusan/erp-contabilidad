@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarios, invitarUsuario, getRoles } from '@/lib/db/usuarios'
 import { getSession } from '@/lib/auth/session'
+import { ROLE_IDS } from '@/lib/auth/permissions'
 import { z } from 'zod'
 
-const ROLES_USUARIOS_ADMIN = new Set(['admin', 'superadmin'])
-const SUPERADMIN_ROLE_ID = '10000000-0000-0000-0000-000000000005'
+const ROLES_USUARIOS_ADMIN = new Set(['admin'])
+const SUPERADMIN_ROLE_ID = ROLE_IDS.superadmin
 
 const crearUsuarioSchema = z.object({
   email: z.string().trim().email().max(320),

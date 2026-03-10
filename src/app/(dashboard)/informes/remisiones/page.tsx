@@ -1,12 +1,12 @@
 export const dynamic = 'force-dynamic'
 
-import { getRemisiones } from '@/lib/db/remisiones'
+import { getRemisiones, getResumenRemisiones } from '@/lib/db/remisiones'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { Truck } from 'lucide-react'
 import Link from 'next/link'
 
 interface PageProps {
-  searchParams: Promise<{ desde?: string; hasta?: string; estado?: string }>
+  searchParams: Promise<{ desde?: string; hasta?: string; estado?: string; page?: string }>
 }
 
 const BADGE: Record<string, string> = {
@@ -17,18 +17,34 @@ const BADGE: Record<string, string> = {
 }
 
 export default async function InformeRemisionesPage({ searchParams }: PageProps) {
+  const PAGE_SIZE = 100
   const sp    = await searchParams
   const hoy   = new Date().toISOString().split('T')[0]
   const anio  = new Date().getFullYear()
   const desde = sp.desde || `${anio}-01-01`
   const hasta  = sp.hasta  || hoy
   const estado = sp.estado || ''
+  const page = Math.max(1, Number(sp.page ?? '1') || 1)
+  const offset = (page - 1) * PAGE_SIZE
 
-  const { remisiones, total } = await getRemisiones({ desde, hasta, estado: estado || undefined, limit: 500 })
+  const [{ remisiones, total }, resumen] = await Promise.all([
+    getRemisiones({ desde, hasta, estado: estado || undefined, limit: PAGE_SIZE, offset }),
+    getResumenRemisiones({ desde, hasta, estado: estado || undefined }),
+  ])
 
-  const totalValor    = remisiones.reduce((s, r) => s + (r.total ?? 0), 0)
-  const entregadas    = remisiones.filter(r => r.estado === 'entregada').length
-  const valorEntregado = remisiones.filter(r => r.estado === 'entregada').reduce((s, r) => s + (r.total ?? 0), 0)
+  const totalPaginas = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const rangoInicio = total === 0 ? 0 : offset + 1
+  const rangoFin = Math.min(offset + PAGE_SIZE, total)
+
+  function buildHref(nextPage: number) {
+    const params = new URLSearchParams()
+    if (desde) params.set('desde', desde)
+    if (hasta) params.set('hasta', hasta)
+    if (estado) params.set('estado', estado)
+    if (nextPage > 1) params.set('page', String(nextPage))
+    const query = params.toString()
+    return query ? `/informes/remisiones?${query}` : '/informes/remisiones'
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -74,10 +90,10 @@ export default async function InformeRemisionesPage({ searchParams }: PageProps)
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Total remisiones',  val: total.toString(),             color: 'text-gray-900' },
-          { label: 'Valor total',       val: formatCOP(totalValor),        color: 'text-purple-700', mono: true },
-          { label: 'Entregadas',        val: entregadas.toString(),        color: 'text-green-700' },
-          { label: 'Valor entregado',   val: formatCOP(valorEntregado),    color: 'text-green-700', mono: true },
+          { label: 'Total remisiones', val: resumen.total.toString(), color: 'text-gray-900' },
+          { label: 'Valor total', val: formatCOP(resumen.total_valor), color: 'text-purple-700', mono: true },
+          { label: 'Entregadas', val: resumen.entregadas.toString(), color: 'text-green-700' },
+          { label: 'Valor entregado', val: formatCOP(resumen.valor_entregado), color: 'text-green-700', mono: true },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-100 bg-white p-4">
             <p className="text-xs text-gray-500">{k.label}</p>
@@ -125,13 +141,32 @@ export default async function InformeRemisionesPage({ searchParams }: PageProps)
           {remisiones.length > 0 && (
             <tfoot className="border-t-2 border-gray-200">
               <tr className="font-bold">
-                <td colSpan={4} className="px-4 py-3 text-gray-700">TOTAL ({total})</td>
-                <td className="px-4 py-3 text-right font-mono text-purple-700">{formatCOP(totalValor)}</td>
+                <td colSpan={4} className="px-4 py-3 text-gray-700">TOTAL ({resumen.total})</td>
+                <td className="px-4 py-3 text-right font-mono text-purple-700">{formatCOP(resumen.total_valor)}</td>
               </tr>
             </tfoot>
           )}
         </table>
       </div>
+
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-600">
+          <span>Mostrando {rangoInicio}-{rangoFin} de {total}</span>
+          <div className="flex items-center gap-2">
+            {page > 1 ? (
+              <Link href={buildHref(page - 1)} className="rounded-lg border border-gray-300 px-3 py-2 hover:bg-gray-50">Anterior</Link>
+            ) : (
+              <span className="rounded-lg border border-gray-200 px-3 py-2 text-gray-300">Anterior</span>
+            )}
+            <span className="px-2 font-medium">{page} / {totalPaginas}</span>
+            {page < totalPaginas ? (
+              <Link href={buildHref(page + 1)} className="rounded-lg border border-gray-300 px-3 py-2 hover:bg-gray-50">Siguiente</Link>
+            ) : (
+              <span className="rounded-lg border border-gray-200 px-3 py-2 text-gray-300">Siguiente</span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

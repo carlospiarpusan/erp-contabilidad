@@ -1,21 +1,18 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
-import { getProductos } from '@/lib/db/productos'
-import { getClientes, getGruposClientes } from '@/lib/db/clientes'
+import { getGruposClientes } from '@/lib/db/clientes'
 import { GestorPrecios } from '@/components/precios/GestorPrecios'
 import { Tag } from 'lucide-react'
 
 export default async function ListaPreciosPage() {
   const supabase = await createClient()
 
-  const [{ data: precios }, { productos }, { clientes }, grupos] = await Promise.all([
+  const [{ data: precios }, grupos] = await Promise.all([
     supabase
       .from('listas_precios')
       .select('*, producto:producto_id(codigo, descripcion), cliente:cliente_id(razon_social), grupo:grupo_id(nombre)')
       .order('nombre'),
-    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getClientes({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
     getGruposClientes(),
   ])
 
@@ -33,8 +30,6 @@ export default async function ListaPreciosPage() {
 
       <GestorPrecios
         precios={(precios ?? []) as any}
-        productos={productos.map(p => ({ id: p.id, codigo: p.codigo, descripcion: p.descripcion }))}
-        clientes={clientes.map(c => ({ id: c.id, razon_social: c.razon_social }))}
         grupos={grupos.map((g: any) => ({ id: g.id, nombre: g.nombre }))}
       />
     </div>

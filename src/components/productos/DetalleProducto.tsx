@@ -65,7 +65,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? 'Error') }
       setModalEditar(false)
       router.refresh()
-    } catch (e: any) {
+    } catch (e) {
       setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setCargando(false)

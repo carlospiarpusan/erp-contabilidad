@@ -34,20 +34,29 @@ export function ListaAcreedores({ acreedores: inicial, total }: Props) {
       if (editando) {
         const res = await fetch(`/api/gastos/acreedores/${editando.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
         const updated = await res.json()
+        if (!res.ok) throw new Error(updated.error ?? 'Error al guardar')
         setAcreedores(prev => prev.map(a => a.id === editando.id ? updated : a))
       } else {
         const res = await fetch('/api/gastos/acreedores', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
         const created = await res.json()
+        if (!res.ok) throw new Error(created.error ?? 'Error al crear')
         setAcreedores(prev => [created, ...prev])
       }
       setModal(false); router.refresh()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
     } finally { setGuardando(false) }
   }
 
   async function toggleActivo(a: Acreedor) {
-    const res = await fetch(`/api/gastos/acreedores/${a.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activo: !a.activo }) })
-    const updated = await res.json()
-    setAcreedores(prev => prev.map(x => x.id === a.id ? updated : x))
+    try {
+      const res = await fetch(`/api/gastos/acreedores/${a.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ activo: !a.activo }) })
+      const updated = await res.json()
+      if (!res.ok) { alert(updated.error ?? 'Error al actualizar'); return }
+      setAcreedores(prev => prev.map(x => x.id === a.id ? updated : x))
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error de conexión')
+    }
   }
 
   const inputCls = 'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500'

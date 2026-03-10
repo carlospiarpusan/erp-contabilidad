@@ -43,20 +43,22 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
   }
 
   async function cambiarRol(id: string, rol_id: string) {
-    await fetch(`/api/usuarios/${id}`, {
+    const res = await fetch(`/api/usuarios/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rol_id }),
     })
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Error al cambiar rol'); return }
     setLista(prev => prev.map(u => u.id === id ? { ...u, rol_id } : u))
   }
 
   async function toggleActivo(id: string, activo: boolean) {
-    await fetch(`/api/usuarios/${id}`, {
+    const res = await fetch(`/api/usuarios/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ activo: !activo }),
     })
+    if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Error al actualizar'); return }
     setLista(prev => prev.map(u => u.id === id ? { ...u, activo: !activo } : u))
   }
 
@@ -90,7 +92,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold text-xs">
-                      {u.nombre.charAt(0).toUpperCase()}
+                      {(u.nombre ?? '?').charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{u.nombre}</p>

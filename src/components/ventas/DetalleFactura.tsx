@@ -8,8 +8,12 @@ import { Modal } from '@/components/ui/modal'
 import { FormRecibo } from './FormRecibo'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import Link from 'next/link'
-import { FileText, User, CreditCard, Warehouse, CheckCircle, XCircle, Printer } from 'lucide-react'
+import { FileText, User, CreditCard, Warehouse, CheckCircle, XCircle, Printer, MessageCircle } from 'lucide-react'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
+import { DuplicarButton } from '@/components/shared/DuplicarButton'
+import { GestionDianFactura } from './GestionDianFactura'
+import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
+import { ConfirmActionModal } from '@/components/shared/ConfirmActionModal'
 
 interface FormaPago { id: string; descripcion: string }
 
@@ -32,6 +36,9 @@ interface Factura {
   fecha_vencimiento?: string | null
   subtotal: number; total_iva: number; total_descuento: number; total: number
   estado: string; observaciones?: string | null
+  dian_estado?: string | null
+  cufe?: string | null
+  qr_url?: string | null
   cliente?: { razon_social: string; numero_documento?: string; tipo_documento?: string; email?: string; telefono?: string } | null
   forma_pago?: { descripcion: string; tipo: string } | null
   bodega?: { nombre: string } | null
@@ -53,21 +60,28 @@ export function DetalleFactura({ factura, formasPago }: Props) {
   const router = useRouter()
   const [modalRecibo, setModalRecibo]     = useState(false)
   const [cancelando, setCancelando]       = useState(false)
+  const [modalCancelar, setModalCancelar] = useState(false)
 
   const totalPagado = (factura.recibos ?? []).reduce((s, r) => s + r.valor, 0)
   const saldo       = factura.total - totalPagado
   const puedePagar  = factura.estado === 'pendiente' && saldo > 0.01
+  const esSistecredito = isSistecreditoFormaPago(factura.forma_pago)
+  const fechaCobroEsperada = esSistecredito ? calcularFechaPagoSistecredito(factura.fecha) : null
 
   async function handleCancelar() {
-    if (!confirm(`¿Cancelar la factura ${factura.prefijo}${factura.numero}? Esta acción no se puede revertir.`)) return
     setCancelando(true)
     try {
-      await fetch(`/api/ventas/facturas/${factura.id}`, {
+      const res = await fetch(`/api/ventas/facturas/${factura.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accion: 'cancelar' }),
       })
+      const body = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(body?.error ?? 'No se pudo cancelar la factura')
+      setModalCancelar(false)
       router.refresh()
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'No se pudo cancelar la factura')
     } finally {
       setCancelando(false)
     }
@@ -87,7 +101,7 @@ export function DetalleFactura({ factura, formasPago }: Props) {
                 Factura {factura.prefijo}{factura.numero}
               </h1>
               <Badge variant={BADGE[factura.estado] ?? 'outline'}>
-                {factura.estado.charAt(0).toUpperCase() + factura.estado.slice(1)}
+                {(factura.estado ?? '').charAt(0).toUpperCase() + (factura.estado ?? '').slice(1)}
               </Badge>
             </div>
             <p className="text-sm text-gray-500 mt-0.5">
@@ -103,7 +117,7 @@ export function DetalleFactura({ factura, formasPago }: Props) {
             </Button>
           )}
           {factura.estado === 'pendiente' && (
-            <Button size="sm" variant="outline" onClick={handleCancelar} disabled={cancelando}>
+            <Button size="sm" variant="outline" onClick={() => setModalCancelar(true)} disabled={cancelando}>
               <XCircle className="h-4 w-4 mr-1" /> Cancelar
             </Button>
           )}
@@ -112,6 +126,18 @@ export function DetalleFactura({ factura, formasPago }: Props) {
             docId={factura.id}
             emailCliente={factura.cliente?.email}
           />
+          {factura.cliente?.telefono && (
+            <a
+              href={`https://wa.me/${factura.cliente.telefono.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola! Te compartimos tu factura ${factura.prefijo}${factura.numero} por ${new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(factura.total)}. Gracias por tu compra.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button size="sm" variant="outline">
+                <MessageCircle className="h-4 w-4 mr-1 text-green-600" /> WhatsApp
+              </Button>
+            </a>
+          )}
+          <DuplicarButton documentoId={factura.id} tipo="factura_venta" />
           <Link href={`/print/factura/${factura.id}`} target="_blank">
             <Button size="sm" variant="outline">
               <Printer className="h-4 w-4 mr-1" /> Imprimir
@@ -157,11 +183,18 @@ export function DetalleFactura({ factura, formasPago }: Props) {
             </h3>
             <dl className="flex flex-col gap-1.5 text-sm text-gray-600">
               {factura.forma_pago && <div className="flex justify-between"><dt>Forma de pago</dt><dd>{factura.forma_pago.descripcion}</dd></div>}
+              {fechaCobroEsperada && <div className="flex justify-between"><dt>Cobro esperado</dt><dd>{formatFecha(fechaCobroEsperada)}</dd></div>}
               {factura.bodega     && <div className="flex justify-between"><dt>Bodega</dt><dd>{factura.bodega.nombre}</dd></div>}
               {factura.colaborador && <div className="flex justify-between"><dt>Vendedor</dt><dd>{factura.colaborador.nombre}</dd></div>}
               {factura.observaciones && <div className="mt-2 text-xs text-gray-400 italic">{factura.observaciones}</div>}
             </dl>
           </div>
+          <GestionDianFactura
+            facturaId={factura.id}
+            dianEstado={factura.dian_estado}
+            cufe={factura.cufe}
+            qrUrl={factura.qr_url}
+          />
         </div>
 
         {/* Líneas */}
@@ -243,6 +276,17 @@ export function DetalleFactura({ factura, formasPago }: Props) {
           onCancel={() => setModalRecibo(false)}
         />
       </Modal>
+
+      <ConfirmActionModal
+        open={modalCancelar}
+        onClose={() => !cancelando && setModalCancelar(false)}
+        onConfirm={handleCancelar}
+        titulo={`Cancelar factura ${factura.prefijo}${factura.numero}`}
+        descripcion="La factura quedará cancelada y esta acción no se puede revertir desde la interfaz."
+        confirmLabel="Cancelar factura"
+        confirmVariant="destructive"
+        loading={cancelando}
+      />
     </div>
   )
 }

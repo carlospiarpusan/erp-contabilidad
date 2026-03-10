@@ -18,8 +18,8 @@ export default async function NotasDebitoPage({ searchParams }: PageProps) {
   const supabase = await createClient()
   const { data: notas, count } = await supabase
     .from('documentos')
-    .select(`
-      id, numero, prefijo, fecha, total, motivo,
+      .select(`
+      id, numero, prefijo, fecha, total, motivo, estado,
       cliente:cliente_id(razon_social),
       factura_origen:documento_origen_id(numero, prefijo)
     `, { count: 'exact' })
@@ -77,13 +77,14 @@ export default async function NotasDebitoPage({ searchParams }: PageProps) {
               <th className="px-4 py-3 text-left font-semibold text-gray-600">Cliente</th>
               <th className="px-4 py-3 text-left font-semibold text-gray-600">Factura origen</th>
               <th className="px-4 py-3 text-left font-semibold text-gray-600">Motivo</th>
+              <th className="px-4 py-3 text-center font-semibold text-gray-600">Estado</th>
               <th className="px-4 py-3 text-right font-semibold text-gray-600">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {(notas ?? []).length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                   No hay notas débito en este período.{' '}
                   <Link href="/ventas/notas-debito/nueva" className="text-amber-600 hover:underline">Crear primera nota</Link>
                 </td>
@@ -104,6 +105,17 @@ export default async function NotasDebitoPage({ searchParams }: PageProps) {
                     {origen ? `${origen.prefijo ?? ''}${origen.numero}` : '—'}
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs max-w-48 truncate">{(n as any).motivo ?? '—'}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                        (n as any).estado === 'cancelada'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-emerald-100 text-emerald-700'
+                      }`}
+                    >
+                      {(n as any).estado ?? '—'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-right font-mono font-medium text-amber-700">{formatCOP(n.total)}</td>
                 </tr>
               )

@@ -1,16 +1,13 @@
 export const dynamic = 'force-dynamic'
 
-import { getClientes } from '@/lib/db/clientes'
-import { getProductos, getImpuestos, getBodegas } from '@/lib/db/productos'
+import { getImpuestos, getBodegas } from '@/lib/db/productos'
 import { getFormasPago, getColaboradores } from '@/lib/db/maestros'
 import { FormFactura } from '@/components/ventas/FormFactura'
 import { TrendingUp, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function NuevaFacturaPage() {
-  const [{ clientes }, { productos }, impuestos, bodegas, formasPago, colaboradores] = await Promise.all([
-    getClientes({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
+  const [impuestos, bodegas, formasPago, colaboradores] = await Promise.all([
     getImpuestos(),
     getBodegas(),
     getFormasPago(),
@@ -34,8 +31,6 @@ export default async function NuevaFacturaPage() {
       </div>
 
       <FormFactura
-        clientes={clientes}
-        productos={productos}
         impuestos={impuestos}
         bodegas={bodegas}
         formasPago={formasPago}

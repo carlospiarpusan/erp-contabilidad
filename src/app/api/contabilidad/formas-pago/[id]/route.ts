@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateFormaPago, deleteFormaPago } from '@/lib/db/contabilidad'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
+import { toErrorMsg } from '@/lib/utils/errors'
 
 interface Ctx { params: Promise<{ id: string }> }
 const TIPOS_FORMA_PAGO = new Set(['contado', 'credito', 'anticipo', 'anticipado'])
 
-function errorMessage(e: unknown) {
-  return e instanceof Error ? e.message : 'Error'
-}
 
 async function requireContabilidadAccess() {
   const session = await getSession()
@@ -56,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const data = await updateFormaPago(id, payload)
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -68,6 +66,6 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     await deleteFormaPago(id)
     return NextResponse.json({ ok: true })
   } catch (e) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

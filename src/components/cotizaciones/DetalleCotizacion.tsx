@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { formatCOP, formatFecha } from '@/utils/cn'
-import { FileText, CheckCircle, XCircle, ArrowRight, Printer } from 'lucide-react'
+import { FileText, CheckCircle, XCircle, ArrowRight, Printer, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
+import { DuplicarButton } from '@/components/shared/DuplicarButton'
 
 interface FormaPago { id: string; descripcion: string }
 interface Linea {
@@ -59,8 +60,8 @@ export function DetalleCotizacion({ cotizacion, formasPago }: Props) {
       } else {
         router.refresh()
       }
-    } catch (e: any) {
-      alert(e.message)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
     } finally {
       setAccionando(false)
       setModalConv(false)
@@ -112,6 +113,17 @@ export function DetalleCotizacion({ cotizacion, formasPago }: Props) {
               docId={cotizacion.id}
               emailCliente={cotizacion.cliente?.email}
             />
+            {cotizacion.cliente?.telefono && (
+              <a
+                href={`https://wa.me/${cotizacion.cliente.telefono.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola! Te enviamos tu cotización ${cotizacion.prefijo ?? ''}${cotizacion.numero} por ${new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(cotizacion.total)}. Gracias.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              >
+                <MessageCircle className="h-4 w-4 text-green-600" /> WhatsApp
+              </a>
+            )}
+            <DuplicarButton documentoId={cotizacion.id} tipo="cotizacion" />
             <Link href={`/print/cotizacion/${cotizacion.id}`} target="_blank"
               className="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
               <Printer className="h-4 w-4" /> Imprimir

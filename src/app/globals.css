@@ -3,12 +3,77 @@
 /* Modo oscuro — class strategy */
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --app-bg: #f5f7fb;
+  --app-surface: #ffffff;
+  --app-surface-soft: #eef3fb;
+  --app-border: #d8e0ed;
+  --app-text: #1d2636;
+  --app-text-muted: #586379;
+  --app-selection: color-mix(in srgb, #4f7dff 24%, transparent);
+  --app-scrollbar-thumb: #c6cfdd;
+  --app-scrollbar-thumb-hover: #a9b5c8;
+
+  color-scheme: light;
+}
+
+.dark {
+  /* Base de modo oscuro pensada para menor fatiga visual */
+  --app-bg: #111721;
+  --app-surface: #171f2c;
+  --app-surface-soft: #1d2736;
+  --app-border: #2d3a4e;
+  --app-text: #d8e1ef;
+  --app-text-muted: #9aa8be;
+  --app-selection: color-mix(in srgb, #8aa8ff 34%, transparent);
+  --app-scrollbar-thumb: #44526a;
+  --app-scrollbar-thumb-hover: #56647d;
+
+  /*
+   * Ajuste global de grises de Tailwind en dark.
+   * Esto suaviza automáticamente cientos de clases dark:* ya existentes.
+   */
+  --color-gray-950: #101621;
+  --color-gray-900: #151d2a;
+  --color-gray-800: #1d2736;
+  --color-gray-700: #2a3649;
+  --color-gray-600: #3d4b62;
+  --color-gray-500: #61718a;
+  --color-gray-400: #92a3ba;
+  --color-gray-300: #b8c5d8;
+  --color-gray-200: #d4deeb;
+  --color-gray-100: #e9eff8;
+  --color-gray-50: #f4f7fc;
+
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
 
+html,
+body {
+  min-height: 100%;
+}
+
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: var(--app-bg);
+  color: var(--app-text);
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--app-selection);
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 
 /* Scrollbar delgada */
@@ -20,9 +85,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--app-scrollbar-thumb);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: var(--app-scrollbar-thumb-hover);
 }

@@ -114,7 +114,7 @@ export function DetalleCompra({ compra, formasPago }: Props) {
                 Compra {compra.prefijo}{compra.numero}
               </h1>
               <Badge variant={BADGE[compra.estado] ?? 'outline'}>
-                {compra.estado.charAt(0).toUpperCase() + compra.estado.slice(1)}
+                {(compra.estado ?? '').charAt(0).toUpperCase() + (compra.estado ?? '').slice(1)}
               </Badge>
             </div>
             <p className="text-sm text-gray-500 mt-0.5">

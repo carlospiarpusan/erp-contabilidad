@@ -17,7 +17,7 @@ export function Paginacion({ total, limit, offset, onChange }: PaginacionProps) 
   if (totalPaginas <= 1) return null
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-sm text-gray-600">
+    <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">
       <span>
         Mostrando {offset + 1}–{Math.min(offset + limit, total)} de {total.toLocaleString('es-CO')}
       </span>
@@ -30,7 +30,7 @@ export function Paginacion({ total, limit, offset, onChange }: PaginacionProps) 
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <span className="px-2 font-medium">
+        <span className="px-2 font-medium dark:text-gray-200">
           {pagina} / {totalPaginas}
         </span>
         <Button

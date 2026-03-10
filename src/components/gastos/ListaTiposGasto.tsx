@@ -36,20 +36,29 @@ export function ListaTiposGasto({ tipos: inicial }: Props) {
       if (editando) {
         const res = await fetch(`/api/gastos/tipos/${editando.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
         const updated = await res.json()
+        if (!res.ok) throw new Error(updated.error ?? 'Error al guardar')
         setTipos(prev => prev.map(t => t.id === editando.id ? { ...t, ...updated } : t))
       } else {
         const res = await fetch('/api/gastos/tipos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
         const created = await res.json()
+        if (!res.ok) throw new Error(created.error ?? 'Error al crear')
         setTipos(prev => [...prev, created])
       }
       setModal(false); router.refresh()
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error')
     } finally { setGuardando(false) }
   }
 
   async function eliminar(id: string) {
     if (!confirm('¿Eliminar este tipo de gasto?')) return
-    await fetch(`/api/gastos/tipos/${id}`, { method: 'DELETE' })
-    setTipos(prev => prev.filter(t => t.id !== id))
+    try {
+      const res = await fetch(`/api/gastos/tipos/${id}`, { method: 'DELETE' })
+      if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error ?? 'Error al eliminar'); return }
+      setTipos(prev => prev.filter(t => t.id !== id))
+    } catch {
+      alert('Error de conexión')
+    }
   }
 
   const inputCls = 'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500'

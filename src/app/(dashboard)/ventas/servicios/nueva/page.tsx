@@ -1,12 +1,9 @@
 export const dynamic = 'force-dynamic'
 
-import { getClientes } from '@/lib/db/clientes'
 import { FormServicio } from '@/components/servicios/FormServicio'
 import { Wrench } from 'lucide-react'
 
 export default async function NuevoServicioPage() {
-  const { clientes } = await getClientes({ activo: true, limit: 500, select_mode: 'selector', include_total: false })
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -18,7 +15,7 @@ export default async function NuevoServicioPage() {
           <p className="text-sm text-gray-500">Registro de reparación o servicio técnico</p>
         </div>
       </div>
-      <FormServicio clientes={clientes as any} />
+      <FormServicio />
     </div>
   )
 }

@@ -33,8 +33,8 @@ export function NuevoUsuarioForm({ empresas, roles }: { empresas: Empresa[]; rol
       setForm({ nombre: '', email: '', password: '', empresa_id: '', rol_id: '' })
       setOpen(false)
       router.refresh()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setGuardando(false)
     }

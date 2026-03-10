@@ -1,11 +1,15 @@
 import { toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { updateTipoGasto, deleteTipoGasto } from '@/lib/db/gastos'
+import { getSession } from '@/lib/auth/session'
 
 interface Ctx { params: Promise<{ id: string }> }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const body = await req.json()
     const data = await updateTipoGasto(id, body)
@@ -17,6 +21,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     await deleteTipoGasto(id)
     return NextResponse.json({ ok: true })

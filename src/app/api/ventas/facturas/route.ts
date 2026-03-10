@@ -1,26 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFacturas, createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
+import { toErrorMsg } from '@/lib/utils/errors'
+import { revalidateTag } from 'next/cache'
+import { getInventarioStatsTag, getReportTag, getStockBajoTag, getVentasStatsTag } from '@/lib/cache/empresa-tags'
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const result = await getFacturas({
-      busqueda: searchParams.get('q') ?? undefined,
+      busqueda: searchParams.get('q') ?? searchParams.get('busqueda') ?? undefined,
       estado:   searchParams.get('estado') ?? undefined,
       desde:    searchParams.get('desde') ?? undefined,
       hasta:    searchParams.get('hasta') ?? undefined,
+      cliente_id: searchParams.get('cliente_id') ?? undefined,
       limit:    parseInt(searchParams.get('limit') ?? '50'),
       offset:   parseInt(searchParams.get('offset') ?? '0'),
     })
     return NextResponse.json(result)
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const body = await req.json()
     const { cliente_id, bodega_id, forma_pago_id, lineas } = body
 
@@ -46,8 +57,13 @@ export async function POST(req: NextRequest) {
       lineas,
     })
 
+    revalidateTag(getVentasStatsTag(empresa_id), 'max')
+    revalidateTag(getInventarioStatsTag(empresa_id), 'max')
+    revalidateTag(getStockBajoTag(empresa_id), 'max')
+    revalidateTag(getReportTag(empresa_id), 'max')
+
     return NextResponse.json({ id: doc_id }, { status: 201 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error al crear factura' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

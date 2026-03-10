@@ -65,7 +65,7 @@ export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorN
                 estado === e ? 'bg-orange-600 text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-300'
               }`}
             >
-              {e.charAt(0).toUpperCase() + e.slice(1)}
+              {(e ?? '').charAt(0).toUpperCase() + (e ?? '').slice(1)}
             </button>
           ))}
         </div>
@@ -114,7 +114,7 @@ export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorN
                 <td className="px-4 py-3 text-right font-mono font-medium text-orange-700">{formatCOP(c.total)}</td>
                 <td className="px-4 py-3 text-center">
                   <Badge variant={BADGE[c.estado] ?? 'outline'}>
-                    {c.estado.charAt(0).toUpperCase() + c.estado.slice(1)}
+                    {(c.estado ?? '').charAt(0).toUpperCase() + (c.estado ?? '').slice(1)}
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-right">

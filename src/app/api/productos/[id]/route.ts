@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProductoById, updateProducto } from '@/lib/db/productos'
+import { getSession } from '@/lib/auth/session'
+import { revalidateTag } from 'next/cache'
+import { getInventarioStatsTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const producto = await getProductoById(id)
     return NextResponse.json(producto)
@@ -13,6 +19,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const body   = await req.json()
     // Strip join relations and variantes — only persist scalar columns
@@ -25,6 +34,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       precio_venta2: rest.precio_venta2 > 0 ? rest.precio_venta2 : null,
     }
     const producto = await updateProducto(id, datos)
+    revalidateTag(getInventarioStatsTag(session.empresa_id), 'max')
+    revalidateTag(getStockBajoTag(session.empresa_id), 'max')
     return NextResponse.json(producto)
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })

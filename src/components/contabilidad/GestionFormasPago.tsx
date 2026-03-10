@@ -10,24 +10,30 @@ interface CuentaPUC { codigo: string; descripcion: string }
 interface FormaPago {
   id: string; descripcion: string; tipo: string
   dias_vencimiento?: number | null; activo: boolean
+  cuenta_id?: string | null
   cuenta?: CuentaPUC | null
 }
 
-interface Props { formasPago: FormaPago[] }
+interface CuentaOpcion { id: string; codigo: string; descripcion: string }
 
-export function GestionFormasPago({ formasPago: inicial }: Props) {
+interface Props {
+  formasPago: FormaPago[]
+  cuentas: CuentaOpcion[]
+}
+
+export function GestionFormasPago({ formasPago: inicial, cuentas }: Props) {
   const router = useRouter()
   const [formasPago, setFormasPago] = useState(inicial)
   const [modal, setModal]     = useState(false)
   const [editando, setEditando] = useState<FormaPago | null>(null)
-  const [form, setForm] = useState({ descripcion: '', tipo: 'contado', dias_vencimiento: 0 })
+  const [form, setForm] = useState({ descripcion: '', tipo: 'contado', dias_vencimiento: 0, cuenta_id: '' })
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
 
-  function abrirNuevo() { setEditando(null); setForm({ descripcion: '', tipo: 'contado', dias_vencimiento: 0 }); setModal(true) }
+  function abrirNuevo() { setEditando(null); setForm({ descripcion: '', tipo: 'contado', dias_vencimiento: 0, cuenta_id: '' }); setModal(true) }
   function abrirEditar(f: FormaPago) {
     setEditando(f)
-    setForm({ descripcion: f.descripcion, tipo: f.tipo, dias_vencimiento: f.dias_vencimiento ?? 0 })
+    setForm({ descripcion: f.descripcion, tipo: f.tipo, dias_vencimiento: f.dias_vencimiento ?? 0, cuenta_id: f.cuenta_id ?? '' })
     setModal(true)
   }
 
@@ -137,10 +143,10 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
             <label className={labelCls}>Descripción *</label>
             <input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Tipo</label>
-              <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inputCls}>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelCls}>Tipo</label>
+            <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inputCls}>
                 <option value="contado">Contado</option>
                 <option value="credito">Crédito</option>
                 <option value="anticipo">Anticipo</option>
@@ -151,6 +157,16 @@ export function GestionFormasPago({ formasPago: inicial }: Props) {
               <label className={labelCls}>Días vencimiento</label>
               <input type="number" min="0" value={form.dias_vencimiento} onChange={e => setForm(f => ({ ...f, dias_vencimiento: Number(e.target.value) }))} className={inputCls} />
             </div>
+          </div>
+          <div>
+            <label className={labelCls}>Cuenta PUC</label>
+            <select value={form.cuenta_id} onChange={e => setForm(f => ({ ...f, cuenta_id: e.target.value }))} className={inputCls}>
+              <option value="">— Sin cuenta específica —</option>
+              {cuentas.map(c => (
+                <option key={c.id} value={c.id}>{c.codigo} — {c.descripcion}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">Para Sistecrédito asigna aquí la cuenta por cobrar del convenio.</p>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setModal(false)}>Cancelar</Button>

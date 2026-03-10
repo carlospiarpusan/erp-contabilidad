@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getKPIs, getUltimasFacturas, getAlertasStock, getFacturasVencidas, getResumenMensual } from '@/lib/db/dashboard'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { searchParams } = new URL(req.url)
     const año = parseInt(searchParams.get('año') ?? String(new Date().getFullYear()))
 

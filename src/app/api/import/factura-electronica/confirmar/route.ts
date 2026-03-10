@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 interface LineaConfirmada {
   descripcion: string
@@ -19,6 +20,8 @@ interface LineaConfirmada {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const body = await req.json()
     const {
       proveedor_id,

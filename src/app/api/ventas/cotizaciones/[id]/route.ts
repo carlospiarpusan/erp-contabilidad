@@ -3,11 +3,14 @@ import { getCotizacionById, aprobarCotizacion, cancelarCotizacion } from '@/lib/
 import { createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
 import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth/session'
 
 interface Ctx { params: Promise<{ id: string }> }
 
 export async function GET(_: NextRequest, { params }: Ctx) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const { id } = await params
     const data = await getCotizacionById(id)
     return NextResponse.json(data)
@@ -18,6 +21,8 @@ export async function GET(_: NextRequest, { params }: Ctx) {
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const { id } = await params
     const { accion, forma_pago_id, vencimiento } = await req.json()
 

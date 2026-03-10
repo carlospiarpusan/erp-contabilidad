@@ -48,7 +48,7 @@ BEGIN
       AND r.tipo        = 'venta'
       AND NOT EXISTS (
         SELECT 1 FROM asientos a
-        WHERE a.documento_id = r.id
+        WHERE a.recibo_id = r.id
           AND a.tipo_doc     = 'recibo_venta'
       )
     ORDER BY r.fecha
@@ -115,7 +115,7 @@ BEGIN
       AND r.tipo       = 'venta'
       AND NOT EXISTS (
         SELECT 1 FROM asientos a
-        WHERE a.documento_id = r.id AND a.tipo_doc = 'recibo_venta'
+        WHERE a.recibo_id = r.id AND a.tipo_doc = 'recibo_venta'
       );
 
   RETURN QUERY

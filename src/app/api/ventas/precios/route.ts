@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET() {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('listas_precios')
@@ -18,6 +21,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     const body = await req.json()
     const { nombre, tipo, producto_id, cliente_id, grupo_id, precio, descuento_porcentaje, valida_desde, valida_hasta } = body
     if (!nombre || !producto_id) {

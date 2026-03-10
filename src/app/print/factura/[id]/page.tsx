@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { PrintButton } from '@/components/print/PrintButton'
 import { PrintLayout } from '@/components/print/PrintLayout'
+import { QRDocumento } from '@/components/print/QRDocumento'
+import { headers } from 'next/headers'
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -41,6 +43,10 @@ export default async function PrintFacturaPage({ params }: PageProps) {
   const cliente = factura.cliente as { razon_social?: string; numero_documento?: string; tipo_documento?: string; email?: string; telefono?: string; direccion?: string } | null
 
   const plantilla = (empresa as any)?.plantilla_pdf ?? 'clasica'
+  const hdrs = await headers()
+  const host = hdrs.get('host') ?? 'localhost:3000'
+  const proto = host.includes('localhost') ? 'http' : 'https'
+  const docUrl = `${proto}://${host}/ventas/facturas/${id}`
 
   return (
     <div className="min-h-screen bg-white" data-plantilla={plantilla}>
@@ -172,8 +178,8 @@ export default async function PrintFacturaPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Firma */}
-        <div className="grid grid-cols-2 gap-12 mt-12 pt-6 border-t border-gray-200 text-xs text-center text-gray-400">
+        {/* Firma + QR */}
+        <div className="grid grid-cols-3 gap-8 mt-12 pt-6 border-t border-gray-200 text-xs text-center text-gray-400">
           <div>
             <div className="border-b border-gray-300 mb-1 pb-4"></div>
             <p>Firma autorizada</p>
@@ -181,6 +187,9 @@ export default async function PrintFacturaPage({ params }: PageProps) {
           <div>
             <div className="border-b border-gray-300 mb-1 pb-4"></div>
             <p>Firma cliente / recibí conforme</p>
+          </div>
+          <div className="flex justify-center">
+            <QRDocumento url={docUrl} size={72} />
           </div>
         </div>
 

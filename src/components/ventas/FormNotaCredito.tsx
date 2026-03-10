@@ -44,12 +44,13 @@ export function FormNotaCredito({ facturaInicial }: { facturaInicial: Factura | 
     setBuscando(true)
     setError(null)
     try {
-      const res = await fetch(`/api/ventas/facturas?busqueda=${encodeURIComponent(busqueda)}&limit=5`)
+      const res = await fetch(`/api/ventas/facturas?q=${encodeURIComponent(busqueda)}&limit=5`)
       const data = await res.json()
       const facturas = data.facturas ?? []
       if (facturas.length === 0) { setError('No se encontraron facturas'); return }
       // Cargar la primera que coincida
       const r = await fetch(`/api/ventas/facturas/${facturas[0].id}`)
+      if (!r.ok) { setError('Error al cargar la factura'); return }
       const fdata = await r.json()
       setFactura(fdata)
       setSeleccionadas(new Set())
@@ -98,8 +99,8 @@ export function FormNotaCredito({ facturaInicial }: { facturaInicial: Factura | 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       router.push(`/ventas/notas-credito/${data.id}`)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setGuardando(false)
     }
@@ -166,7 +167,7 @@ export function FormNotaCredito({ facturaInicial }: { facturaInicial: Factura | 
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {factura.lineas.map(l => {
+                {(factura.lineas ?? []).map(l => {
                   const sel = seleccionadas.has(l.id)
                   const cant = cantidades[l.id] ?? l.cantidad
                   return (

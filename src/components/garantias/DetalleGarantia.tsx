@@ -49,7 +49,7 @@ export function DetalleGarantia({ garantia }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).error)
       router.refresh()
-    } catch (e: any) { alert(e.message) }
+    } catch (e) { alert(e instanceof Error ? e.message : 'Error') }
     finally { setAccionando(false) }
   }
 

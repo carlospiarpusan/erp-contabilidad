@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Users, Package, X, ArrowRight } from 'lucide-react'
+import { Search, Users, Package, X, ArrowRight, FileText, Building2 } from 'lucide-react'
 
 interface Resultado {
-  tipo: 'cliente' | 'producto'
+  tipo: 'cliente' | 'producto' | 'factura' | 'proveedor'
   id: string
-  nombre: string
+  titulo: string
   detalle: string
   href: string
 }
@@ -36,27 +36,10 @@ export function BusquedaGlobal() {
   const buscar = useCallback(async (q: string) => {
     if (q.trim().length < 2) { setResults([]); return }
     setLoading(true)
-    const [rc, rp] = await Promise.all([
-      fetch(`/api/clientes?q=${encodeURIComponent(q)}&limit=5`).then(r => r.json()).catch(() => ({ clientes: [] })),
-      fetch(`/api/productos?q=${encodeURIComponent(q)}&limit=5`).then(r => r.json()).catch(() => ({ productos: [] })),
-    ])
-    const res: Resultado[] = [
-      ...(rc.clientes ?? []).map((c: { id: string; razon_social?: string; numero_documento?: string; tipo_documento?: string }) => ({
-        tipo: 'cliente' as const,
-        id: c.id,
-        nombre: c.razon_social ?? 'Cliente',
-        detalle: c.numero_documento ? `${c.tipo_documento ?? 'Doc'}: ${c.numero_documento}` : 'Cliente',
-        href: `/clientes/${c.id}`,
-      })),
-      ...(rp.productos ?? []).map((p: { id: string; descripcion?: string; codigo?: string }) => ({
-        tipo: 'producto' as const,
-        id: p.id,
-        nombre: p.descripcion ?? 'Producto',
-        detalle: p.codigo ?? 'Producto',
-        href: `/productos/${p.id}`,
-      })),
-    ]
-    setResults(res)
+    const body = await fetch(`/api/busqueda?q=${encodeURIComponent(q)}`)
+      .then((response) => response.json())
+      .catch(() => ({ items: [] }))
+    setResults(body.items ?? [])
     setSelected(0)
     setLoading(false)
   }, [])
@@ -82,21 +65,21 @@ export function BusquedaGlobal() {
   if (!open) return (
     <button
       onClick={() => setOpen(true)}
-      className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 transition-colors"
+      className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:bg-gray-800/80 transition-colors"
     >
       <Search className="h-3.5 w-3.5" />
       <span className="hidden sm:inline">Buscar...</span>
-      <kbd className="hidden rounded bg-gray-200 px-1.5 py-0.5 text-xs font-mono text-gray-500 sm:inline dark:bg-gray-700 dark:text-gray-400">⌘K</kbd>
+      <kbd className="hidden rounded bg-gray-200 px-1.5 py-0.5 text-xs font-mono text-gray-500 sm:inline dark:bg-gray-800 dark:text-gray-300">⌘K</kbd>
     </button>
   )
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
+      <div className="absolute inset-0 bg-black/45 backdrop-blur-sm dark:bg-black/60" onClick={() => setOpen(false)} />
 
       {/* Panel */}
-      <div className="relative w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+      <div className="relative w-full max-w-lg rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900/95">
         {/* Input */}
         <div className="flex items-center gap-3 border-b border-gray-100 px-4 py-3 dark:border-gray-700">
           <Search className="h-4 w-4 shrink-0 text-gray-400" />
@@ -105,15 +88,15 @@ export function BusquedaGlobal() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Buscar clientes, productos..."
-            className="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none dark:text-white"
+            placeholder="Buscar clientes, productos, facturas, proveedores..."
+            className="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none dark:text-gray-100"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="text-gray-400 hover:text-gray-600">
+            <button onClick={() => setQuery('')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
               <X className="h-4 w-4" />
             </button>
           )}
-          <kbd className="rounded border border-gray-200 px-1.5 py-0.5 text-xs text-gray-400 dark:border-gray-600">Esc</kbd>
+          <kbd className="rounded border border-gray-200 px-1.5 py-0.5 text-xs text-gray-400 dark:border-gray-600 dark:text-gray-300">Esc</kbd>
         </div>
 
         {/* Resultados */}
@@ -130,11 +113,12 @@ export function BusquedaGlobal() {
               {[
                 { label: 'Clientes', href: '/clientes', icon: Users },
                 { label: 'Productos', href: '/productos', icon: Package },
+                { label: 'Facturas', href: '/ventas/facturas', icon: FileText },
               ].map(item => (
                 <button
                   key={item.href}
                   onClick={() => navegar(item.href)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/70"
                 >
                   <item.icon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                   {item.label}
@@ -145,17 +129,27 @@ export function BusquedaGlobal() {
           )}
           {results.map((r, i) => (
             <button
-              key={r.id}
+              key={`${r.tipo}-${r.id}`}
               onClick={() => navegar(r.href)}
-              className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${i === selected ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:hover:bg-gray-800'
+              className={`flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors ${i === selected ? 'bg-blue-50 dark:bg-blue-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-800/70'
                 }`}
             >
-              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${r.tipo === 'cliente' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
+              <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                r.tipo === 'cliente'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
+                  : r.tipo === 'producto'
+                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400'
+                    : r.tipo === 'factura'
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                      : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
                 }`}>
-                {r.tipo === 'cliente' ? <Users className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />}
+                {r.tipo === 'cliente' && <Users className="h-3.5 w-3.5" />}
+                {r.tipo === 'producto' && <Package className="h-3.5 w-3.5" />}
+                {r.tipo === 'factura' && <FileText className="h-3.5 w-3.5" />}
+                {r.tipo === 'proveedor' && <Building2 className="h-3.5 w-3.5" />}
               </div>
               <div className="flex-1 text-left">
-                <p className="font-medium text-gray-900 dark:text-white">{r.nombre}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{r.titulo}</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">{r.detalle}</p>
               </div>
               <ArrowRight className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600" />

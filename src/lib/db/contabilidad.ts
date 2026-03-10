@@ -180,11 +180,14 @@ export async function deleteImpuesto(id: string) {
 
 // ── Formas de Pago ─────────────────────────────────────────────────────────────
 
+const FORMAS_PAGO_SELECT =
+  'id, descripcion, tipo, dias_vencimiento, cuenta_id, activo:activa, cuenta:cuenta_id(codigo, descripcion)'
+
 export async function getFormasPagoAll() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('formas_pago')
-    .select('id, descripcion, tipo, dias_vencimiento, activo, cuenta:cuenta_id(codigo, descripcion)')
+    .select(FORMAS_PAGO_SELECT)
     .order('descripcion')
   if (error) throw error
   return data ?? []
@@ -197,7 +200,7 @@ export async function createFormaPago(fields: {
 
   const { supabase, empresa_id } = await getCurrentEmpresaId()
   const { data, error } = await supabase.from('formas_pago')
-    .insert({ ...payload, empresa_id, activo: true }).select().single()
+    .insert({ ...payload, empresa_id, activa: true }).select(FORMAS_PAGO_SELECT).single()
   if (error) throw error
   return data
 }
@@ -218,13 +221,13 @@ export async function updateFormaPago(
   if (fields.tipo !== undefined) payloadRaw.tipo = fields.tipo
   if (fields.dias_vencimiento !== undefined) payloadRaw.dias_vencimiento = fields.dias_vencimiento
   if (fields.cuenta_id !== undefined) payloadRaw.cuenta_id = fields.cuenta_id
-  if (fields.activo !== undefined) payloadRaw.activo = fields.activo
+  if (fields.activo !== undefined) payloadRaw.activa = fields.activo
   if (fields.genera_factura !== undefined) payloadRaw.genera_factura = fields.genera_factura
 
   const payload = cleanUUIDs(payloadRaw, ['cuenta_id'])
 
   const supabase = await createClient()
-  const { data, error } = await supabase.from('formas_pago').update(payload).eq('id', id).select().single()
+  const { data, error } = await supabase.from('formas_pago').update(payload).eq('id', id).select(FORMAS_PAGO_SELECT).single()
   if (error) throw error
   return data
 }
@@ -259,4 +262,329 @@ export async function updateConsecutivo(
   const { data, error } = await supabase.from('consecutivos').update(payload).eq('id', id).select().single()
   if (error) throw error
   return data
+}
+
+// ── PUC CRUD ──────────────────────────────────────────────────────────────────
+
+export async function getCuentaPUCById(id: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('cuentas_puc')
+    .select('id, codigo, descripcion, tipo, nivel, naturaleza, cuenta_padre_id, activa')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function createCuentaPUC(fields: {
+  codigo: string
+  descripcion: string
+  tipo: string
+  nivel: number
+  naturaleza?: 'debito' | 'credito'
+  cuenta_padre_id?: string | null
+  activa?: boolean
+}) {
+  const payload = cleanUUIDs({
+    codigo: fields.codigo.trim(),
+    descripcion: fields.descripcion.trim(),
+    tipo: fields.tipo.trim(),
+    nivel: fields.nivel,
+    naturaleza: fields.naturaleza ?? 'debito',
+    cuenta_padre_id: fields.cuenta_padre_id ?? null,
+    activa: fields.activa ?? true,
+  }, ['cuenta_padre_id'])
+
+  const { supabase, empresa_id } = await getCurrentEmpresaId()
+  const { data, error } = await supabase
+    .from('cuentas_puc')
+    .insert({ ...payload, empresa_id })
+    .select('id, codigo, descripcion, tipo, nivel, naturaleza, cuenta_padre_id, activa')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateCuentaPUC(
+  id: string,
+  fields: Partial<{
+    codigo: string
+    descripcion: string
+    tipo: string
+    nivel: number
+    naturaleza: 'debito' | 'credito'
+    cuenta_padre_id: string | null
+    activa: boolean
+  }>
+) {
+  const payloadRaw: Record<string, unknown> = {}
+  if (fields.codigo !== undefined) payloadRaw.codigo = fields.codigo.trim()
+  if (fields.descripcion !== undefined) payloadRaw.descripcion = fields.descripcion.trim()
+  if (fields.tipo !== undefined) payloadRaw.tipo = fields.tipo.trim()
+  if (fields.nivel !== undefined) payloadRaw.nivel = fields.nivel
+  if (fields.naturaleza !== undefined) payloadRaw.naturaleza = fields.naturaleza
+  if (fields.cuenta_padre_id !== undefined) payloadRaw.cuenta_padre_id = fields.cuenta_padre_id
+  if (fields.activa !== undefined) payloadRaw.activa = fields.activa
+
+  const payload = cleanUUIDs(payloadRaw, ['cuenta_padre_id'])
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('cuentas_puc')
+    .update(payload)
+    .eq('id', id)
+    .select('id, codigo, descripcion, tipo, nivel, naturaleza, cuenta_padre_id, activa')
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ── Asientos manuales ─────────────────────────────────────────────────────────
+
+type AsientoLineaInput = {
+  cuenta_id: string
+  descripcion?: string
+  debe: number
+  haber: number
+}
+
+function round2(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100
+}
+
+function validarLineasPartidaDoble(lineas: AsientoLineaInput[]) {
+  if (!Array.isArray(lineas) || lineas.length < 2) {
+    throw new Error('El asiento debe tener al menos 2 líneas')
+  }
+
+  let totalDebe = 0
+  let totalHaber = 0
+
+  for (const linea of lineas) {
+    if (!linea.cuenta_id) throw new Error('Todas las líneas deben tener cuenta')
+    const debe = Number(linea.debe ?? 0)
+    const haber = Number(linea.haber ?? 0)
+    if (Number.isNaN(debe) || Number.isNaN(haber) || debe < 0 || haber < 0) {
+      throw new Error('Valores de debe/haber inválidos')
+    }
+    if ((debe > 0 && haber > 0) || (debe === 0 && haber === 0)) {
+      throw new Error('Cada línea debe tener solo débito o solo crédito')
+    }
+    totalDebe += debe
+    totalHaber += haber
+  }
+
+  const debeRound = round2(totalDebe)
+  const haberRound = round2(totalHaber)
+  if (debeRound <= 0 || haberRound <= 0) {
+    throw new Error('El asiento debe tener valores en débito y crédito')
+  }
+  if (debeRound !== haberRound) {
+    throw new Error('El asiento está descuadrado: débito y crédito deben ser iguales')
+  }
+
+  return { total: debeRound }
+}
+
+async function siguienteNumeroAsiento(supabase: Awaited<ReturnType<typeof createClient>>, empresa_id: string) {
+  const { data, error } = await supabase
+    .from('asientos')
+    .select('numero')
+    .eq('empresa_id', empresa_id)
+    .order('numero', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return Number(data?.numero ?? 0) + 1
+}
+
+async function ejercicioActivoId(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const { data, error } = await supabase
+    .from('ejercicios')
+    .select('id')
+    .eq('estado', 'activo')
+    .order('año', { ascending: false })
+    .limit(1)
+    .single()
+  if (error || !data?.id) throw new Error('No hay ejercicio contable activo')
+  return data.id as string
+}
+
+export async function createAsientoManual(fields: {
+  fecha: string
+  concepto: string
+  lineas: AsientoLineaInput[]
+}) {
+  const { supabase, empresa_id } = await getCurrentEmpresaId()
+  const { total } = validarLineasPartidaDoble(fields.lineas)
+  const [numero, ejercicio_id, auth] = await Promise.all([
+    siguienteNumeroAsiento(supabase, empresa_id),
+    ejercicioActivoId(supabase),
+    supabase.auth.getUser(),
+  ])
+
+  const created_by = auth.data.user?.id ?? null
+  const { data: asiento, error: asientoErr } = await supabase
+    .from('asientos')
+    .insert({
+      empresa_id,
+      ejercicio_id,
+      numero,
+      tipo: 'manual',
+      tipo_doc: 'manual',
+      concepto: fields.concepto.trim(),
+      fecha: fields.fecha,
+      importe: total,
+      created_by,
+    })
+    .select('id, numero, tipo, tipo_doc, concepto, fecha, importe')
+    .single()
+
+  if (asientoErr || !asiento) throw asientoErr ?? new Error('No se pudo crear el asiento')
+
+  const payloadLineas = fields.lineas.map((l) => ({
+    asiento_id: asiento.id,
+    cuenta_id: l.cuenta_id,
+    descripcion: l.descripcion?.trim() || null,
+    debe: Number(l.debe ?? 0),
+    haber: Number(l.haber ?? 0),
+  }))
+
+  const { error: lineasErr } = await supabase
+    .from('asientos_lineas')
+    .insert(payloadLineas)
+
+  if (lineasErr) {
+    await supabase.from('asientos').delete().eq('id', asiento.id)
+    throw lineasErr
+  }
+
+  return asiento
+}
+
+export async function updateAsientoManual(
+  id: string,
+  fields: Partial<{ fecha: string; concepto: string; lineas: AsientoLineaInput[] }>
+) {
+  const supabase = await createClient()
+  const { data: actual, error: actualErr } = await supabase
+    .from('asientos')
+    .select('id, tipo, tipo_doc')
+    .eq('id', id)
+    .single()
+  if (actualErr || !actual) throw actualErr ?? new Error('Asiento no encontrado')
+  if (actual.tipo !== 'manual') throw new Error('Solo se pueden editar asientos manuales')
+
+  const updatePayload: Record<string, unknown> = {}
+  if (fields.fecha) updatePayload.fecha = fields.fecha
+  if (fields.concepto !== undefined) updatePayload.concepto = fields.concepto.trim()
+
+  if (fields.lineas) {
+    const { total } = validarLineasPartidaDoble(fields.lineas)
+    updatePayload.importe = total
+
+    const { error: delErr } = await supabase.from('asientos_lineas').delete().eq('asiento_id', id)
+    if (delErr) throw delErr
+
+    const payloadLineas = fields.lineas.map((l) => ({
+      asiento_id: id,
+      cuenta_id: l.cuenta_id,
+      descripcion: l.descripcion?.trim() || null,
+      debe: Number(l.debe ?? 0),
+      haber: Number(l.haber ?? 0),
+    }))
+    const { error: insErr } = await supabase.from('asientos_lineas').insert(payloadLineas)
+    if (insErr) throw insErr
+  }
+
+  if (Object.keys(updatePayload).length > 0) {
+    const { error } = await supabase.from('asientos').update(updatePayload).eq('id', id)
+    if (error) throw error
+  }
+
+  return { ok: true }
+}
+
+export async function revertirAsiento(
+  asiento_id: string,
+  opts?: { tipo_doc?: string; concepto?: string; allow_automatic?: boolean }
+) {
+  const { supabase, empresa_id } = await getCurrentEmpresaId()
+  const tipo_doc = opts?.tipo_doc ?? 'reversion_manual'
+
+  const { data: original, error: originalErr } = await supabase
+    .from('asientos')
+    .select(`
+      id, empresa_id, ejercicio_id, numero, tipo, tipo_doc, concepto, fecha, importe,
+      lineas:asientos_lineas(id, cuenta_id, descripcion, debe, haber)
+    `)
+    .eq('id', asiento_id)
+    .single()
+
+  if (originalErr || !original) throw originalErr ?? new Error('Asiento no encontrado')
+  if (!opts?.allow_automatic && original.tipo !== 'manual') {
+    throw new Error('Solo se pueden revertir asientos manuales desde este flujo')
+  }
+
+  const lineasOriginal = (original.lineas ?? []) as Array<{
+    id: string
+    cuenta_id: string
+    descripcion?: string | null
+    debe: number
+    haber: number
+  }>
+
+  if (lineasOriginal.length === 0) {
+    throw new Error('El asiento no tiene líneas para revertir')
+  }
+
+  const { data: yaExiste } = await supabase
+    .from('asientos')
+    .select('id')
+    .eq('empresa_id', empresa_id)
+    .eq('tipo_doc', tipo_doc)
+    .ilike('concepto', `%${asiento_id}%`)
+    .limit(1)
+    .maybeSingle()
+
+  if (yaExiste?.id) {
+    throw new Error('Ya existe una reversión para este asiento')
+  }
+
+  const numero = await siguienteNumeroAsiento(supabase, empresa_id)
+  const total = round2(lineasOriginal.reduce((s, l) => s + Number(l.haber ?? 0), 0))
+  const concepto = opts?.concepto?.trim() || `Reversión asiento #${original.numero ?? 'N/A'} (${asiento_id})`
+
+  const { data: reverso, error: reversoErr } = await supabase
+    .from('asientos')
+    .insert({
+      empresa_id,
+      ejercicio_id: original.ejercicio_id,
+      numero,
+      tipo: 'manual',
+      tipo_doc,
+      concepto,
+      fecha: new Date().toISOString().split('T')[0],
+      importe: total,
+    })
+    .select('id, numero')
+    .single()
+
+  if (reversoErr || !reverso) throw reversoErr ?? new Error('No se pudo crear el asiento de reversión')
+
+  const payloadLineas = lineasOriginal.map((l) => ({
+    asiento_id: reverso.id,
+    cuenta_id: l.cuenta_id,
+    descripcion: l.descripcion ?? `Reverso ${original.numero ?? ''}`.trim(),
+    debe: Number(l.haber ?? 0),
+    haber: Number(l.debe ?? 0),
+  }))
+
+  const { error: lineasErr } = await supabase.from('asientos_lineas').insert(payloadLineas)
+  if (lineasErr) {
+    await supabase.from('asientos').delete().eq('id', reverso.id)
+    throw lineasErr
+  }
+
+  return reverso
 }

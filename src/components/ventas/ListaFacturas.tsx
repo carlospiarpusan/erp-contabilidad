@@ -95,7 +95,7 @@ export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFi
             <input
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar factura..."
+              placeholder="Número, prefijo, cliente u observación..."
               className="h-9 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -168,7 +168,7 @@ export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFi
             </CeldaTabla>
             <CeldaTabla className="text-center">
               <Badge variant={BADGE_ESTADO[f.estado] ?? 'outline'}>
-                {f.estado.charAt(0).toUpperCase() + f.estado.slice(1)}
+                {(f.estado ?? '').charAt(0).toUpperCase() + (f.estado ?? '').slice(1)}
               </Badge>
             </CeldaTabla>
             <CeldaTabla>

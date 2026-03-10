@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth/session'
 import { getEstadisticasGlobales } from '@/lib/db/superadmin'
+import { hasSupabaseServiceEnv } from '@/lib/supabase/config'
 import { formatCOP } from '@/utils/cn'
 import Link from 'next/link'
 import {
@@ -14,10 +15,7 @@ export default async function SuperadminHomePage() {
   const session = await getSession()
   if (!session || session.rol !== 'superadmin') redirect('/')
 
-  const hasSuperadminConfig = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  )
+  const hasSuperadminConfig = hasSupabaseServiceEnv()
   if (!hasSuperadminConfig) {
     return (
       <div className="max-w-3xl rounded-xl border border-amber-200 bg-amber-50 p-6">

@@ -64,8 +64,8 @@ export function FormEmpresa({ empresa }: Props) {
       })
       if (!res.ok) throw new Error((await res.json()).error ?? 'Error al guardar')
       setMsg({ tipo: 'ok', texto: 'Datos de la empresa actualizados.' })
-    } catch (e: any) {
-      setMsg({ tipo: 'err', texto: e.message })
+    } catch (e) {
+      setMsg({ tipo: 'err', texto: e instanceof Error ? e.message : 'Error' })
     } finally {
       setGuardando(false)
     }

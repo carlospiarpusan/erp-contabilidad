@@ -176,6 +176,7 @@ export interface Colaborador {
   id: string
   empresa_id: string
   nombre: string
+  usuario_id?: string | null
   email?: string
   telefono?: string
   porcentaje_comision: number

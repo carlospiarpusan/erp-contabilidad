@@ -11,26 +11,74 @@ const SELECT_LINEA = `
   impuesto:impuesto_id(id, descripcion, porcentaje)
 `
 
+type RemisionesFilters = {
+  estado?: string
+  desde?: string
+  hasta?: string
+}
+
+function applyRemisionesFilters<T>(query: T, params: RemisionesFilters) {
+  let nextQuery = query as any
+  if (params.estado) nextQuery = nextQuery.eq('estado', params.estado)
+  if (params.desde) nextQuery = nextQuery.gte('fecha', params.desde)
+  if (params.hasta) nextQuery = nextQuery.lte('fecha', params.hasta)
+  return nextQuery as T
+}
+
 export async function getRemisiones(params?: {
   estado?: string; desde?: string; hasta?: string; limit?: number; offset?: number
 }) {
   const supabase = await createClient()
   const { estado, desde, hasta, limit = 50, offset = 0 } = params ?? {}
 
-  let q = supabase
-    .from('documentos')
-    .select(SELECT_REM, { count: 'exact' })
-    .eq('tipo', 'remision')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (estado) q = q.eq('estado', estado)
-  if (desde) q = q.gte('fecha', desde)
-  if (hasta) q = q.lte('fecha', hasta)
+  const q = applyRemisionesFilters(
+    supabase
+      .from('documentos')
+      .select(SELECT_REM, { count: 'exact' })
+      .eq('tipo', 'remision')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1),
+    { estado, desde, hasta }
+  )
 
   const { data, count, error } = await q
   if (error) throw error
   return { remisiones: data ?? [], total: count ?? 0 }
+}
+
+export async function getResumenRemisiones(params?: RemisionesFilters) {
+  const supabase = await createClient()
+  const filters = params ?? {}
+
+  const [countRes, rowsRes] = await Promise.all([
+    applyRemisionesFilters(
+      supabase
+        .from('documentos')
+        .select('id', { count: 'exact', head: true })
+        .eq('tipo', 'remision'),
+      filters
+    ),
+    applyRemisionesFilters(
+      supabase
+        .from('documentos')
+        .select('estado, total')
+        .eq('tipo', 'remision'),
+      filters
+    ),
+  ])
+
+  if (countRes.error) throw countRes.error
+  if (rowsRes.error) throw rowsRes.error
+
+  const rows = rowsRes.data ?? []
+  const entregadas = rows.filter((row) => row.estado === 'entregada')
+
+  return {
+    total: countRes.count ?? 0,
+    total_valor: rows.reduce((sum, row) => sum + Number(row.total ?? 0), 0),
+    entregadas: entregadas.length,
+    valor_entregado: entregadas.reduce((sum, row) => sum + Number(row.total ?? 0), 0),
+  }
 }
 
 export async function getRemisionById(id: string) {

@@ -2,12 +2,16 @@ import { toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompras, createCompra } from '@/lib/db/compras'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { searchParams } = req.nextUrl
     const result = await getCompras({
-      busqueda: searchParams.get('busqueda') ?? undefined,
+      busqueda: searchParams.get('q') ?? searchParams.get('busqueda') ?? undefined,
       estado: searchParams.get('estado') ?? undefined,
       desde: searchParams.get('desde') ?? undefined,
       hasta: searchParams.get('hasta') ?? undefined,
@@ -22,6 +26,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const body = await req.json()
     const { proveedor_id, bodega_id, fecha, numero_externo, lineas } = body
 

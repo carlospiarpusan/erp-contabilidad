@@ -2,11 +2,15 @@ import { toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompraById, cancelarCompra, pagarCompra } from '@/lib/db/compras'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
+import { getSession } from '@/lib/auth/session'
 
 interface Ctx { params: Promise<{ id: string }> }
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const data = await getCompraById(id)
     return NextResponse.json(data)
@@ -17,6 +21,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
+    const session = await getSession()
+    if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
     const { id } = await params
     const body = await req.json()
 

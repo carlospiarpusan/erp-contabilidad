@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId } from '@/lib/db/maestros'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
+import { toErrorMsg } from '@/lib/utils/errors'
 
-function errorMessage(e: unknown) {
-  return e instanceof Error ? e.message : 'Error'
-}
 
 async function requireContabilidadAccess() {
   const session = await getSession()
@@ -31,7 +29,7 @@ export async function GET() {
     if (error) throw error
     return NextResponse.json(data ?? [])
   } catch (e: unknown) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -53,6 +51,6 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
     return NextResponse.json({ ok: true })
   } catch (e: unknown) {
-    return NextResponse.json({ error: errorMessage(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

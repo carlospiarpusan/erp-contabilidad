@@ -6,6 +6,7 @@ import { formatCOP, formatFecha } from '@/utils/cn'
 import { TrendingUp, Printer, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
+import { AnularNotaButton } from '@/components/ventas/AnularNotaButton'
 
 export default async function NotaDebitoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -52,6 +53,9 @@ export default async function NotaDebitoDetailPage({ params }: { params: Promise
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {nd.estado !== 'cancelada' && (
+            <AnularNotaButton apiPath={`/api/ventas/notas-debito/${nd.id}`} tipoLabel={`la nota débito ${nd.prefijo}${nd.numero}`} />
+          )}
           <EnviarEmailButton apiPath="/api/email/nota-debito" docId={nd.id} emailCliente={cliente?.email ?? null} />
           <Link href={`/print/nota-debito/${nd.id}`} target="_blank"
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50">

@@ -5,6 +5,8 @@ import { getCotizacionById } from '@/lib/db/cotizaciones'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { PrintButton } from '@/components/print/PrintButton'
+import { QRDocumento } from '@/components/print/QRDocumento'
+import { headers } from 'next/headers'
 
 interface PageProps { params: Promise<{ id: string }> }
 
@@ -62,6 +64,11 @@ export default async function PrintCotizacionPage({ params }: PageProps) {
   ])
 
   if (!cotizacion) notFound()
+
+  const hdrs = await headers()
+  const host = hdrs.get('host') ?? 'localhost:3000'
+  const proto = host.includes('localhost') ? 'http' : 'https'
+  const docUrl = `${proto}://${host}/ventas/cotizaciones/${id}`
 
   const doc = cotizacion as DocumentoImpresion
   const lineas = doc.lineas ?? []
@@ -175,9 +182,12 @@ export default async function PrintCotizacionPage({ params }: PageProps) {
           </div>
         )}
 
-        <div className="mt-8 pt-6 border-t border-gray-200 text-xs text-gray-400">
-          <p>Esta cotización no constituye factura de venta. Válida sujeta a disponibilidad de inventario.</p>
-          <p className="mt-1 text-center">Generado por ERP Contable · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}</p>
+        <div className="mt-8 pt-6 border-t border-gray-200 text-xs text-gray-400 flex justify-between items-end">
+          <div>
+            <p>Esta cotización no constituye factura de venta. Válida sujeta a disponibilidad de inventario.</p>
+            <p className="mt-1">Generado por ERP Contable · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}</p>
+          </div>
+          <QRDocumento url={docUrl} size={64} />
         </div>
       </div>
     </div>

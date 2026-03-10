@@ -1,17 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-import { getClientes } from '@/lib/db/clientes'
-import { getProductos, getImpuestos, getBodegas } from '@/lib/db/productos'
+import { getImpuestos, getBodegas } from '@/lib/db/productos'
 import { FormCotizacion } from '@/components/cotizaciones/FormCotizacion'
 import { FileText } from 'lucide-react'
 
 export default async function NuevaCotizacionPage() {
-  const [{ clientes }, { productos }, impuestos, bodegas] = await Promise.all([
-    getClientes({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getProductos({ activo: true, limit: 500, select_mode: 'selector', include_total: false }),
-    getImpuestos(),
-    getBodegas(),
-  ])
+  const [impuestos, bodegas] = await Promise.all([getImpuestos(), getBodegas()])
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,12 +19,7 @@ export default async function NuevaCotizacionPage() {
         </div>
       </div>
 
-      <FormCotizacion
-        clientes={clientes as unknown as Parameters<typeof FormCotizacion>[0]['clientes']}
-        productos={productos as unknown as Parameters<typeof FormCotizacion>[0]['productos']}
-        impuestos={impuestos as unknown as Parameters<typeof FormCotizacion>[0]['impuestos']}
-        bodegas={bodegas as unknown as Parameters<typeof FormCotizacion>[0]['bodegas']}
-      />
+      <FormCotizacion impuestos={impuestos as any} bodegas={bodegas as any} />
     </div>
   )
 }

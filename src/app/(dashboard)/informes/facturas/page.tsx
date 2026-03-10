@@ -1,7 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { getInformeFacturas } from '@/lib/db/informes'
-import { getClientes } from '@/lib/db/clientes'
+import { getClienteById } from '@/lib/db/clientes'
+import { FiltrosInformeFacturas } from '@/components/informes/FiltrosInformeFacturas'
 import { formatCOP, formatFecha } from '@/utils/cn'
 import { FileText } from 'lucide-react'
 import Link from 'next/link'
@@ -24,9 +25,9 @@ export default async function InformeFacturasPage({ searchParams }: PageProps) {
   const desde = sp.desde || `${anio}-01-01`
   const hasta  = sp.hasta  || hoy
 
-  const [{ facturas, totales, total }, clientes] = await Promise.all([
+  const [{ facturas, totales, total }, clienteSeleccionado] = await Promise.all([
     getInformeFacturas({ desde, hasta, estado: sp.estado, cliente_id: sp.cliente_id }),
-    getClientes({ limit: 500, select_mode: 'selector', include_total: false }),
+    sp.cliente_id ? getClienteById(sp.cliente_id).catch(() => null) : Promise.resolve(null),
   ])
 
   return (
@@ -45,43 +46,13 @@ export default async function InformeFacturasPage({ searchParams }: PageProps) {
         </a>
       </div>
 
-      {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">Desde</label>
-          <input type="date" name="desde" defaultValue={desde}
-            className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">Hasta</label>
-          <input type="date" name="hasta" defaultValue={hasta}
-            className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">Estado</label>
-          <select name="estado" defaultValue={sp.estado ?? ''}
-            className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">Todos</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="pagada">Pagada</option>
-            <option value="parcial">Parcial</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">Cliente</label>
-          <select name="cliente_id" defaultValue={sp.cliente_id ?? ''}
-            className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs">
-            <option value="">Todos</option>
-            {clientes.clientes.map(c => (
-              <option key={c.id} value={c.id}>{c.razon_social}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-end gap-2">
-          <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Aplicar</button>
-          <Link href="/informes/facturas" className="h-9 px-4 flex items-center rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">Limpiar</Link>
-        </div>
-      </form>
+      <FiltrosInformeFacturas
+        desde={desde}
+        hasta={hasta}
+        estado={sp.estado}
+        clienteId={sp.cliente_id}
+        clienteLabel={clienteSeleccionado?.razon_social}
+      />
 
       {/* KPIs totales */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
