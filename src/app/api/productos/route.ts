@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getProductos, createProducto } from '@/lib/db/productos'
-import { getSession } from '@/lib/auth/session'
+import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { toErrorMsg } from '@/lib/utils/errors'
 import { revalidateTag } from 'next/cache'
 import { getInventarioStatsTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
@@ -9,6 +9,9 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!puedeAcceder(session.rol, 'productos')) {
+      return NextResponse.json({ error: 'Sin permisos para productos' }, { status: 403 })
+    }
 
     const { searchParams } = new URL(req.url)
     const result = await getProductos({
@@ -31,6 +34,9 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!puedeAcceder(session.rol, 'productos', 'manage')) {
+      return NextResponse.json({ error: 'Sin permisos para gestionar productos' }, { status: 403 })
+    }
 
     const body = await req.json()
     const { variantes, ...rest } = body

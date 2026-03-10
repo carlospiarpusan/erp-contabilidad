@@ -190,6 +190,90 @@ export async function updateProducto(id: string, datos: Partial<Producto>) {
   return data as Producto
 }
 
+export async function deleteProducto(id: string) {
+  const supabase = await createClient()
+
+  const [productoRes, lineasRes, movimientosRes, stockRes] = await Promise.all([
+    supabase
+      .from('productos')
+      .select('id, activo')
+      .eq('id', id)
+      .single(),
+    supabase
+      .from('documentos_lineas')
+      .select('id', { count: 'exact', head: true })
+      .eq('producto_id', id),
+    supabase
+      .from('stock_movimientos')
+      .select('id', { count: 'exact', head: true })
+      .eq('producto_id', id),
+    supabase
+      .from('stock')
+      .select('cantidad')
+      .eq('producto_id', id),
+  ])
+
+  if (productoRes.error || !productoRes.data) {
+    throw new Error(productoRes.error?.message ?? 'Producto no encontrado')
+  }
+  if (lineasRes.error) throw new Error(lineasRes.error.message ?? 'Error al revisar líneas del producto')
+  if (movimientosRes.error) throw new Error(movimientosRes.error.message ?? 'Error al revisar movimientos del producto')
+  if (stockRes.error) throw new Error(stockRes.error.message ?? 'Error al revisar stock del producto')
+
+  const lineasRelacionadas = Number(lineasRes.count ?? 0)
+  const movimientosRelacionados = Number(movimientosRes.count ?? 0)
+  const stockActual = (stockRes.data ?? []).reduce((sum, row) => sum + Number(row.cantidad ?? 0), 0)
+  const debeDesactivar = lineasRelacionadas > 0 || movimientosRelacionados > 0 || stockActual !== 0
+
+  if (debeDesactivar) {
+    const { data, error } = await supabase
+      .from('productos')
+      .update({ activo: false, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('id, activo')
+      .single()
+
+    if (error) throw new Error(error.message ?? 'Error al desactivar producto')
+
+    return {
+      mode: 'deactivated' as const,
+      producto: data as Producto,
+      message: 'El producto tiene stock o movimientos relacionados y fue desactivado en lugar de eliminarse.',
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from('productos')
+    .delete()
+    .eq('id', id)
+
+  if (!deleteError) {
+    return {
+      mode: 'deleted' as const,
+      message: 'Producto eliminado correctamente.',
+    }
+  }
+
+  if (deleteError.code === '23503') {
+    const { data, error: updateError } = await supabase
+      .from('productos')
+      .update({ activo: false, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('id, activo')
+      .single()
+
+    if (updateError) throw new Error(updateError.message ?? 'Error al desactivar producto')
+
+    return {
+      mode: 'deactivated' as const,
+      producto: data as Producto,
+      message: 'El producto tiene referencias históricas y fue desactivado en lugar de eliminarse.',
+    }
+  }
+
+  throw new Error(deleteError.message ?? 'Error al eliminar producto')
+}
+
 // ── Ajuste de stock ──────────────────────────────────────────
 
 export async function ajustarStock(params: {

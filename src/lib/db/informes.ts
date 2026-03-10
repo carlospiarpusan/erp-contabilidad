@@ -9,6 +9,28 @@ type ReportContext = {
   session: UserSession
 }
 
+type CuentaResumen = {
+  id: string
+  codigo: string
+  descripcion: string
+  tipo: string
+  nivel: number
+  naturaleza: string
+  debe: number
+  haber: number
+}
+
+type AsientoMeta = {
+  id: string
+  numero?: number | null
+  fecha?: string | null
+  concepto?: string | null
+  tipo_doc?: string | null
+}
+
+const REPORT_PAGE_SIZE = 500
+const ASIENTO_IDS_CHUNK_SIZE = 100
+
 async function withReportCache<T>(
   _scope: string,
   _params: Record<string, unknown>,
@@ -22,6 +44,161 @@ async function withReportCache<T>(
 
 function isValidUUID(value: string) {
   return UUID_REGEX.test(value)
+}
+
+function getPreviousDate(date: string) {
+  const base = new Date(`${date}T12:00:00Z`)
+  base.setUTCDate(base.getUTCDate() - 1)
+  return base.toISOString().slice(0, 10)
+}
+
+async function fetchAllRows<T>(
+  fetchPage: (from: number, to: number) => Promise<T[]>
+) {
+  const rows: T[] = []
+  let from = 0
+
+  while (true) {
+    const batch = await fetchPage(from, from + REPORT_PAGE_SIZE - 1)
+    if (!batch.length) break
+    rows.push(...batch)
+    if (batch.length < REPORT_PAGE_SIZE) break
+    from += REPORT_PAGE_SIZE
+  }
+
+  return rows
+}
+
+async function listAsientoIdsInRange(
+  supabase: ReportContext['supabase'],
+  empresaId: string,
+  desde: string,
+  hasta: string
+) {
+  const rows = await fetchAllRows<{ id?: string | null }>(async (from, to) => {
+    const { data, error } = await supabase
+      .from('asientos')
+      .select('id')
+      .eq('empresa_id', empresaId)
+      .gte('fecha', desde)
+      .lte('fecha', hasta)
+      .order('fecha', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, to)
+
+    if (error) throw error
+    return (data ?? []) as Array<{ id?: string | null }>
+  })
+
+  return rows.flatMap((row) => (row.id ? [row.id] : []))
+}
+
+async function getAsientosMetaInRange(
+  supabase: ReportContext['supabase'],
+  empresaId: string,
+  desde: string,
+  hasta: string
+) {
+  return fetchAllRows<AsientoMeta>(async (from, to) => {
+    const { data, error } = await supabase
+      .from('asientos')
+      .select('id, numero, fecha, concepto, tipo_doc')
+      .eq('empresa_id', empresaId)
+      .gte('fecha', desde)
+      .lte('fecha', hasta)
+      .order('fecha', { ascending: true })
+      .order('numero', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, to)
+
+    if (error) throw error
+    return (data ?? []) as AsientoMeta[]
+  })
+}
+
+async function getLineasByAsientoIds(
+  supabase: ReportContext['supabase'],
+  asientoIds: string[]
+) {
+  const lineas: Array<{
+    debe: number | null
+    haber: number | null
+    cuenta: {
+      id?: string
+      codigo?: string
+      descripcion?: string
+      tipo?: string
+      nivel?: number
+      naturaleza?: string
+    } | Array<{
+      id?: string
+      codigo?: string
+      descripcion?: string
+      tipo?: string
+      nivel?: number
+      naturaleza?: string
+    }> | null
+  }> = []
+
+  for (let index = 0; index < asientoIds.length; index += ASIENTO_IDS_CHUNK_SIZE) {
+    const chunk = asientoIds.slice(index, index + ASIENTO_IDS_CHUNK_SIZE)
+    if (chunk.length === 0) continue
+
+    const chunkRows = await fetchAllRows<typeof lineas[number]>(async (from, to) => {
+      const { data, error } = await supabase
+        .from('asientos_lineas')
+        .select(`
+          debe, haber,
+          cuenta:cuenta_id(id, codigo, descripcion, tipo, nivel, naturaleza)
+        `)
+        .in('asiento_id', chunk)
+        .order('id', { ascending: true })
+        .range(from, to)
+
+      if (error) throw error
+      return ((data ?? []) as typeof lineas)
+    })
+
+    lineas.push(...chunkRows)
+  }
+
+  return lineas
+}
+
+async function getCuentaLineasByAsientoIds(
+  supabase: ReportContext['supabase'],
+  cuentaId: string,
+  asientoIds: string[]
+) {
+  const lineas: Array<{
+    id: string
+    asiento_id: string
+    descripcion: string | null
+    debe: number | null
+    haber: number | null
+  }> = []
+
+  for (let index = 0; index < asientoIds.length; index += ASIENTO_IDS_CHUNK_SIZE) {
+    const chunk = asientoIds.slice(index, index + ASIENTO_IDS_CHUNK_SIZE)
+    if (chunk.length === 0) continue
+
+    const chunkRows = await fetchAllRows<typeof lineas[number]>(async (from, to) => {
+      const { data, error } = await supabase
+        .from('asientos_lineas')
+        .select('id, asiento_id, descripcion, debe, haber')
+        .eq('cuenta_id', cuentaId)
+        .in('asiento_id', chunk)
+        .order('id', { ascending: true })
+        .range(from, to)
+
+      if (error) throw error
+      return (data ?? []) as typeof lineas
+    })
+
+    lineas.push(...chunkRows)
+  }
+
+  return lineas
 }
 
 type CarteraDeudor = {
@@ -61,34 +238,33 @@ function getDeudorCartera(
 // ── Sumas y Saldos ────────────────────────────────────────────────────────────
 
 export async function getSumasYSaldos(params: { desde: string; hasta: string }) {
-  return withReportCache('sumas-saldos', params, async ({ supabase }) => {
-    const { data: lineas, error } = await supabase
-      .from('asientos_lineas')
-      .select(`
-        debe, haber,
-        cuenta:cuenta_id(id, codigo, descripcion, tipo, nivel, naturaleza),
-        asiento:asiento_id(fecha, empresa_id)
-      `)
-      .gte('asiento.fecha', params.desde)
-      .lte('asiento.fecha', params.hasta)
+  return withReportCache('sumas-saldos', params, async ({ supabase, session }) => {
+    const asientoIds = await listAsientoIdsInRange(
+      supabase,
+      session.empresa_id,
+      params.desde,
+      params.hasta
+    )
 
-    if (error) throw error
+    if (asientoIds.length === 0) return []
 
-    const mapa: Record<string, {
-      id: string; codigo: string; descripcion: string
-      tipo: string; nivel: number; naturaleza: string
-      debe: number; haber: number
-    }> = {}
+    const lineas = await getLineasByAsientoIds(supabase, asientoIds)
 
-    for (const l of lineas ?? []) {
-      const c = l.cuenta as { id?: string; codigo?: string; descripcion?: string; tipo?: string; nivel?: number; naturaleza?: string } | null
-      const a = l.asiento as { fecha?: string } | null
-      if (!c?.id || !a?.fecha) continue
+    const mapa: Record<string, CuentaResumen> = {}
+
+    for (const l of lineas) {
+      const c = Array.isArray(l.cuenta) ? l.cuenta[0] : l.cuenta
+      if (!c?.id) continue
       if (!mapa[c.id]) {
         mapa[c.id] = {
-          id: c.id, codigo: c.codigo ?? '', descripcion: c.descripcion ?? '',
-          tipo: c.tipo ?? '', nivel: c.nivel ?? 4, naturaleza: c.naturaleza ?? 'debito',
-          debe: 0, haber: 0,
+          id: c.id,
+          codigo: c.codigo ?? '',
+          descripcion: c.descripcion ?? '',
+          tipo: c.tipo ?? '',
+          nivel: c.nivel ?? 4,
+          naturaleza: c.naturaleza ?? 'debito',
+          debe: 0,
+          haber: 0,
         }
       }
       mapa[c.id].debe += l.debe ?? 0
@@ -155,41 +331,81 @@ export async function getLibroMayor(params: { cuenta_id: string; desde: string; 
     return { cuenta: null, movimientos: [] }
   }
 
-  return withReportCache('libro-mayor', params, async ({ supabase }) => {
-    const { data: lineas, error } = await supabase
-      .from('asientos_lineas')
-      .select(`
-        id, descripcion, debe, haber,
-        asiento:asiento_id(id, numero, fecha, concepto, tipo_doc)
-      `)
-      .eq('cuenta_id', params.cuenta_id)
-      .gte('asiento.fecha', params.desde)
-      .lte('asiento.fecha', params.hasta)
-      .order('asiento.fecha', { ascending: true })
-
-    if (error) throw error
-
+  return withReportCache('libro-mayor', params, async ({ supabase, session }) => {
     const { data: cuenta } = await supabase
       .from('cuentas_puc')
       .select('codigo, descripcion, naturaleza')
+      .eq('empresa_id', session.empresa_id)
       .eq('id', params.cuenta_id)
       .single()
 
-    let saldoAcumulado = 0
-    const movimientos = (lineas ?? []).map(l => {
-      const a = l.asiento as { id?: string; numero?: number; fecha?: string; concepto?: string; tipo_doc?: string } | null
-      saldoAcumulado += (l.debe ?? 0) - (l.haber ?? 0)
-      return {
-        asiento_id: a?.id ?? '',
-        numero: a?.numero ?? 0,
-        fecha: a?.fecha ?? '',
-        concepto: a?.concepto ?? l.descripcion ?? '',
-        tipo_doc: a?.tipo_doc ?? '',
-        debe: l.debe ?? 0,
-        haber: l.haber ?? 0,
-        saldo: saldoAcumulado,
-      }
-    }).filter(l => l.fecha >= params.desde && l.fecha <= params.hasta)
+    const hastaSaldoInicial = getPreviousDate(params.desde)
+    const [asientosPeriodo, asientoIdsSaldoInicial] = await Promise.all([
+      getAsientosMetaInRange(supabase, session.empresa_id, params.desde, params.hasta),
+      hastaSaldoInicial >= '2000-01-01'
+        ? listAsientoIdsInRange(supabase, session.empresa_id, '2000-01-01', hastaSaldoInicial)
+        : Promise.resolve([] as string[]),
+    ])
+
+    const [lineasPeriodo, lineasSaldoInicial] = await Promise.all([
+      getCuentaLineasByAsientoIds(
+        supabase,
+        params.cuenta_id,
+        asientosPeriodo.map((asiento) => asiento.id)
+      ),
+      asientoIdsSaldoInicial.length > 0
+        ? getCuentaLineasByAsientoIds(supabase, params.cuenta_id, asientoIdsSaldoInicial)
+        : Promise.resolve([] as Awaited<ReturnType<typeof getCuentaLineasByAsientoIds>>),
+    ])
+
+    const asientoMap = new Map(asientosPeriodo.map((asiento) => [asiento.id, asiento]))
+    const saldoInicial = lineasSaldoInicial.reduce(
+      (sum, linea) => sum + Number(linea.debe ?? 0) - Number(linea.haber ?? 0),
+      0
+    )
+
+    let saldoAcumulado = saldoInicial
+    const movimientosPeriodo = lineasPeriodo
+      .map((linea) => ({
+        linea,
+        asiento: asientoMap.get(linea.asiento_id) ?? null,
+      }))
+      .filter((row) => row.asiento?.fecha)
+      .sort((a, b) => {
+        const fechaA = a.asiento?.fecha ?? ''
+        const fechaB = b.asiento?.fecha ?? ''
+        if (fechaA !== fechaB) return fechaA.localeCompare(fechaB)
+        const numeroA = Number(a.asiento?.numero ?? 0)
+        const numeroB = Number(b.asiento?.numero ?? 0)
+        if (numeroA !== numeroB) return numeroA - numeroB
+        return a.linea.id.localeCompare(b.linea.id)
+      })
+      .map(({ linea, asiento }) => {
+        saldoAcumulado += Number(linea.debe ?? 0) - Number(linea.haber ?? 0)
+        return {
+          asiento_id: asiento?.id ?? '',
+          numero: asiento?.numero ?? 0,
+          fecha: asiento?.fecha ?? '',
+          concepto: asiento?.concepto ?? linea.descripcion ?? '',
+          tipo_doc: asiento?.tipo_doc ?? '',
+          debe: Number(linea.debe ?? 0),
+          haber: Number(linea.haber ?? 0),
+          saldo: saldoAcumulado,
+        }
+      })
+
+    const movimientos = saldoInicial !== 0
+      ? [{
+        asiento_id: '',
+        numero: 0,
+        fecha: params.desde,
+        concepto: 'Saldo inicial',
+        tipo_doc: 'saldo_inicial',
+        debe: 0,
+        haber: 0,
+        saldo: saldoInicial,
+      }, ...movimientosPeriodo]
+      : movimientosPeriodo
 
     return { cuenta, movimientos }
   })
@@ -206,21 +422,27 @@ export async function getInformeFacturas(params: {
   const estado = params.estado || ''
   const cliente_id = params.cliente_id || ''
 
-  return withReportCache('informe-facturas', { desde, hasta, estado, cliente_id }, async ({ supabase }) => {
-    let q = supabase
-      .from('documentos')
-      .select('id, numero, prefijo, fecha, fecha_vencimiento, estado, subtotal, total_iva, total_descuento, total, total_costo, cliente:cliente_id(id, razon_social, numero_documento)', { count: 'exact' })
-      .eq('tipo', 'factura_venta')
-      .gte('fecha', desde).lte('fecha', hasta)
-      .order('fecha', { ascending: false })
+  return withReportCache('informe-facturas', { desde, hasta, estado, cliente_id }, async ({ supabase, session }) => {
+    const rows = await fetchAllRows<any>(async (from, to) => {
+      let q = supabase
+        .from('documentos')
+        .select('id, numero, prefijo, fecha, fecha_vencimiento, estado, subtotal, total_iva, total_descuento, total, total_costo, cliente:cliente_id(id, razon_social, numero_documento)')
+        .eq('empresa_id', session.empresa_id)
+        .eq('tipo', 'factura_venta')
+        .gte('fecha', desde)
+        .lte('fecha', hasta)
+        .order('fecha', { ascending: false })
+        .order('numero', { ascending: false })
+        .range(from, to)
 
-    if (estado) q = q.eq('estado', estado)
-    if (cliente_id) q = q.eq('cliente_id', cliente_id)
+      if (estado) q = q.eq('estado', estado)
+      if (cliente_id) q = q.eq('cliente_id', cliente_id)
 
-    const { data, count, error } = await q
-    if (error) throw error
+      const { data, error } = await q
+      if (error) throw error
+      return data ?? []
+    })
 
-    const rows = data ?? []
     const totales = rows.reduce((acc, r) => ({
       subtotal: acc.subtotal + (r.subtotal ?? 0),
       iva: acc.iva + (r.total_iva ?? 0),
@@ -229,7 +451,7 @@ export async function getInformeFacturas(params: {
       costo: acc.costo + (r.total_costo ?? 0),
     }), { subtotal: 0, iva: 0, descuento: 0, total: 0, costo: 0 })
 
-    return { facturas: rows, total: count ?? 0, totales }
+    return { facturas: rows, total: rows.length, totales }
   })
 }
 
@@ -242,23 +464,28 @@ export async function getInformeVentasPorMedioPago(params?: { desde?: string; ha
   const hasta = params?.hasta || hoy
   const forma_pago_id = params?.forma_pago_id || ''
 
-  return withReportCache('ventas-por-medio-pago', { desde, hasta, forma_pago_id }, async ({ supabase }) => {
-    let query = supabase
-      .from('documentos')
-      .select('id, numero, prefijo, fecha, estado, total, cliente:cliente_id(id, razon_social), forma_pago:forma_pago_id(id, descripcion)')
-      .eq('tipo', 'factura_venta')
-      .neq('estado', 'cancelada')
-      .gte('fecha', desde)
-      .lte('fecha', hasta)
-      .order('fecha', { ascending: false })
+  return withReportCache('ventas-por-medio-pago', { desde, hasta, forma_pago_id }, async ({ supabase, session }) => {
+    const rows = await fetchAllRows<any>(async (from, to) => {
+      let query = supabase
+        .from('documentos')
+        .select('id, numero, prefijo, fecha, estado, total, cliente:cliente_id(id, razon_social), forma_pago:forma_pago_id(id, descripcion)')
+        .eq('empresa_id', session.empresa_id)
+        .eq('tipo', 'factura_venta')
+        .neq('estado', 'cancelada')
+        .gte('fecha', desde)
+        .lte('fecha', hasta)
+        .order('fecha', { ascending: false })
+        .order('numero', { ascending: false })
+        .range(from, to)
 
-    if (forma_pago_id === 'sin-forma') query = query.is('forma_pago_id', null)
-    else if (forma_pago_id && isValidUUID(forma_pago_id)) query = query.eq('forma_pago_id', forma_pago_id)
+      if (forma_pago_id === 'sin-forma') query = query.is('forma_pago_id', null)
+      else if (forma_pago_id && isValidUUID(forma_pago_id)) query = query.eq('forma_pago_id', forma_pago_id)
 
-    const { data, error } = await query
-    if (error) throw error
+      const { data, error } = await query
+      if (error) throw error
+      return data ?? []
+    })
 
-    const rows = data ?? []
     const mapa: Record<string, {
       id: string | null
       descripcion: string
@@ -336,22 +563,27 @@ export async function getInformeCartera() {
   return withReportCache('informe-cartera', {}, async ({ supabase, session }) => {
     const hoy = new Date()
 
-    const { data, error } = await supabase
-      .from('documentos')
-      .select(`
-        id, numero, prefijo, fecha, fecha_vencimiento, total, estado,
-        cliente:cliente_id(id, razon_social, numero_documento, email, telefono),
-        forma_pago:forma_pago_id(id, descripcion),
-        recibos(valor)
-      `)
-      .eq('empresa_id', session.empresa_id)
-      .eq('tipo', 'factura_venta')
-      .in('estado', ['pendiente', 'vencida'])
-      .order('fecha_vencimiento', { ascending: true })
+    const documentos = await fetchAllRows<any>(async (from, to) => {
+      const { data, error } = await supabase
+        .from('documentos')
+        .select(`
+          id, numero, prefijo, fecha, fecha_vencimiento, total, estado,
+          cliente:cliente_id(id, razon_social, numero_documento, email, telefono),
+          forma_pago:forma_pago_id(id, descripcion),
+          recibos(valor)
+        `)
+        .eq('empresa_id', session.empresa_id)
+        .eq('tipo', 'factura_venta')
+        .in('estado', ['pendiente', 'vencida'])
+        .order('fecha_vencimiento', { ascending: true })
+        .order('numero', { ascending: true })
+        .range(from, to)
 
-    if (error) throw error
+      if (error) throw error
+      return data ?? []
+    })
 
-    const filas = (data ?? []).map((doc) => {
+    const filas = documentos.map((doc) => {
       const cliente = doc.cliente as {
         id?: string
         razon_social?: string
@@ -361,7 +593,8 @@ export async function getInformeCartera() {
       } | null
       const formaPago = doc.forma_pago as { id?: string; descripcion?: string } | null
       const deudor = getDeudorCartera(cliente, formaPago)
-      const pagado = (doc.recibos ?? []).reduce((s, r) => s + (r.valor ?? 0), 0)
+      const recibos = Array.isArray(doc.recibos) ? (doc.recibos as Array<{ valor?: number | null }>) : []
+      const pagado = recibos.reduce((sum, recibo) => sum + Number(recibo.valor ?? 0), 0)
       const saldo = (doc.total ?? 0) - pagado
       const fechaGestion = deudor.tipo === 'sistecredito'
         ? calcularFechaPagoSistecredito(doc.fecha ?? '')
@@ -418,21 +651,28 @@ export async function getInformeClientes(params?: { desde?: string; hasta?: stri
   const desde = params?.desde || `${new Date().getFullYear()}-01-01`
   const hasta  = params?.hasta  || hoy
 
-  return withReportCache('informe-clientes', { desde, hasta }, async ({ supabase }) => {
-    const { data: fRows, error } = await supabase
-      .from('documentos')
-      .select(`
-        total, total_costo, estado, fecha,
-        cliente:cliente_id(id, razon_social, numero_documento),
-        forma_pago:forma_pago_id(descripcion),
-        recibos(valor, fecha)
-      `)
-      .eq('tipo', 'factura_venta')
-      .neq('estado', 'cancelada')
-      .gte('fecha', desde)
-      .lte('fecha', hasta)
+  return withReportCache('informe-clientes', { desde, hasta }, async ({ supabase, session }) => {
+    const fRows = await fetchAllRows<any>(async (from, to) => {
+      const { data, error } = await supabase
+        .from('documentos')
+        .select(`
+          total, total_costo, estado, fecha,
+          cliente:cliente_id(id, razon_social, numero_documento),
+          forma_pago:forma_pago_id(descripcion),
+          recibos(valor, fecha)
+        `)
+        .eq('empresa_id', session.empresa_id)
+        .eq('tipo', 'factura_venta')
+        .neq('estado', 'cancelada')
+        .gte('fecha', desde)
+        .lte('fecha', hasta)
+        .order('fecha', { ascending: false })
+        .order('id', { ascending: false })
+        .range(from, to)
 
-    if (error) throw error
+      if (error) throw error
+      return data ?? []
+    })
 
     const mapa: Record<string, {
       id: string; razon_social: string; numero_documento: string
@@ -452,7 +692,8 @@ export async function getInformeClientes(params?: { desde?: string; hasta?: stri
       mapa[c.id].utilidad += (r.total ?? 0) - (r.total_costo ?? 0)
       mapa[c.id].num_facturas += 1
       const formaPago = r.forma_pago as { descripcion?: string } | null
-      const totalCobrado = (r.recibos ?? []).reduce((sum, recibo) => sum + (recibo.valor ?? 0), 0)
+      const recibos = Array.isArray(r.recibos) ? (r.recibos as Array<{ valor?: number | null }>) : []
+      const totalCobrado = recibos.reduce((sum, recibo) => sum + Number(recibo.valor ?? 0), 0)
       mapa[c.id].cobrado += totalCobrado
       if ((r.estado === 'pendiente' || r.estado === 'vencida') && !isSistecreditoFormaPago(formaPago)) {
         mapa[c.id].por_cobrar += Math.max(0, (r.total ?? 0) - totalCobrado)
@@ -469,22 +710,27 @@ export async function getInformeArticulos(params?: { familia_id?: string; con_st
   const familia_id = params?.familia_id || ''
   const con_stock = Boolean(params?.con_stock)
 
-  return withReportCache('informe-articulos', { familia_id, con_stock }, async ({ supabase }) => {
-    let q = supabase
-      .from('productos')
-      .select('id, codigo, descripcion, precio_venta, precio_compra, activo, familia:familia_id(nombre, descripcion), stock(cantidad, cantidad_minima)')
-      .eq('activo', true)
-      .order('descripcion')
+  return withReportCache('informe-articulos', { familia_id, con_stock }, async ({ supabase, session }) => {
+    const productos = await fetchAllRows<any>(async (from, to) => {
+      let q = supabase
+        .from('productos')
+        .select('id, codigo, descripcion, precio_venta, precio_compra, activo, familia:familia_id(nombre, descripcion), stock(cantidad, cantidad_minima)')
+        .eq('empresa_id', session.empresa_id)
+        .eq('activo', true)
+        .order('descripcion')
+        .range(from, to)
 
-    if (familia_id) q = q.eq('familia_id', familia_id)
+      if (familia_id) q = q.eq('familia_id', familia_id)
 
-    const { data, error } = await q
-    if (error) throw error
+      const { data, error } = await q
+      if (error) throw error
+      return data ?? []
+    })
 
-    let rows = (data ?? []).map((r) => {
-      const stocks = Array.isArray(r.stock) ? r.stock : []
-      const stock_actual = stocks.reduce((s, st) => s + (st.cantidad ?? 0), 0)
-      const stock_minimo = stocks.reduce((s, st) => s + (st.cantidad_minima ?? 0), 0)
+    let rows = productos.map((r) => {
+      const stocks = Array.isArray(r.stock) ? (r.stock as Array<{ cantidad?: number | null; cantidad_minima?: number | null }>) : []
+      const stock_actual = stocks.reduce((sum, stock) => sum + Number(stock.cantidad ?? 0), 0)
+      const stock_minimo = stocks.reduce((sum, stock) => sum + Number(stock.cantidad_minima ?? 0), 0)
       return { ...r, stock_actual, stock_minimo }
     })
     if (con_stock) rows = rows.filter(r => (r.stock_actual ?? 0) > 0)
@@ -506,21 +752,73 @@ export async function getInformeBalances(params?: { anio?: number }) {
   const desde = `${anio}-01-01`
   const hasta  = `${anio}-12-31`
 
-  return withReportCache('informe-balances', { anio }, async ({ supabase }) => {
+  return withReportCache('informe-balances', { anio }, async ({ supabase, session }) => {
     const [ventas, compras, gastos, cobros] = await Promise.all([
-      supabase.from('documentos').select('fecha, total, total_costo, estado')
-        .eq('tipo', 'factura_venta').neq('estado', 'cancelada').gte('fecha', desde).lte('fecha', hasta),
-      supabase.from('documentos').select('fecha, total')
-        .eq('tipo', 'factura_compra').neq('estado', 'cancelada').gte('fecha', desde).lte('fecha', hasta),
-      supabase.from('documentos').select('fecha, total')
-        .eq('tipo', 'gasto').neq('estado', 'cancelada').gte('fecha', desde).lte('fecha', hasta),
-      supabase.from('recibos').select('fecha, valor').eq('tipo', 'venta').gte('fecha', desde).lte('fecha', hasta),
+      fetchAllRows<any>(async (from, to) => {
+        const { data, error } = await supabase
+          .from('documentos')
+          .select('fecha, total, total_costo, estado')
+          .eq('empresa_id', session.empresa_id)
+          .eq('tipo', 'factura_venta')
+          .neq('estado', 'cancelada')
+          .gte('fecha', desde)
+          .lte('fecha', hasta)
+          .order('fecha', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to)
+        if (error) throw error
+        return data ?? []
+      }),
+      fetchAllRows<any>(async (from, to) => {
+        const { data, error } = await supabase
+          .from('documentos')
+          .select('fecha, total')
+          .eq('empresa_id', session.empresa_id)
+          .eq('tipo', 'factura_compra')
+          .neq('estado', 'cancelada')
+          .gte('fecha', desde)
+          .lte('fecha', hasta)
+          .order('fecha', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to)
+        if (error) throw error
+        return data ?? []
+      }),
+      fetchAllRows<any>(async (from, to) => {
+        const { data, error } = await supabase
+          .from('documentos')
+          .select('fecha, total')
+          .eq('empresa_id', session.empresa_id)
+          .eq('tipo', 'gasto')
+          .neq('estado', 'cancelada')
+          .gte('fecha', desde)
+          .lte('fecha', hasta)
+          .order('fecha', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to)
+        if (error) throw error
+        return data ?? []
+      }),
+      fetchAllRows<any>(async (from, to) => {
+        const { data, error } = await supabase
+          .from('recibos')
+          .select('fecha, valor')
+          .eq('empresa_id', session.empresa_id)
+          .eq('tipo', 'venta')
+          .gte('fecha', desde)
+          .lte('fecha', hasta)
+          .order('fecha', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to)
+        if (error) throw error
+        return data ?? []
+      }),
     ])
 
-    const vRows = ventas.data ?? []
-    const cRows = compras.data ?? []
-    const gRows = gastos.data ?? []
-    const rRows = cobros.data ?? []
+    const vRows = ventas
+    const cRows = compras
+    const gRows = gastos
+    const rRows = cobros
 
     const meses = Array.from({ length: 12 }, (_, i) => {
       const mes = i + 1
@@ -786,47 +1084,40 @@ function shouldFallbackToRaw(error: unknown) {
 
 async function getVentasSugeridoDesdeAgregados(params: {
   supabase: Awaited<ReturnType<typeof createClient>>
+  empresaId: string
   desde: string
   hasta: string
   inicioMesActual: string
   rangosMismoMesHistorico: RangoHistorico[]
 }) {
-  const consultasHistoricas = params.rangosMismoMesHistorico.map((rango) =>
-    params.supabase
-      .from('ventas_producto_diarias')
-      .select('producto_id, cantidad_total')
-      .gte('fecha', rango.desde)
-      .lte('fecha', rango.hasta)
-  )
+  const fetchRange = (desde: string, hasta: string) =>
+    fetchAllRows<Array<{ producto_id?: string | null; cantidad_total?: number | null }>[number]>(async (from, to) => {
+      const { data, error } = await params.supabase
+        .from('ventas_producto_diarias')
+        .select('producto_id, cantidad_total')
+        .eq('empresa_id', params.empresaId)
+        .gte('fecha', desde)
+        .lte('fecha', hasta)
+        .order('fecha', { ascending: true })
+        .order('producto_id', { ascending: true })
+        .range(from, to)
 
-  const [ventanaRes, mesActualRes, ...historicasRes] = await Promise.all([
-    params.supabase
-      .from('ventas_producto_diarias')
-      .select('producto_id, cantidad_total')
-      .gte('fecha', params.desde)
-      .lte('fecha', params.hasta),
-    params.supabase
-      .from('ventas_producto_diarias')
-      .select('producto_id, cantidad_total')
-      .gte('fecha', params.inicioMesActual)
-      .lte('fecha', params.hasta),
-    ...consultasHistoricas,
+      if (error) throw error
+      return (data ?? []) as Array<{ producto_id?: string | null; cantidad_total?: number | null }>
+    })
+
+  const [ventasVentanaRows, ventasMesActualRows, ...historicasRows] = await Promise.all([
+    fetchRange(params.desde, params.hasta),
+    fetchRange(params.inicioMesActual, params.hasta),
+    ...params.rangosMismoMesHistorico.map((rango) => fetchRange(rango.desde, rango.hasta)),
   ])
 
-  const aggregateError =
-    ventanaRes.error ??
-    mesActualRes.error ??
-    historicasRes.find((result) => result.error)?.error ??
-    null
-
-  if (aggregateError) throw aggregateError
-
   const ventasMismoMesHistorico: VentasHistoricasPorProducto = {}
-  for (let index = 0; index < historicasRes.length; index += 1) {
+  for (let index = 0; index < historicasRows.length; index += 1) {
     const anio = params.rangosMismoMesHistorico[index]?.anio
     if (!anio) continue
     acumularHistoricoPorAnio(
-      (historicasRes[index]?.data ?? []) as Array<{ producto_id?: string | null; cantidad_total?: number | null }>,
+      historicasRows[index] ?? [],
       'cantidad_total',
       anio,
       ventasMismoMesHistorico
@@ -834,69 +1125,51 @@ async function getVentasSugeridoDesdeAgregados(params: {
   }
 
   return {
-    ventasVentana: acumularVentas(
-      (ventanaRes.data ?? []) as Array<{ producto_id?: string | null; cantidad_total?: number | null }>,
-      'cantidad_total'
-    ),
-    ventasMesActual: acumularVentas(
-      (mesActualRes.data ?? []) as Array<{ producto_id?: string | null; cantidad_total?: number | null }>,
-      'cantidad_total'
-    ),
+    ventasVentana: acumularVentas(ventasVentanaRows, 'cantidad_total'),
+    ventasMesActual: acumularVentas(ventasMesActualRows, 'cantidad_total'),
     ventasMismoMesHistorico,
   }
 }
 
 async function getVentasSugeridoDesdeLineas(params: {
   supabase: Awaited<ReturnType<typeof createClient>>
+  empresaId: string
   desde: string
   hasta: string
   inicioMesActual: string
   rangosMismoMesHistorico: RangoHistorico[]
 }) {
-  const lineasSelect = 'producto_id, cantidad, documento:documentos!inner(fecha, tipo, estado)'
+  const lineasSelect = 'producto_id, cantidad, documento:documentos!inner(fecha, tipo, estado, empresa_id)'
 
-  const consultasHistoricas = params.rangosMismoMesHistorico.map((rango) =>
-    params.supabase
-      .from('documentos_lineas')
-      .select(lineasSelect)
-      .eq('documento.tipo', 'factura_venta')
-      .neq('documento.estado', 'cancelada')
-      .gte('documento.fecha', rango.desde)
-      .lte('documento.fecha', rango.hasta)
-  )
+  const fetchRange = (desde: string, hasta: string) =>
+    fetchAllRows<Array<{ producto_id?: string | null; cantidad?: number | null }>[number]>(async (from, to) => {
+      const { data, error } = await params.supabase
+        .from('documentos_lineas')
+        .select(lineasSelect)
+        .eq('documento.empresa_id', params.empresaId)
+        .eq('documento.tipo', 'factura_venta')
+        .neq('documento.estado', 'cancelada')
+        .gte('documento.fecha', desde)
+        .lte('documento.fecha', hasta)
+        .order('id', { ascending: true })
+        .range(from, to)
 
-  const [ventanaRes, mesActualRes, ...historicasRes] = await Promise.all([
-    params.supabase
-      .from('documentos_lineas')
-      .select(lineasSelect)
-      .eq('documento.tipo', 'factura_venta')
-      .neq('documento.estado', 'cancelada')
-      .gte('documento.fecha', params.desde)
-      .lte('documento.fecha', params.hasta),
-    params.supabase
-      .from('documentos_lineas')
-      .select(lineasSelect)
-      .eq('documento.tipo', 'factura_venta')
-      .neq('documento.estado', 'cancelada')
-      .gte('documento.fecha', params.inicioMesActual)
-      .lte('documento.fecha', params.hasta),
-    ...consultasHistoricas,
+      if (error) throw error
+      return (data ?? []) as Array<{ producto_id?: string | null; cantidad?: number | null }>
+    })
+
+  const [ventasVentanaRows, ventasMesActualRows, ...historicasRows] = await Promise.all([
+    fetchRange(params.desde, params.hasta),
+    fetchRange(params.inicioMesActual, params.hasta),
+    ...params.rangosMismoMesHistorico.map((rango) => fetchRange(rango.desde, rango.hasta)),
   ])
 
-  const rawError =
-    ventanaRes.error ??
-    mesActualRes.error ??
-    historicasRes.find((result) => result.error)?.error ??
-    null
-
-  if (rawError) throw rawError
-
   const ventasMismoMesHistorico: VentasHistoricasPorProducto = {}
-  for (let index = 0; index < historicasRes.length; index += 1) {
+  for (let index = 0; index < historicasRows.length; index += 1) {
     const anio = params.rangosMismoMesHistorico[index]?.anio
     if (!anio) continue
     acumularHistoricoPorAnio(
-      (historicasRes[index]?.data ?? []) as Array<{ producto_id?: string | null; cantidad?: number | null }>,
+      historicasRows[index] ?? [],
       'cantidad',
       anio,
       ventasMismoMesHistorico
@@ -904,14 +1177,8 @@ async function getVentasSugeridoDesdeLineas(params: {
   }
 
   return {
-    ventasVentana: acumularVentas(
-      (ventanaRes.data ?? []) as Array<{ producto_id?: string | null; cantidad?: number | null }>,
-      'cantidad'
-    ),
-    ventasMesActual: acumularVentas(
-      (mesActualRes.data ?? []) as Array<{ producto_id?: string | null; cantidad?: number | null }>,
-      'cantidad'
-    ),
+    ventasVentana: acumularVentas(ventasVentanaRows, 'cantidad'),
+    ventasMesActual: acumularVentas(ventasMesActualRows, 'cantidad'),
     ventasMismoMesHistorico,
   }
 }
@@ -932,7 +1199,7 @@ export async function getSugeridoCompra(params?: {
     lead_time,
     max_items,
     incluir_sin_movimiento,
-  }, async ({ supabase }) => {
+  }, async ({ supabase, session }) => {
     const hoy = new Date()
     const hasta = hoy.toISOString().slice(0, 10)
 
@@ -955,38 +1222,45 @@ export async function getSugeridoCompra(params?: {
     }))
 
     const [
-      productosRes,
+      productos,
       facturasVentaRes,
       lineasProductoRes,
       agregadosProductoRes,
     ] = await Promise.all([
-      supabase
-        .from('productos')
-        .select('id, codigo, descripcion, precio_compra, familia:familia_id(nombre), stock(cantidad, cantidad_minima)')
-        .eq('activo', true)
-        .order('descripcion'),
+      fetchAllRows<ProductoSugeridoRow>(async (from, to) => {
+        const { data, error } = await supabase
+          .from('productos')
+          .select('id, codigo, descripcion, precio_compra, familia:familia_id(nombre), stock(cantidad, cantidad_minima)')
+          .eq('empresa_id', session.empresa_id)
+          .eq('activo', true)
+          .order('descripcion')
+          .range(from, to)
+
+        if (error) throw error
+        return (data ?? []) as ProductoSugeridoRow[]
+      }),
       supabase
         .from('documentos')
         .select('id', { count: 'exact', head: true })
+        .eq('empresa_id', session.empresa_id)
         .eq('tipo', 'factura_venta')
         .neq('estado', 'cancelada'),
       supabase
         .from('documentos_lineas')
         .select('id, documento:documentos!inner(id)', { count: 'exact', head: true })
+        .eq('documento.empresa_id', session.empresa_id)
         .eq('documento.tipo', 'factura_venta')
         .neq('documento.estado', 'cancelada')
         .not('producto_id', 'is', null),
       supabase
         .from('ventas_producto_diarias')
-        .select('producto_id', { count: 'exact', head: true }),
+        .select('producto_id', { count: 'exact', head: true })
+        .eq('empresa_id', session.empresa_id),
     ])
 
-    if (productosRes.error) throw productosRes.error
     if (facturasVentaRes.error) throw facturasVentaRes.error
     if (lineasProductoRes.error) throw lineasProductoRes.error
     if (agregadosProductoRes.error) throw agregadosProductoRes.error
-
-    const productos = (productosRes.data ?? []) as ProductoSugeridoRow[]
 
     const diagnosticoBase = productos.reduce((acc, producto) => {
       const stocks = Array.isArray(producto.stock) ? producto.stock : []
@@ -1021,6 +1295,7 @@ export async function getSugeridoCompra(params?: {
 
     const ventasParams = {
       supabase,
+      empresaId: session.empresa_id,
       desde,
       hasta,
       inicioMesActual,

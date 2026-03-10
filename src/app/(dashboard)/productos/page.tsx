@@ -1,4 +1,5 @@
 import { getProductos, getFamilias, getFabricantes, getImpuestos, getEstadisticasInventario } from '@/lib/db/productos'
+import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { ListaProductos } from '@/components/productos/ListaProductos'
 import { Package, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react'
 import Link from 'next/link'
@@ -18,13 +19,15 @@ export default async function ProductosPage({ searchParams }: PageProps) {
   const limit        = 50
   const activo       = sp.inactivos === '1' ? false : true
 
-  const [{ productos, total }, familias, fabricantes, impuestos, stats] = await Promise.all([
+  const [session, { productos, total }, familias, fabricantes, impuestos, stats] = await Promise.all([
+    getSession(),
     getProductos({ busqueda, familia_id, fabricante_id, activo, offset, limit }),
     getFamilias(),
     getFabricantes(),
     getImpuestos(),
     getEstadisticasInventario(),
   ])
+  const canManage = session ? puedeAcceder(session.rol, 'productos', 'manage') : false
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,6 +78,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
         soloInactivos={activo === false}
         offset={offset}
         limit={limit}
+        canManage={canManage}
       />
     </div>
   )

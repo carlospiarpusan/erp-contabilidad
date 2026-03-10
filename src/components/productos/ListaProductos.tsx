@@ -11,7 +11,7 @@ import { FormProducto } from './FormProducto'
 import type { Producto, Familia, Fabricante, Impuesto } from '@/types'
 import { formatCOP } from '@/utils/cn'
 import { hasLowStock } from '@/lib/utils/stock'
-import { Search, Plus, Pencil, Layers, AlertTriangle, Eye, SlidersHorizontal } from 'lucide-react'
+import { Search, Plus, Pencil, Layers, AlertTriangle, Eye, SlidersHorizontal, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 
 const COLUMNAS = [
@@ -37,13 +37,14 @@ interface ListaProductosProps {
   soloInactivos?:  boolean
   offset:          number
   limit:           number
+  canManage:       boolean
 }
 
 export function ListaProductos({
   productos, total, familias, fabricantes, impuestos,
   busqueda: busqInicial, familiaFiltro: familiaInicial = '',
   fabricanteFiltro: fabricanteInicial = '', soloInactivos: soloInactivosInicial = false,
-  offset: offsetInicial, limit,
+  offset: offsetInicial, limit, canManage,
 }: ListaProductosProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -56,6 +57,7 @@ export function ListaProductos({
   const [modal, setModal]                = useState(false)
   const [editar, setEditar]              = useState<Producto | null>(null)
   const [cargando, setCargando]          = useState(false)
+  const [eliminandoId, setEliminandoId]  = useState<string | null>(null)
   const [error, setError]                = useState('')
 
   function navegar(params: Record<string, string | number | boolean>) {
@@ -94,6 +96,27 @@ export function ListaProductos({
     }
   }
 
+  async function handleEliminar(producto: Producto) {
+    const confirmado = window.confirm(
+      `Vas a eliminar "${producto.descripcion}". Si tiene movimientos, stock o documentos relacionados se desactivará en lugar de borrarse.`
+    )
+    if (!confirmado) return
+
+    setError('')
+    setEliminandoId(producto.id)
+    try {
+      const res = await fetch(`/api/productos/${producto.id}`, { method: 'DELETE' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error ?? 'Error al eliminar producto')
+      if (body?.message) window.alert(body.message)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
+    } finally {
+      setEliminandoId(null)
+    }
+  }
+
   function calcularStock(p: Producto) {
     return (p.stock ?? []).reduce((s, st) => s + (st.cantidad ?? 0), 0)
   }
@@ -128,10 +151,18 @@ export function ListaProductos({
           {(familia_id || fabricante_id) && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-bold">!</span>}
         </button>
 
-        <Button variant="success" size="sm" onClick={() => { setEditar(null); setModal(true) }}>
-          <Plus className="h-4 w-4 mr-1" /> Nuevo
-        </Button>
+        {canManage && (
+          <Button variant="success" size="sm" onClick={() => { setEditar(null); setModal(true) }}>
+            <Plus className="h-4 w-4 mr-1" /> Nuevo
+          </Button>
+        )}
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* Panel filtros */}
       {showFiltros && (
@@ -248,13 +279,25 @@ export function ListaProductos({
                   >
                     <Eye className="h-3.5 w-3.5" />
                   </Link>
-                  <button
-                    onClick={() => { setEditar(p); setModal(true) }}
-                    className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                    title="Editar"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
+                  {canManage && (
+                    <>
+                      <button
+                        onClick={() => { setEditar(p); setModal(true) }}
+                        className="rounded p-1.5 text-gray-400 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        title="Editar"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleEliminar(p)}
+                        disabled={eliminandoId === p.id}
+                        className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                        title="Eliminar o desactivar"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </CeldaTabla>
             </FilaTabla>

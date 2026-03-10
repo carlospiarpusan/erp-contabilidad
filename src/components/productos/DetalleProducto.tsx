@@ -12,7 +12,7 @@ import { formatCOP, formatFecha } from '@/utils/cn'
 import { hasLowStock, isLowStock } from '@/lib/utils/stock'
 import {
   Package, Pencil, ArrowUpCircle, ArrowDownCircle, RefreshCw,
-  Layers, Warehouse, TrendingUp, AlertTriangle, Clock,
+  Layers, Warehouse, TrendingUp, AlertTriangle, Clock, Trash2,
 } from 'lucide-react'
 
 interface Props {
@@ -22,6 +22,7 @@ interface Props {
   fabricantes: Fabricante[]
   impuestos:   Impuesto[]
   movimientos: MovimientoRow[]
+  canManage:   boolean
 }
 
 interface MovimientoRow {
@@ -41,11 +42,12 @@ const TIPO_LABELS: Record<string, { label: string; icon: typeof ArrowUpCircle; c
   ajuste_inventario: { label: 'Ajuste inventario', icon: RefreshCw,       color: 'text-purple-600' },
 }
 
-export function DetalleProducto({ producto, bodegas, familias, fabricantes, impuestos, movimientos }: Props) {
+export function DetalleProducto({ producto, bodegas, familias, fabricantes, impuestos, movimientos, canManage }: Props) {
   const router = useRouter()
   const [modalEditar, setModalEditar]   = useState(false)
   const [modalAjuste, setModalAjuste]   = useState(false)
   const [cargando, setCargando]         = useState(false)
+  const [eliminando, setEliminando]     = useState(false)
   const [error, setError]               = useState('')
 
   const stockTotal = (producto.stock ?? []).reduce((s, st) => s + (st.cantidad ?? 0), 0)
@@ -69,6 +71,28 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       setError(e instanceof Error ? e.message : 'Error')
     } finally {
       setCargando(false)
+    }
+  }
+
+  async function handleEliminar() {
+    const confirmado = window.confirm(
+      `Vas a eliminar "${producto.descripcion}". Si tiene movimientos, stock o documentos relacionados se desactivará en lugar de borrarse.`
+    )
+    if (!confirmado) return
+
+    setEliminando(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/productos/${producto.id}`, { method: 'DELETE' })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error ?? 'Error al eliminar producto')
+      if (body?.message) window.alert(body.message)
+      router.push('/productos')
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error')
+    } finally {
+      setEliminando(false)
     }
   }
 
@@ -106,15 +130,26 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setModalAjuste(true)}>
-            <Warehouse className="h-4 w-4 mr-1" /> Ajustar stock
-          </Button>
-          <Button size="sm" onClick={() => setModalEditar(true)}>
-            <Pencil className="h-4 w-4 mr-1" /> Editar
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setModalAjuste(true)}>
+              <Warehouse className="h-4 w-4 mr-1" /> Ajustar stock
+            </Button>
+            <Button size="sm" onClick={() => setModalEditar(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Editar
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleEliminar} disabled={eliminando}>
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+            </Button>
+          </div>
+        )}
       </div>
+
+      {error && (
+        <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -271,7 +306,6 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
 
       {/* Modal editar */}
       <Modal open={modalEditar} onClose={() => setModalEditar(false)} titulo="Editar producto" size="xl">
-        {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
         <FormProducto
           inicial={producto}
           familias={familias}

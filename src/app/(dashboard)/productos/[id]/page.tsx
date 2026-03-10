@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
+import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { getProductoById, getMovimientosProducto, getFamilias, getFabricantes, getImpuestos, getBodegas } from '@/lib/db/productos'
 import { DetalleProducto } from '@/components/productos/DetalleProducto'
 import { ChevronLeft } from 'lucide-react'
@@ -11,7 +12,8 @@ interface PageProps { params: Promise<{ id: string }> }
 export default async function DetalleProductoPage({ params }: PageProps) {
   const { id } = await params
 
-  const [producto, movimientos, bodegas, familias, fabricantes, impuestos] = await Promise.all([
+  const [session, producto, movimientos, bodegas, familias, fabricantes, impuestos] = await Promise.all([
+    getSession(),
     getProductoById(id).catch(() => null),
     getMovimientosProducto(id),
     getBodegas(),
@@ -21,6 +23,7 @@ export default async function DetalleProductoPage({ params }: PageProps) {
   ])
 
   if (!producto) notFound()
+  const canManage = session ? puedeAcceder(session.rol, 'productos', 'manage') : false
 
   return (
     <div className="flex flex-col gap-4">
@@ -34,6 +37,7 @@ export default async function DetalleProductoPage({ params }: PageProps) {
         fabricantes={fabricantes}
         impuestos={impuestos}
         movimientos={movimientos}
+        canManage={canManage}
       />
     </div>
   )
