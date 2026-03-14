@@ -10,6 +10,7 @@ export interface UserSession {
   rol: AppRole
   empresa_id: string
   empresa_nombre?: string
+  debe_cambiar_password: boolean
 }
 
 export const getSession = cache(async (): Promise<UserSession | null> => {
@@ -28,6 +29,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       rol: context.rol,
       empresa_id: context.empresa_id,
       empresa_nombre: context.empresa_nombre,
+      debe_cambiar_password: context.debe_cambiar_password,
     }
   } catch {
     return null

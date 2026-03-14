@@ -23,7 +23,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
   const [modal, setModal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ email: '', nombre: '', rol_id: '' })
+  const [form, setForm] = useState({ email: '', nombre: '', cedula: '', rol_id: '' })
 
   async function invitar(e: React.FormEvent) {
     e.preventDefault()
@@ -38,7 +38,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
     setLoading(false)
     if (!res.ok) { setError(data.error); return }
     setModal(false)
-    setForm({ email: '', nombre: '', rol_id: '' })
+    setForm({ email: '', nombre: '', cedula: '', rol_id: '' })
     router.refresh()
   }
 
@@ -71,7 +71,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
         </div>
         <Button onClick={() => setModal(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
-          Invitar usuario
+          Crear usuario
         </Button>
       </div>
 
@@ -137,7 +137,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
       </div>
 
       {/* Modal invitar */}
-      <Modal open={modal} onClose={() => setModal(false)} titulo="Invitar usuario" size="sm">
+      <Modal open={modal} onClose={() => setModal(false)} titulo="Crear usuario" size="sm">
         <form onSubmit={invitar} className="flex flex-col gap-4">
           <Input
             label="Nombre completo"
@@ -146,6 +146,16 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
             onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
             required
           />
+          <Input
+            label="Cédula"
+            placeholder="Ej: 1085123456"
+            value={form.cedula}
+            onChange={e => setForm(p => ({ ...p, cedula: e.target.value.replace(/\D/g, '') }))}
+            required
+            minLength={5}
+            maxLength={20}
+          />
+          <p className="-mt-3 text-xs text-gray-400">La cédula será la contraseña inicial del usuario</p>
           <Input
             label="Correo electrónico"
             type="email"
@@ -167,7 +177,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={loading}>
-              {loading ? 'Invitando...' : 'Invitar'}
+              {loading ? 'Creando...' : 'Crear'}
             </Button>
           </div>
         </form>

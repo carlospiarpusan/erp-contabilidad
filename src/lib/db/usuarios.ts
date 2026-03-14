@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { getSupabaseServiceEnv } from '@/lib/supabase/config'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { TENANT_ROLE_OPTIONS } from '@/lib/auth/permissions'
@@ -9,8 +10,10 @@ export interface UsuarioRow {
   rol_id: string | null
   nombre: string
   email: string
+  cedula: string | null
   telefono: string | null
   activo: boolean
+  debe_cambiar_password: boolean
   created_at: string
 }
 
@@ -18,7 +21,7 @@ export async function getUsuarios() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('usuarios')
-    .select('id, empresa_id, rol_id, nombre, email, telefono, activo, created_at')
+    .select('id, empresa_id, rol_id, nombre, email, cedula, telefono, activo, debe_cambiar_password, created_at')
     .order('created_at', { ascending: true })
 
   if (error) throw error
@@ -32,7 +35,7 @@ export async function getUsuarioActual() {
 
   const { data, error } = await supabase
     .from('usuarios')
-    .select('id, empresa_id, rol_id, nombre, email, telefono, activo, created_at')
+    .select('id, empresa_id, rol_id, nombre, email, cedula, telefono, activo, debe_cambiar_password, created_at')
     .eq('id', user.id)
     .single()
 
@@ -70,16 +73,21 @@ export async function updatePerfilPropio(
     .from('usuarios')
     .update(payload)
     .eq('id', id)
-    .select('id, empresa_id, rol_id, nombre, email, telefono, activo, created_at')
+    .select('id, empresa_id, rol_id, nombre, email, cedula, telefono, activo, debe_cambiar_password, created_at')
     .single()
 
   if (error) throw error
   return data as UsuarioRow
 }
 
-export async function invitarUsuario(email: string, nombre: string, rol_id: string) {
+export async function crearUsuario(
+  email: string,
+  nombre: string,
+  rol_id: string,
+  cedula: string
+) {
   const { url, serviceRoleKey } = getSupabaseServiceEnv()
-  // Crea usuario vía Supabase Admin Auth (service_role)
+  // La contraseña inicial es la cédula
   const res = await fetch(
     `${url}/auth/v1/admin/users`,
     {
@@ -91,8 +99,8 @@ export async function invitarUsuario(email: string, nombre: string, rol_id: stri
       },
       body: JSON.stringify({
         email,
-        password: `Temp${Date.now()}!`,
-        email_confirm: false,
+        password: cedula,
+        email_confirm: true,
         user_metadata: { nombre },
       }),
     }
@@ -102,11 +110,46 @@ export async function invitarUsuario(email: string, nombre: string, rol_id: stri
     throw new Error(err.msg || err.message || 'Error al crear usuario')
   }
 
-  // El trigger handle_new_user asigna rol 'vendedor' por defecto
-  // Actualizamos al rol correcto
   const { id } = await res.json()
-  const supabase = await createClient()
-  await supabase.from('usuarios').update({ nombre, rol_id }).eq('id', id)
+  
+  // Usar adminClient para saltar RLS al actualizar el perfil recién creado
+  const adminClient = createAdminClient(url, serviceRoleKey)
+  const { error: updateError } = await adminClient
+    .from('usuarios')
+    .update({ nombre, rol_id, cedula, debe_cambiar_password: true })
+    .eq('id', id)
+
+  if (updateError) throw updateError
+}
+
+/** Busca el email de un usuario por su cédula (para login con cédula).
+ *  Usa service role porque durante el login no hay sesión y RLS bloquearía la query. */
+export async function buscarEmailPorCedula(cedula: string): Promise<string | null> {
+  const { url, serviceRoleKey } = getSupabaseServiceEnv()
+  const admin = createAdminClient(url, serviceRoleKey)
+
+  const { data, error } = await admin
+    .from('usuarios')
+    .select('email')
+    .eq('cedula', cedula)
+    .eq('activo', true)
+    .limit(1)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return data.email
+}
+
+/** Marca que el usuario ya cambió su contraseña.
+ *  Usa service role para garantizar que el update funcione sin importar las políticas RLS. */
+export async function marcarPasswordCambiado(userId: string) {
+  const { url, serviceRoleKey } = getSupabaseServiceEnv()
+  const admin = createAdminClient(url, serviceRoleKey)
+  const { error } = await admin
+    .from('usuarios')
+    .update({ debe_cambiar_password: false })
+    .eq('id', userId)
+  if (error) throw error
 }
 
 // Roles estáticos — UUIDs fijos en la DB, sin query para evitar bloqueos RLS

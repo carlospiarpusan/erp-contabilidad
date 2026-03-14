@@ -9,7 +9,7 @@ import { Building2, Lock, User } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -22,13 +22,20 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: identifier, password }),
     })
     const body = await res.json().catch(() => null)
 
     if (!res.ok) {
       setError(body?.error ?? 'Usuario o contraseña incorrectos')
       setLoading(false)
+      return
+    }
+
+    // Si debe cambiar contraseña, redirigir a esa página
+    if (body?.debe_cambiar_password) {
+      router.push('/cambiar-password')
+      router.refresh()
       return
     }
 
@@ -60,10 +67,10 @@ export default function LoginPage() {
             <div className="relative">
               <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="Correo electrónico o cédula"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
                 autoFocus
                 className="flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900/80 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-blue-400"

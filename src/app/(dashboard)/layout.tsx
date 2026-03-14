@@ -8,6 +8,7 @@ import { getSession } from '@/lib/auth/session'
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
   if (!session) redirect('/login')
+  if (session.debe_cambiar_password) redirect('/cambiar-password')
 
   return (
     <div className="flex h-screen overflow-hidden">

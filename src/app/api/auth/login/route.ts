@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { loginRateLimitStatus, registerLoginFailure, resetLoginFailures } from '@/lib/security/login-rate-limit'
+import { buscarEmailPorCedula } from '@/lib/db/usuarios'
 
 function getClientIp(req: NextRequest) {
   const fwd = req.headers.get('x-forwarded-for')
@@ -10,13 +11,28 @@ function getClientIp(req: NextRequest) {
   return 'unknown'
 }
 
+/** Detecta si el input parece una cédula (solo números) o un email */
+function looksLikeCedula(input: string) {
+  return /^\d{5,20}$/.test(input)
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}))
-    const email = String(body?.email ?? '').trim().toLowerCase()
+    const identifier = String(body?.email ?? '').trim().toLowerCase()
     const password = String(body?.password ?? '')
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email y contraseña son requeridos' }, { status: 400 })
+    if (!identifier || !password) {
+      return NextResponse.json({ error: 'Email/cédula y contraseña son requeridos' }, { status: 400 })
+    }
+
+    // Si el identificador parece cédula, buscar el email asociado
+    let email = identifier
+    if (looksLikeCedula(identifier)) {
+      const found = await buscarEmailPorCedula(identifier)
+      if (!found) {
+        return NextResponse.json({ error: 'No se encontró un usuario con esa cédula' }, { status: 401 })
+      }
+      email = found
     }
 
     const key = `${getClientIp(req)}:${email}`
@@ -41,13 +57,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No se pudo iniciar sesión' }, { status: 500 })
     }
 
-    const { data: usuario, error: usuarioError } = await supabase
+    // Usar service role para verificar estado sin depender de RLS durante el login
+    const { getSupabaseServiceEnv } = await import('@/lib/supabase/config')
+    const { url, serviceRoleKey } = getSupabaseServiceEnv()
+    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+    const adminClient = createSupabaseClient(url, serviceRoleKey)
+
+    // Probar primero con todas las columnas
+    let usuario: any, usuarioError: any;
+    const initialResult = await adminClient
       .from('usuarios')
-      .select('activo')
+      .select('activo, debe_cambiar_password')
       .eq('id', userId)
       .single()
+    
+    usuario = initialResult.data
+    usuarioError = initialResult.error
+
+    // Si falla porque no existen las columnas (error 42703), reintentar solo con activo
+    if (usuarioError && usuarioError.code === '42703') {
+      const fallback = await adminClient
+        .from('usuarios')
+        .select('activo')
+        .eq('id', userId)
+        .single()
+      usuario = fallback.data
+      usuarioError = fallback.error
+    }
 
     if (usuarioError || !usuario?.activo) {
+      console.error('Login block:', { userId, usuarioError, activo: usuario?.activo })
       await supabase.auth.signOut()
       registerLoginFailure(key)
       return NextResponse.json(
@@ -57,7 +96,10 @@ export async function POST(req: NextRequest) {
     }
 
     resetLoginFailures(key)
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({
+      ok: true,
+      debe_cambiar_password: (usuario as any).debe_cambiar_password ?? false,
+    })
   } catch {
     return NextResponse.json({ error: 'No se pudo iniciar sesión' }, { status: 500 })
   }
