@@ -84,7 +84,8 @@ export async function crearUsuario(
   email: string,
   nombre: string,
   rol_id: string,
-  cedula: string
+  cedula: string,
+  empresa_id: string
 ) {
   const { url, serviceRoleKey } = getSupabaseServiceEnv()
   // La contraseña inicial es la cédula
@@ -111,15 +112,26 @@ export async function crearUsuario(
   }
 
   const { id } = await res.json()
-  
-  // Usar adminClient para saltar RLS al actualizar el perfil recién creado
-  const adminClient = createServiceClient()
-  const { error: updateError } = await adminClient
-    .from('usuarios')
-    .update({ nombre, rol_id, cedula, debe_cambiar_password: true })
-    .eq('id', id)
 
-  if (updateError) throw updateError
+  // Usar adminClient para saltar RLS al insertar el perfil recién creado
+  const adminClient = createServiceClient()
+  const { error: insertError } = await adminClient
+    .from('usuarios')
+    .upsert(
+      {
+        id,
+        empresa_id,
+        email,
+        nombre,
+        rol_id,
+        cedula,
+        activo: true,
+        debe_cambiar_password: true,
+      },
+      { onConflict: 'id' }
+    )
+
+  if (insertError) throw insertError
 }
 
 /** Busca el email de un usuario por su cédula (para login con cédula).
