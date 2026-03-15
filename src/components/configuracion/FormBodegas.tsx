@@ -7,7 +7,7 @@ import { Plus, Star, Edit2, Check, X } from 'lucide-react'
 import { cn, cardCls } from '@/utils/cn'
 
 interface Bodega {
-  id: string; codigo: string | null; nombre: string; principal: boolean; activa: boolean
+  id: string; codigo: string | null; nombre: string; principal: boolean; activa: boolean; permite_venta_sin_stock: boolean
 }
 
 interface Props { bodegas: Bodega[] }
@@ -19,7 +19,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
   const [adding, setAdding] = useState(false)
   const [saving, setSaving] = useState(false)
   const [nuevo, setNuevo] = useState({ codigo: '', nombre: '', principal: false })
-  const [edit, setEdit] = useState<Omit<Bodega, 'id'>>({ codigo: '', nombre: '', principal: false, activa: true })
+  const [edit, setEdit] = useState<Omit<Bodega, 'id'>>({ codigo: '', nombre: '', principal: false, activa: true, permite_venta_sin_stock: false })
 
   async function guardarNuevo() {
     if (!nuevo.nombre.trim()) return
@@ -43,7 +43,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
 
   function iniciarEdit(b: Bodega) {
     setEditando(b.id)
-    setEdit({ codigo: b.codigo ?? '', nombre: b.nombre, principal: b.principal, activa: b.activa })
+    setEdit({ codigo: b.codigo ?? '', nombre: b.nombre, principal: b.principal, activa: b.activa, permite_venta_sin_stock: b.permite_venta_sin_stock })
   }
 
   async function guardarEdit(id: string) {
@@ -90,6 +90,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
               <th className="px-4 py-3 text-left font-medium text-gray-500">Nombre</th>
               <th className="px-4 py-3 text-center font-medium text-gray-500">Principal</th>
               <th className="px-4 py-3 text-center font-medium text-gray-500">Activa</th>
+              <th className="px-4 py-3 text-center font-medium text-gray-500">Venta sin stock</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -111,6 +112,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
                     className="h-4 w-4 rounded border-gray-300 text-teal-600" />
                 </td>
                 <td className="px-4 py-2 text-center text-gray-400 text-xs">—</td>
+                <td className="px-4 py-2 text-center text-gray-400 text-xs">—</td>
                 <td className="px-4 py-2 text-right">
                   <div className="flex gap-1 justify-end">
                     <button onClick={guardarNuevo} disabled={saving}
@@ -123,7 +125,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
             )}
 
             {bodegas.length === 0 && !adding ? (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No hay bodegas</td></tr>
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No hay bodegas</td></tr>
             ) : bodegas.map(b => (
               <tr key={b.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 ${!b.activa ? 'opacity-50' : ''}`}>
                 {editando === b.id ? (
@@ -142,6 +144,10 @@ export function FormBodegas({ bodegas: inicial }: Props) {
                     </td>
                     <td className="px-4 py-2 text-center">
                       <input type="checkbox" checked={edit.activa} onChange={e => setEdit(p => ({ ...p, activa: e.target.checked }))}
+                        className="h-4 w-4 rounded border-gray-300 text-teal-600" />
+                    </td>
+                    <td className="px-4 py-2 text-center">
+                      <input type="checkbox" checked={edit.permite_venta_sin_stock} onChange={e => setEdit(p => ({ ...p, permite_venta_sin_stock: e.target.checked }))}
                         className="h-4 w-4 rounded border-gray-300 text-teal-600" />
                     </td>
                     <td className="px-4 py-2 text-right">
@@ -165,6 +171,11 @@ export function FormBodegas({ bodegas: inicial }: Props) {
                         className={`text-xs px-2 py-0.5 rounded-full font-medium ${b.activa ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'}`}>
                         {b.activa ? 'Activa' : 'Inactiva'}
                       </button>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${b.permite_venta_sin_stock ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {b.permite_venta_sin_stock ? 'Si' : 'No'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => iniciarEdit(b)}

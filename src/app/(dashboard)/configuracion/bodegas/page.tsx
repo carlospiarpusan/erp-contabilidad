@@ -13,7 +13,7 @@ export default async function BodegasPage() {
   const supabase = await createClient()
   const { data } = await supabase
     .from('bodegas')
-    .select('id, codigo, nombre, principal, activa')
+    .select('id, codigo, nombre, principal, activa, permite_venta_sin_stock')
     .eq('empresa_id', session.empresa_id)
     .order('nombre')
 

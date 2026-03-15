@@ -47,8 +47,8 @@ export async function updateUsuario(id: string, values: Partial<UsuarioRow>) {
   const { id: _, ...rest } = values
   const payload = cleanUUIDs(rest)
 
-  const supabase = await createClient()
-  const { data, error } = await supabase
+  const admin = createServiceClient()
+  const { data, error } = await admin
     .from('usuarios')
     .update(payload)
     .eq('id', id)

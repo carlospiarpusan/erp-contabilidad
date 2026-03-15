@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest) {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-    const { id, codigo, nombre, principal, activa } = await req.json()
+    const { id, codigo, nombre, principal, activa, permite_venta_sin_stock } = await req.json()
     if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
 
     const supabase = await createClient()
@@ -66,6 +66,7 @@ export async function PATCH(req: NextRequest) {
     if (codigo !== undefined)    updates.codigo    = codigo || null
     if (principal !== undefined) updates.principal = principal
     if (activa !== undefined)    updates.activa    = activa
+    if (permite_venta_sin_stock !== undefined) updates.permite_venta_sin_stock = permite_venta_sin_stock
 
     const { error } = await supabase.from('bodegas').update(updates).eq('id', id).eq('empresa_id', session.empresa_id)
     if (error) throw error
