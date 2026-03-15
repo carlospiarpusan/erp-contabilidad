@@ -15,7 +15,6 @@ export type AppModule =
   | 'configuracion'
   | 'notificaciones'
   | 'perfil'
-  | 'documentacion'
   | 'superadmin'
 
 type ModuleAccessRule = {
@@ -37,7 +36,7 @@ type RouteRule = {
 const TENANT_ROLES = ['admin', 'contador', 'vendedor', 'solo_lectura'] as const satisfies readonly AppRole[]
 const VENTAS_WRITE_ROLES = ['admin', 'contador', 'vendedor'] as const satisfies readonly AppRole[]
 const ACCOUNTING_ROLES = ['admin', 'contador'] as const satisfies readonly AppRole[]
-const INFORMES_ROLES = ['admin', 'contador', 'vendedor'] as const satisfies readonly AppRole[]
+const INFORMES_ROLES = ['admin', 'contador'] as const satisfies readonly AppRole[]
 const ADMIN_ROLES = ['admin'] as const satisfies readonly AppRole[]
 const PROFILE_ROLES = ['superadmin', ...TENANT_ROLES] as const satisfies readonly AppRole[]
 const SUPERADMIN_ROLES = ['superadmin'] as const satisfies readonly AppRole[]
@@ -82,7 +81,6 @@ export const MODULE_ACCESS = {
   configuracion: { read: ADMIN_ROLES, manage: ADMIN_ROLES },
   notificaciones: { read: TENANT_ROLES, manage: TENANT_ROLES },
   perfil: { read: PROFILE_ROLES, manage: PROFILE_ROLES },
-  documentacion: { read: TENANT_ROLES, manage: TENANT_ROLES },
   superadmin: { read: SUPERADMIN_ROLES, manage: SUPERADMIN_ROLES },
 } as const satisfies Record<AppModule, ModuleAccessRule>
 
@@ -96,7 +94,6 @@ const PAGE_ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/informes', module: 'informes' },
   { prefix: '/inventario/ajuste', module: 'inventario' },
   { prefix: '/notificaciones', module: 'notificaciones' },
-  { prefix: '/documentacion', module: 'documentacion' },
   { prefix: '/productos', module: 'productos' },
   { prefix: '/clientes', module: 'clientes' },
   { prefix: '/ventas/recibos/sistecredito', module: 'contabilidad' },

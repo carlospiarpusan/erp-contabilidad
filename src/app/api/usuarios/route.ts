@@ -48,7 +48,8 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    if (!await requireUsersAdmin()) {
+    const session = await requireUsersAdmin()
+    if (!session) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No se puede asignar rol superadmin desde este módulo' }, { status: 403 })
     }
 
-    await crearUsuario(email.toLowerCase(), nombre, rol_id, cedula)
+    await crearUsuario(email.toLowerCase(), nombre, rol_id, cedula, session.empresa_id)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Error'
