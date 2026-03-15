@@ -35,8 +35,11 @@ export async function PATCH(req: NextRequest) {
     ]
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    const nullIfEmpty = ['fecha_resolucion', 'rango_desde', 'rango_hasta', 'email_copia', 'prefijo', 'resolucion', 'auth_token', 'account_id']
     for (const key of allowed) {
-      if (body[key] !== undefined) updates[key] = body[key]
+      if (body[key] !== undefined) {
+        updates[key] = nullIfEmpty.includes(key) && body[key] === '' ? null : body[key]
+      }
     }
 
     const supabase = await createClient()
@@ -72,24 +75,21 @@ export async function POST(req: NextRequest) {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-    const { action } = await req.json()
+    const body = await req.json()
 
-    if (action === 'test') {
-      const supabase = await createClient()
-      const { data } = await supabase
-        .from('configuracion_fe')
-        .select('auth_token, account_id, ambiente')
-        .eq('empresa_id', session.empresa_id)
-        .maybeSingle()
+    if (body.action === 'test') {
+      const authToken = body.auth_token
+      const accountId = body.account_id
+      const ambiente = body.ambiente ?? 'pruebas'
 
-      if (!data?.auth_token || !data?.account_id) {
-        return NextResponse.json({ ok: false, message: 'Configura el Auth Token y Account ID primero' })
+      if (!authToken || !accountId) {
+        return NextResponse.json({ ok: false, message: 'Ingresa el Auth Token y Account ID primero' })
       }
 
       const result = await testDataicoConnection({
-        auth_token: data.auth_token,
-        account_id: data.account_id,
-        ambiente: data.ambiente ?? 'pruebas',
+        auth_token: authToken,
+        account_id: accountId,
+        ambiente,
       })
 
       return NextResponse.json(result)

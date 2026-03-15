@@ -75,17 +75,10 @@ export function FormFacturacionElectronica({ config }: Props) {
     setTesting(true)
     setTestResult(null)
     try {
-      const saveRes = await fetch('/api/configuracion/facturacion-electronica', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (!saveRes.ok) throw new Error('Error al guardar antes de probar')
-
       const res = await fetch('/api/configuracion/facturacion-electronica', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'test' }),
+        body: JSON.stringify({ action: 'test', auth_token: form.auth_token, account_id: form.account_id, ambiente: form.ambiente }),
       })
       const data = await res.json()
       setTestResult({ ok: data.ok, message: data.message })
