@@ -848,16 +848,14 @@ async function main() {
     mustOk(asErr, 'Consultar asientos')
     assert((asientos ?? []).length > 0, 'No hay asientos contables')
 
-    const { data: kpis, error: kpisErr } = await anon.rpc('get_kpis_dashboard', {
-      p_empresa_id: state.empresaId,
-      p_año: year,
+    const { data: kpis, error: kpisErr } = await anon.rpc('secure_get_kpis_dashboard', {
+      p_anio: year,
     })
     mustOk(kpisErr, 'Consultar KPIs dashboard')
     assert(kpis && typeof kpis === 'object', 'Respuesta inválida de KPIs')
 
-    const { data: resumen, error: resumenErr } = await anon.rpc('get_resumen_mensual', {
-      p_empresa_id: state.empresaId,
-      p_año: year,
+    const { data: resumen, error: resumenErr } = await anon.rpc('secure_get_resumen_mensual', {
+      p_anio: year,
     })
     mustOk(resumenErr, 'Consultar resumen mensual')
     assert(Array.isArray(resumen), 'Respuesta inválida de resumen mensual')
