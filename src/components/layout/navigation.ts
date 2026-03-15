@@ -159,6 +159,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
       { label: 'Bodegas', href: '/configuracion/bodegas' },
       { label: 'Transportadoras', href: '/configuracion/transportadoras' },
       { label: 'Usuarios', href: '/configuracion/usuarios' },
+      { label: 'Facturación Electrónica', href: '/configuracion/facturacion-electronica' },
       { label: 'Importar datos', href: '/configuracion/importar' },
       { label: 'Auditoría', href: '/configuracion/auditoria' },
     ],
