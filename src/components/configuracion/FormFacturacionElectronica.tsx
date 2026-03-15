@@ -42,6 +42,7 @@ export function FormFacturacionElectronica({ config }: Props) {
   const [guardando, setGuardando] = useState(false)
   const [testing, setTesting] = useState(false)
   const [msg, setMsg] = useState<{ tipo: 'ok' | 'err'; texto: string } | null>(null)
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
 
   const set = <K extends keyof ConfigFE>(k: K, v: ConfigFE[K]) =>
     setForm(p => ({ ...p, [k]: v }))
@@ -67,7 +68,7 @@ export function FormFacturacionElectronica({ config }: Props) {
 
   async function testConnection() {
     setTesting(true)
-    setMsg(null)
+    setTestResult(null)
     try {
       // Guardar primero
       const saveRes = await fetch('/api/configuracion/facturacion-electronica', {
@@ -83,9 +84,9 @@ export function FormFacturacionElectronica({ config }: Props) {
         body: JSON.stringify({ action: 'test' }),
       })
       const data = await res.json()
-      setMsg({ tipo: data.ok ? 'ok' : 'err', texto: data.message })
+      setTestResult({ ok: data.ok, message: data.message })
     } catch (e) {
-      setMsg({ tipo: 'err', texto: e instanceof Error ? e.message : 'Error' })
+      setTestResult({ ok: false, message: e instanceof Error ? e.message : 'Error de conexión' })
     } finally {
       setTesting(false)
     }
@@ -180,17 +181,32 @@ export function FormFacturacionElectronica({ config }: Props) {
           </div>
         </div>
 
-        <div className="mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={testing || !form.auth_token || !form.account_id}
-            onClick={testConnection}
-          >
-            {testing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {testing ? 'Probando…' : 'Probar conexión'}
-          </Button>
+        <div className="mt-4 flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={testing || !form.auth_token || !form.account_id}
+              onClick={testConnection}
+            >
+              {testing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {testing ? 'Probando…' : 'Probar conexión'}
+            </Button>
+            {!form.auth_token || !form.account_id ? (
+              <span className="text-xs text-gray-400">Ingresa Auth Token y Account ID primero</span>
+            ) : null}
+          </div>
+          {testResult && (
+            <div className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm ${
+              testResult.ok
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              <span className="text-lg">{testResult.ok ? '\u2705' : '\u274C'}</span>
+              <span>{testResult.message}</span>
+            </div>
+          )}
         </div>
       </div>
 

@@ -88,13 +88,18 @@ export async function testDataicoConnection(config: DataicoConfig): Promise<{ ok
     })
 
     if (res.status === 401 || res.status === 403) {
-      return { ok: false, message: 'Token o cuenta inválidos' }
+      return { ok: false, message: 'Auth Token inválido. Verifica tus credenciales en app.dataico.com.' }
     }
 
-    // 404 or empty response is OK — means credentials work but invoice not found
-    return { ok: true, message: 'Conexión exitosa con Dataico' }
+    if (res.status >= 500) {
+      return { ok: false, message: `Dataico respondió con error del servidor (${res.status}). Intenta más tarde.` }
+    }
+
+    // Any 2xx or 404 means the credentials are valid (invoice not found is expected)
+    return { ok: true, message: 'Conexión exitosa. Las credenciales de Dataico son válidas.' }
   } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : 'Error de conexión' }
+    const errMsg = e instanceof Error ? e.message : 'Error desconocido'
+    return { ok: false, message: `No se pudo conectar con Dataico: ${errMsg}` }
   }
 }
 
