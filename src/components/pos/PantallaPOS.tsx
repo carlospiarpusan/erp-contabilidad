@@ -37,7 +37,7 @@ interface Props {
   formasPago: FormaPago[]
 }
 
-const CONSUMIDOR_FINAL = { id: '__CF__', razon_social: 'Consumidor Final', numero_documento: '222222222222' }
+const CF_PLACEHOLDER: ClienteSimple = { id: '', razon_social: 'Consumidor Final', numero_documento: '222222222222' }
 
 export function PantallaPOS({ bodegas, formasPago }: Props) {
   const router = useRouter()
@@ -45,7 +45,8 @@ export function PantallaPOS({ bodegas, formasPago }: Props) {
   const [productos, setProductos] = useState<ProductoSimple[]>([])
   const [loadingProductos, setLoadingProductos] = useState(false)
   const [lineas, setLineas] = useState<LineaPOS[]>([])
-  const [cliente, setCliente] = useState<ClienteSimple>(CONSUMIDOR_FINAL)
+  const [cliente, setCliente] = useState<ClienteSimple>(CF_PLACEHOLDER)
+  const [cfReal, setCfReal] = useState<ClienteSimple>(CF_PLACEHOLDER)
   const [busqCliente, setBusqCliente] = useState('')
   const [clientes, setClientes] = useState<ClienteSimple[]>([])
   const [loadingClientes, setLoadingClientes] = useState(false)
@@ -56,6 +57,19 @@ export function PantallaPOS({ bodegas, formasPago }: Props) {
   const [guardando, setGuardando] = useState(false)
   const [resultado, setResultado] = useState<{ id: string; numero: string } | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/clientes?q=222222222222&limit=1&activo=true&select_mode=selector&include_total=false', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => {
+        const found = data?.clientes?.[0]
+        if (found) {
+          setCfReal(found)
+          setCliente(found)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -130,7 +144,7 @@ export function PantallaPOS({ bodegas, formasPago }: Props) {
   }, [busqCliente, showClientes])
 
   const productosFiltrados = productos.slice(0, 20)
-  const clientesFiltrados = [CONSUMIDOR_FINAL, ...clientes.filter((item) => item.id !== CONSUMIDOR_FINAL.id)]
+  const clientesFiltrados = [cfReal, ...clientes.filter((item) => item.id !== cfReal.id)]
 
   const agregarProducto = (producto: ProductoSimple) => {
     setLineas((prev) => {
@@ -186,8 +200,8 @@ export function PantallaPOS({ bodegas, formasPago }: Props) {
 
   const handleVenta = async () => {
     if (!lineas.length || !bodegaId || !formaPagoId) return
-    if (cliente.id === '__CF__') {
-      alert('Seleccione un cliente. Si la venta es a consumidor final, creelo primero en el modulo de Clientes con NIT 222222222222.')
+    if (!cliente.id) {
+      alert('Seleccione un cliente.')
       return
     }
 
@@ -215,7 +229,7 @@ export function PantallaPOS({ bodegas, formasPago }: Props) {
       setResultado({ id: data.id, numero: data.numero ?? data.id.slice(0, 8) })
       setLineas([])
       setEfectivoRecibido('')
-      setCliente(CONSUMIDOR_FINAL)
+      setCliente(cfReal)
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Error al guardar')
     } finally {
@@ -304,8 +318,8 @@ export function PantallaPOS({ bodegas, formasPago }: Props) {
             >
               {cliente.razon_social}
             </button>
-            {cliente.id !== '__CF__' && (
-              <button type="button" onClick={() => setCliente(CONSUMIDOR_FINAL)}>
+            {cliente.id !== cfReal.id && (
+              <button type="button" onClick={() => setCliente(cfReal)}>
                 <X className="h-3.5 w-3.5 text-gray-400" />
               </button>
             )}
