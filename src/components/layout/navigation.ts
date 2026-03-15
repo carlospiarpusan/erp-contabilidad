@@ -3,7 +3,6 @@ import {
   BarChart3,
   Bell,
   BookOpen,
-  CircleHelp,
   LayoutDashboard,
   Package,
   Receipt,
@@ -49,12 +48,6 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     icon: Bell,
     href: '/notificaciones',
     module: 'notificaciones',
-  },
-  {
-    label: 'Documentación',
-    icon: CircleHelp,
-    href: '/documentacion',
-    module: 'documentacion',
   },
   {
     label: 'Ventas',
