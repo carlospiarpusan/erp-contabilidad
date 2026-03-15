@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           userEmail={session.email}
           userRol={session.rol}
         />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-50/50 dark:bg-gray-950">
           {children}
         </main>
       </div>

@@ -7,18 +7,18 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 function Badge({ className, variant = 'default', ...props }: BadgeProps) {
   const variants = {
-    default: 'bg-gray-100 text-gray-800 dark:bg-gray-800/80 dark:text-gray-200',
-    success: 'bg-green-100 text-green-800 dark:bg-green-900/35 dark:text-green-300',
-    warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/35 dark:text-yellow-300',
-    danger: 'bg-red-100 text-red-800 dark:bg-red-900/35 dark:text-red-300',
-    info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/35 dark:text-blue-300',
-    outline: 'border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200',
+    default: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+    success: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10 dark:bg-emerald-900/20 dark:text-emerald-400 dark:ring-emerald-400/20',
+    warning: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-400/20',
+    danger: 'bg-red-50 text-red-700 ring-1 ring-red-600/10 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-400/20',
+    info: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-400/20',
+    outline: 'border border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-300',
   }
 
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+        'inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold',
         variants[variant],
         className
       )}

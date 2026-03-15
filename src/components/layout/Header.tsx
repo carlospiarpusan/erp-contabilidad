@@ -43,65 +43,71 @@ export function Header({ titulo, userName, userEmail, userRol }: HeaderProps) {
       : null
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-gray-200 bg-white/90 px-6 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/85">
+    <header className="flex h-[56px] shrink-0 items-center justify-between border-b border-gray-100 bg-white px-6 dark:border-gray-800 dark:bg-gray-950">
       <div>
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{titulo}</h1>
-        <p className="text-xs text-gray-500 capitalize dark:text-gray-400">{hoy}</p>
+        <h1 className="text-[15px] font-semibold text-gray-800 dark:text-gray-200 leading-tight">{titulo}</h1>
+        <p className="text-[11px] text-gray-400 capitalize dark:text-gray-500 leading-tight">{hoy}</p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {puedeUsarERP && <BusquedaGlobal />}
         <ThemeToggle />
-
         {puedeUsarERP && <Notificaciones />}
+
+        {/* Separator */}
+        <div className="h-6 w-px bg-gray-100 dark:bg-gray-800 mx-1" />
 
         {/* User menu */}
         <div className="relative">
           <button
             onClick={() => setMenu(p => !p)}
             aria-expanded={menu}
-            className="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1.5 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800/80 transition-colors"
+            className="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
           >
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs font-semibold">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 text-white text-xs font-bold shadow-sm shadow-teal-500/20">
               {initials}
             </div>
             <div className="hidden text-left sm:block">
-              <p className="text-sm font-medium leading-none text-gray-700 dark:text-gray-200">
+              <p className="text-[13px] font-semibold leading-tight text-gray-700 dark:text-gray-200">
                 {userName ?? userEmail ?? 'Usuario'}
               </p>
               {userRol && (
-                <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{getRoleLabel(userRol)}</p>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-tight">{getRoleLabel(userRol)}</p>
               )}
             </div>
-            <ChevronDown className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+            <ChevronDown className="h-3 w-3 text-gray-300 dark:text-gray-600" />
           </button>
 
           {menu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setMenu(false)} />
-              <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900/95">
+              <div className="absolute right-0 top-full z-20 mt-1.5 w-52 rounded-xl border border-gray-100 bg-white py-1.5 shadow-xl shadow-black/8 dark:border-gray-800 dark:bg-gray-950 dark:shadow-black/30">
+                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800 mb-1">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{userName ?? 'Usuario'}</p>
+                  <p className="text-[11px] text-gray-400 truncate">{userEmail}</p>
+                </div>
                 <Link
                   href="/configuracion/perfil"
                   onClick={() => setMenu(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                  className="flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900 transition-colors"
                 >
-                  <UserCircle className="h-4 w-4" /> Mi perfil
+                  <UserCircle className="h-4 w-4 opacity-50" /> Mi perfil
                 </Link>
                 {usersHref && (
                   <Link
                     href={usersHref}
                     onClick={() => setMenu(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                    className="flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900 transition-colors"
                   >
-                    <Settings className="h-4 w-4" /> Usuarios
+                    <Settings className="h-4 w-4 opacity-50" /> Usuarios
                   </Link>
                 )}
-                <hr className="my-1 border-gray-100 dark:border-gray-700" />
+                <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-900/30"
+                  className="flex w-full items-center gap-2.5 px-4 py-2 text-[13px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
-                  <LogOut className="h-4 w-4" /> Cerrar sesión
+                  <LogOut className="h-4 w-4 opacity-60" /> Cerrar sesión
                 </button>
               </div>
             </>
