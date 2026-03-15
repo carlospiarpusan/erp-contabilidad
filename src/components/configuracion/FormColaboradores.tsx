@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit2, Check, X, Trash2 } from 'lucide-react'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 
 interface Colaborador {
   id: string
@@ -98,7 +98,7 @@ export function FormColaboradores({ colaboradores: inicial, usuarios }: Props) {
   const inp = 'w-full h-8 rounded border border-gray-300 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-500'
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+    <div className={cn(cardCls, 'overflow-hidden')}>
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           {inicial.length} colaborador{inicial.length !== 1 ? 'es' : ''}

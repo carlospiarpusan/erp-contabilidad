@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha, cardCls } from '@/utils/cn'
 import { Eye, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -58,7 +58,7 @@ export function ListaCotizaciones({ cotizaciones, total, estadoFiltro: estadoIni
       <p className="text-sm text-gray-500">{total} cotización{total !== 1 ? 'es' : ''}</p>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={`${cardCls} overflow-hidden`}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

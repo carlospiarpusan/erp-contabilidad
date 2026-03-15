@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getProveedorById, getResumenProveedor } from '@/lib/db/compras'
 import { notFound } from 'next/navigation'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import {
   Phone, Mail, MapPin, Building2, User,
   TrendingDown, ShoppingCart, CreditCard, FileText, CheckCircle2, Clock
@@ -44,7 +44,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
       </div>
 
       {/* Header */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
+      <div className={cn(cardCls, 'p-6')}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 text-xl font-bold shadow-sm">
@@ -72,7 +72,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 flex items-center gap-3">
+          <div key={k.label} className={cn(cardCls, 'p-4 flex items-center gap-3')}>
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${k.color}`}>
               <k.icon className="h-5 w-5" />
             </div>
@@ -86,7 +86,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Datos empresa */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 space-y-4">
+        <div className={cn(cardCls, 'p-5 space-y-4')}>
           <h2 className="font-semibold text-gray-800 flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-400" /> Datos del proveedor
           </h2>
@@ -130,7 +130,7 @@ export default async function DetalleProveedorPage({ params }: Props) {
         </div>
 
         {/* Últimas compras */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
             <FileText className="h-4 w-4 text-gray-400" /> Últimas facturas de compra
           </h2>

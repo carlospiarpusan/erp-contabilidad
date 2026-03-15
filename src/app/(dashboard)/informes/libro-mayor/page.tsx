@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getLibroMayor } from '@/lib/db/informes'
 import { createClient } from '@/lib/supabase/server'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { BookOpen } from 'lucide-react'
 
 interface PageProps {
@@ -82,7 +82,7 @@ export default async function LibroMayorPage({ searchParams }: PageProps) {
           </div>
 
           {/* Tabla movimientos */}
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
+          <div className={cn(cardCls, 'overflow-x-auto')}>
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                 <tr>

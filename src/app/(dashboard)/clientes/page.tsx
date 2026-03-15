@@ -5,7 +5,7 @@ import { ListaClientes } from '@/components/clientes/ListaClientes'
 import { Users, UserCheck, CreditCard, UserX, Trophy, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { formatCOP } from '@/utils/cn'
+import { cardCls, formatCOP } from '@/utils/cn'
 import { isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 
 interface PageProps {
@@ -113,7 +113,7 @@ export default async function ClientesPage({ searchParams }: PageProps) {
           { label: 'Con crédito', valor: stats.conCredito, icon: CreditCard,  color: 'bg-purple-50 text-purple-600' },
           { label: 'Inactivos',   valor: stats.inactivos,  icon: UserX,       color: 'bg-gray-50 text-gray-500' },
         ].map(s => (
-          <div key={s.label} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+          <div key={s.label} className={`flex items-center gap-3 ${cardCls} p-4`}>
             <div className={`rounded-xl p-2.5 ${s.color}`}>
               <s.icon className="h-5 w-5" />
             </div>
@@ -158,7 +158,7 @@ export default async function ClientesPage({ searchParams }: PageProps) {
 
       {/* Tab: Mejores Clientes */}
       {tab === 'mejores' && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+        <div className={`${cardCls} overflow-hidden`}>
           <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-yellow-50 dark:bg-yellow-900/10">
             <Trophy className="h-4 w-4 text-yellow-600" />
             <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-500">Top {mejoresClientes.length} clientes por volumen de compras</span>
@@ -200,7 +200,7 @@ export default async function ClientesPage({ searchParams }: PageProps) {
 
       {/* Tab: Deudores */}
       {tab === 'deudores' && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+        <div className={`${cardCls} overflow-hidden`}>
           <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-red-50 dark:bg-red-900/10">
             <AlertCircle className="h-4 w-4 text-red-600" />
             <span className="text-sm font-semibold text-red-700 dark:text-red-400">

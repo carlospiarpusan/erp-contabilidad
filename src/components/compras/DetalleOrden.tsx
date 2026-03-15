@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha, cardCls } from '@/utils/cn'
 import { ShoppingCart, CheckCircle, XCircle, Printer } from 'lucide-react'
 import Link from 'next/link'
 
@@ -57,7 +57,7 @@ export function DetalleOrden({ orden }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100">
@@ -100,7 +100,7 @@ export function DetalleOrden({ orden }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Proveedor</p>
         <p className="font-semibold text-gray-900">{orden.proveedor?.razon_social ?? '—'}</p>
         {orden.proveedor?.numero_documento && <p className="text-sm text-gray-500">{orden.proveedor.numero_documento}</p>}
@@ -108,7 +108,7 @@ export function DetalleOrden({ orden }: Props) {
         {orden.bodega?.nombre && <p className="text-sm text-gray-400 mt-1">Bodega destino: {orden.bodega.nombre}</p>}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={`${cardCls} overflow-hidden`}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

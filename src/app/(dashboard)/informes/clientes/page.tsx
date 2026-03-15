@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getInformeClientes } from '@/lib/db/informes'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import { Users } from 'lucide-react'
 import Link from 'next/link'
 
@@ -38,7 +38,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+      <form className={cn('flex flex-wrap gap-3', cardCls, 'p-4')}>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Desde</label>
           <input type="date" name="desde" defaultValue={desde}
@@ -71,7 +71,7 @@ export default async function InformeClientesPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
+      <div className={cn(cardCls, 'overflow-x-auto')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

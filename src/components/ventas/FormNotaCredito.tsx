@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 import { Search, Check } from 'lucide-react'
 
 interface LineaFactura {
@@ -117,7 +117,7 @@ export function FormNotaCredito({ facturaInicial }: { facturaInicial: Factura | 
     <form onSubmit={guardar} className="flex flex-col gap-6">
       {/* Buscar factura */}
       {!factura && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={`${cardCls} p-5`}>
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Buscar factura de origen</p>
           <div className="flex gap-2">
             <input
@@ -152,7 +152,7 @@ export function FormNotaCredito({ facturaInicial }: { facturaInicial: Factura | 
           </div>
 
           {/* Líneas a devolver */}
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+          <div className={`${cardCls} overflow-hidden`}>
             <p className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-800">
               Selecciona las líneas a devolver
             </p>

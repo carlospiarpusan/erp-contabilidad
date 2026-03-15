@@ -29,31 +29,15 @@ export async function getUsuarioContext(
   supabase: Pick<SupabaseClient, 'from'>,
   userId: string
 ): Promise<UsuarioContext | null> {
-  // Probar primero con todas las columnas
-  let data: any, error: any;
-  const initialResult = await supabase
+  const { data, error } = await supabase
     .from('usuarios')
     .select('id, nombre, empresa_id, rol_id, activo, debe_cambiar_password, empresas(nombre)')
     .eq('id', userId)
     .single()
-  
-  data = initialResult.data
-  error = initialResult.error
-
-  // Si falla porque no existe la columna (error 42703), reintentar sin debe_cambiar_password
-  if (error && error.code === '42703') {
-    const fallback = await supabase
-      .from('usuarios')
-      .select('id, nombre, empresa_id, rol_id, activo, empresas(nombre)')
-      .eq('id', userId)
-      .single()
-    data = fallback.data
-    error = fallback.error
-  }
 
   if (error || !data) return null
 
-  const row = data as any
+  const row = data as UsuarioContextRow
   if (!row.activo) return null
 
   const rol = resolveRoleById(row.rol_id)

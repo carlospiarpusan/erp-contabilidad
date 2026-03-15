@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { cardCls } from '@/utils/cn'
 
 type CuentaPadre = {
   id: string
@@ -78,7 +79,7 @@ export function FormCuentaPUC({ inicial, cuentasPadre }: Props) {
   }
 
   return (
-    <form onSubmit={guardar} className="max-w-2xl rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+    <form onSubmit={guardar} className={`max-w-2xl ${cardCls} p-5`}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Código *</label>

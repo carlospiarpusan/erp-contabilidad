@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
+import { cardCls } from '@/utils/cn'
 
 type CuentaPUCOption = {
   id: string
@@ -118,7 +119,7 @@ export function FormAsientoManual({ cuentas, initial }: Props) {
 
   return (
     <form onSubmit={guardar} className="flex flex-col gap-5">
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">Fecha *</label>
@@ -143,7 +144,7 @@ export function FormAsientoManual({ cuentas, initial }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-700">Líneas contables</h3>
           <Button

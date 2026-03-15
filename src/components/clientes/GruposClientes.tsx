@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
 import { Plus, Pencil, Trash2, Tag, Percent } from 'lucide-react'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 
 type GrupoConConteo = GrupoCliente & { clientes: { count: number }[] }
 
@@ -138,7 +138,7 @@ export function GruposClientes({ grupos: init }: Props) {
           {grupos.map(g => {
             const conteo = g.clientes?.[0]?.count ?? 0
             return (
-              <div key={g.id} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 hover:shadow-md transition-shadow">
+              <div key={g.id} className={`${cardCls} p-5 hover:shadow-md transition-shadow`}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div

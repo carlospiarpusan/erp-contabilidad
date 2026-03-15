@@ -7,7 +7,7 @@ import { RemoteLookup } from '@/components/ui/remote-lookup'
 import { calcularFechaVencimientoFormaPago, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 
 import type { Impuesto, Bodega } from '@/types'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 
 interface FormaPago { id: string; descripcion: string; tipo: string; dias_vencimiento: number }
@@ -198,7 +198,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-5`}>
         <h3 className="mb-4 text-sm font-semibold text-gray-700">Informacion general</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-1">
@@ -317,7 +317,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-5`}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-700">Articulos</h3>
           <Button type="button" size="sm" onClick={agregarLinea}>
@@ -438,7 +438,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
       {lineas.length > 0 && (
         <div className="flex justify-end">
-          <div className="flex w-full max-w-sm flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+          <div className={`flex w-full max-w-sm flex-col gap-2 ${cardCls} p-4`}>
             <div className="flex justify-between text-sm text-gray-600">
               <span>Subtotal</span>
               <span className="font-mono">{formatCOP(subtotal)}</span>

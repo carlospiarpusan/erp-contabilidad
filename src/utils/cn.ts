@@ -5,6 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Clase base para tarjetas/paneles del sistema */
+export const cardCls = 'rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900'
+
 export function formatCOP(value: number): string {
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',

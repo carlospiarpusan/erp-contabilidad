@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { RemoteLookup } from '@/components/ui/remote-lookup'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 import type { Bodega, Impuesto } from '@/types'
 import { AlertCircle, Plus, Trash2 } from 'lucide-react'
 
@@ -206,7 +206,7 @@ export function RemoteSalesDocumentForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-5`}>
         <h3 className="mb-4 text-sm font-semibold text-gray-700">Informacion general</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-1 sm:col-span-2">
@@ -265,7 +265,7 @@ export function RemoteSalesDocumentForm({
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-5`}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-700">Productos</h3>
           <Button type="button" size="sm" variant="outline" onClick={agregarLinea}>
@@ -374,7 +374,7 @@ export function RemoteSalesDocumentForm({
 
       {lineas.length > 0 && (
         <div className="flex justify-end">
-          <div className="flex w-64 flex-col gap-2 rounded-xl border border-gray-200 bg-white p-4 text-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className={`flex w-64 flex-col gap-2 ${cardCls} p-4 text-sm`}>
             <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-mono">{formatCOP(subtotal)}</span></div>
             {descuento > 0 && <div className="flex justify-between text-red-600"><span>Descuento</span><span className="font-mono">-{formatCOP(descuento)}</span></div>}
             <div className="flex justify-between text-gray-600"><span>IVA</span><span className="font-mono">{formatCOP(totalIva)}</span></div>

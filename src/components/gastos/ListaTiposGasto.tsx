@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 
 interface CuentaPUC { codigo: string; descripcion: string }
 interface TipoGasto {
@@ -69,7 +69,7 @@ export function ListaTiposGasto({ tipos: inicial }: Props) {
       <div className="mb-4 flex justify-end">
         <Button size="sm" onClick={abrirNuevo}><Plus className="h-4 w-4 mr-1" /> Nuevo tipo</Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={`overflow-x-auto ${cardCls}`}>
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>

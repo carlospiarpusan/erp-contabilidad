@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { loginRateLimitStatus, registerLoginFailure, resetLoginFailures } from '@/lib/security/login-rate-limit'
 import { buscarEmailPorCedula } from '@/lib/db/usuarios'
 
@@ -58,32 +59,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Usar service role para verificar estado sin depender de RLS durante el login
-    const { getSupabaseServiceEnv } = await import('@/lib/supabase/config')
-    const { url, serviceRoleKey } = getSupabaseServiceEnv()
-    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
-    const adminClient = createSupabaseClient(url, serviceRoleKey)
-
-    // Probar primero con todas las columnas
-    let usuario: any, usuarioError: any;
-    const initialResult = await adminClient
+    const adminClient = createServiceClient()
+    const { data: usuario, error: usuarioError } = await adminClient
       .from('usuarios')
       .select('activo, debe_cambiar_password')
       .eq('id', userId)
       .single()
-    
-    usuario = initialResult.data
-    usuarioError = initialResult.error
-
-    // Si falla porque no existen las columnas (error 42703), reintentar solo con activo
-    if (usuarioError && usuarioError.code === '42703') {
-      const fallback = await adminClient
-        .from('usuarios')
-        .select('activo')
-        .eq('id', userId)
-        .single()
-      usuario = fallback.data
-      usuarioError = fallback.error
-    }
 
     if (usuarioError || !usuario?.activo) {
       console.error('Login block:', { userId, usuarioError, activo: usuario?.activo })
@@ -98,7 +79,7 @@ export async function POST(req: NextRequest) {
     resetLoginFailures(key)
     return NextResponse.json({
       ok: true,
-      debe_cambiar_password: (usuario as any).debe_cambiar_password ?? false,
+      debe_cambiar_password: usuario.debe_cambiar_password ?? false,
     })
   } catch {
     return NextResponse.json({ error: 'No se pudo iniciar sesión' }, { status: 500 })

@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Upload, FileText, CheckCircle, AlertCircle, ChevronRight, Plus, Link as LinkIcon, Package, Loader2, XCircle } from 'lucide-react'
 import Link from 'next/link'
+import { cn, cardCls } from '@/utils/cn'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -260,7 +261,7 @@ export function ImportarFacturaElectronica() {
     <div className="flex flex-col gap-5">
       {/* Cabecera del documento */}
       {cabecera && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Datos de la factura</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <div>
@@ -329,7 +330,7 @@ export function ImportarFacturaElectronica() {
       </div>
 
       {/* Líneas */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={cn(cardCls, 'overflow-hidden')}>
         <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             Líneas de la factura ({lineas.length})

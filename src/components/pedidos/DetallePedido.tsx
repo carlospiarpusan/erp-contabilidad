@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha, cardCls } from '@/utils/cn'
 import { ClipboardList, CheckCircle, XCircle, Truck, FileText, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
@@ -72,7 +72,7 @@ export function DetallePedido({ pedido, formasPago }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100">
@@ -117,7 +117,7 @@ export function DetallePedido({ pedido, formasPago }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Cliente</p>
         <p className="font-semibold text-gray-900">{pedido.cliente?.razon_social ?? '—'}</p>
         {pedido.cliente?.numero_documento && <p className="text-sm text-gray-500">{pedido.cliente.numero_documento}</p>}
@@ -126,7 +126,7 @@ export function DetallePedido({ pedido, formasPago }: Props) {
         {pedido.bodega?.nombre && <p className="text-sm text-gray-400 mt-1">Bodega: {pedido.bodega.nombre}</p>}
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={`${cardCls} overflow-hidden`}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

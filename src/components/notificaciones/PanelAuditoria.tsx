@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { Loader2, ShieldCheck } from 'lucide-react'
+import { cardCls } from '@/utils/cn'
 
 interface AuditItem {
   id: string
@@ -46,7 +47,7 @@ export function PanelAuditoria() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+      <div className={`${cardCls} p-4`}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="md:col-span-2">
             <label className="mb-1 block text-xs font-medium text-gray-600">Tabla</label>
@@ -90,7 +91,7 @@ export function PanelAuditoria() {
           Sin movimientos en auditoría para los filtros seleccionados.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className={`overflow-x-auto ${cardCls}`}>
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
               <tr>

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
 import { getReciboById } from '@/lib/db/ventas'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { Receipt, CreditCard, FileText, User, Printer } from 'lucide-react'
 import Link from 'next/link'
 
@@ -58,7 +58,7 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
       </div>
 
       {/* Encabezado */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
+      <div className={cn(cardCls, 'p-6')}>
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100">
             <Receipt className="h-6 w-6 text-green-600" />
@@ -79,7 +79,7 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
 
       {/* Cliente */}
       {cliente && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
             <User className="h-3.5 w-3.5" /> Cliente
           </p>
@@ -92,7 +92,7 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
 
       {/* Factura relacionada */}
       {doc?.id && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" /> Factura de venta
           </p>
@@ -115,7 +115,7 @@ export default async function DetalleReciboCajaPage({ params }: PageProps) {
       )}
 
       {/* Detalle pago */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={cn(cardCls, 'p-5')}>
         <p className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
           <CreditCard className="h-3.5 w-3.5" /> Detalle del pago
         </p>

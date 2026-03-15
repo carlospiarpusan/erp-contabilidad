@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Modal } from '@/components/ui/modal'
 import { Plus, Pencil } from 'lucide-react'
+import { cardCls } from '@/utils/cn'
 
 interface Ejercicio {
   id: string; año: number; descripcion?: string | null
@@ -84,7 +85,7 @@ export function GestionEjercicios({ ejercicios: inicial }: Props) {
       <div className="mb-4 flex justify-end">
         <Button size="sm" onClick={abrirNuevo}><Plus className="h-4 w-4 mr-1" /> Nuevo ejercicio</Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={`overflow-x-auto ${cardCls}`}>
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>

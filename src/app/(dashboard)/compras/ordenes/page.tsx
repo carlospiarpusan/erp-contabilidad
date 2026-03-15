@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getOrdenesCompra, getEstadisticasOrdenes } from '@/lib/db/cotizaciones'
 import { ShoppingCart, Plus } from 'lucide-react'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 
@@ -76,7 +76,7 @@ export default async function OrdenesCompraPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={cn(cardCls, 'overflow-hidden')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

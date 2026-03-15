@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getBalanceSituacion } from '@/lib/db/informes'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import { Landmark, Download } from 'lucide-react'
 import Link from 'next/link'
 
@@ -88,14 +88,14 @@ export default async function BalanceSituacionPage({ searchParams }: PageProps) 
 
       {/* Balance en dos columnas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <SeccionBalance titulo="Activos" cuentas={activos} total={total_activos} colorTotal="text-green-700" />
         </div>
         <div className="space-y-6">
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+          <div className={cn(cardCls, 'p-5')}>
             <SeccionBalance titulo="Pasivos" cuentas={pasivos} total={total_pasivos} colorTotal="text-red-700" />
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+          <div className={cn(cardCls, 'p-5')}>
             <SeccionBalance titulo="Patrimonio" cuentas={patrimonio} total={total_patrimonio} colorTotal="text-purple-700" />
           </div>
         </div>

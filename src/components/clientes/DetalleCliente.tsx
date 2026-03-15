@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { FormCliente } from './FormCliente'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 import {
   Phone, Mail, MapPin, CreditCard, Building2, User,
   Pencil, ArrowLeft, MessageCircle, Tag, Calendar,
@@ -131,7 +131,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
           { label: 'Total facturado', valor: formatCOP(resumen?.total_compras ?? 0), icon: TrendingUp, color: 'bg-green-50 text-green-700' },
           { label: 'Saldo pendiente', valor: formatCOP(resumen?.saldo_pendiente ?? 0), icon: CreditCard, color: (resumen?.saldo_pendiente ?? 0) > 0 ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-500 dark:text-gray-400 dark:text-gray-500' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+          <div key={k.label} className={`${cardCls} p-4`}>
             <div className={`mb-2 inline-flex rounded-lg p-2 ${k.color}`}>
               <k.icon className="h-4 w-4" />
             </div>
@@ -143,7 +143,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
 
       <div className="grid grid-cols-2 gap-6">
         {/* Datos generales */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 space-y-4">
+        <div className={`${cardCls} p-5 space-y-4`}>
           <h2 className="font-semibold text-gray-800 flex items-center gap-2">
             <Building2 className="h-4 w-4 text-gray-400" /> Datos de la empresa
           </h2>
@@ -200,7 +200,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
         </div>
 
         {/* Crédito */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 space-y-4">
+        <div className={`${cardCls} p-5 space-y-4`}>
           <h2 className="font-semibold text-gray-800 flex items-center gap-2">
             <CreditCard className="h-4 w-4 text-gray-400" /> Condiciones de crédito
           </h2>
@@ -258,7 +258,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
 
       {/* Observaciones */}
       {(cliente as { observaciones?: string }).observaciones && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={`${cardCls} p-5`}>
           <h2 className="mb-2 font-semibold text-gray-800">Observaciones</h2>
           <p className="text-sm text-gray-600 whitespace-pre-line">
             {(cliente as { observaciones?: string }).observaciones}
@@ -267,7 +267,7 @@ export function DetalleCliente({ cliente: init, grupos, resumen }: Props) {
       )}
 
       {/* Últimas facturas */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <ShoppingCart className="h-4 w-4 text-gray-400" /> Últimas facturas

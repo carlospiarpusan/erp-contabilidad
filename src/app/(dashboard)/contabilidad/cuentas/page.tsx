@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { getCuentasPUC } from '@/lib/db/contabilidad'
 import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
+import { cn, cardCls } from '@/utils/cn'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; nivel?: string }>
@@ -78,7 +79,7 @@ export default async function CuentasPage({ searchParams }: PageProps) {
       </form>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={cn(cardCls, 'overflow-hidden')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

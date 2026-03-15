@@ -7,6 +7,7 @@ import { hasSupabaseServiceEnv } from '@/lib/supabase/config'
 import Link from 'next/link'
 import { ArrowLeft, Building2 } from 'lucide-react'
 import { GestionUsuariosEmpresa } from '@/components/superadmin/GestionUsuariosEmpresa'
+import { cn, cardCls } from '@/utils/cn'
 
 function adminClient() {
   return createServiceClient()
@@ -44,7 +45,7 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {/* Datos empresa */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+      <div className={cn(cardCls, 'p-5 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm')}>
         {[
           { label: 'Nombre', value: empresa.nombre },
           { label: 'NIT', value: empresa.nit },

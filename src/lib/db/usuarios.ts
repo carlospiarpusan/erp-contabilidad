@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase/service'
 import { getSupabaseServiceEnv } from '@/lib/supabase/config'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { TENANT_ROLE_OPTIONS } from '@/lib/auth/permissions'
@@ -113,7 +113,7 @@ export async function crearUsuario(
   const { id } = await res.json()
   
   // Usar adminClient para saltar RLS al actualizar el perfil recién creado
-  const adminClient = createAdminClient(url, serviceRoleKey)
+  const adminClient = createServiceClient()
   const { error: updateError } = await adminClient
     .from('usuarios')
     .update({ nombre, rol_id, cedula, debe_cambiar_password: true })
@@ -125,8 +125,7 @@ export async function crearUsuario(
 /** Busca el email de un usuario por su cédula (para login con cédula).
  *  Usa service role porque durante el login no hay sesión y RLS bloquearía la query. */
 export async function buscarEmailPorCedula(cedula: string): Promise<string | null> {
-  const { url, serviceRoleKey } = getSupabaseServiceEnv()
-  const admin = createAdminClient(url, serviceRoleKey)
+  const admin = createServiceClient()
 
   const { data, error } = await admin
     .from('usuarios')
@@ -143,8 +142,7 @@ export async function buscarEmailPorCedula(cedula: string): Promise<string | nul
 /** Marca que el usuario ya cambió su contraseña.
  *  Usa service role para garantizar que el update funcione sin importar las políticas RLS. */
 export async function marcarPasswordCambiado(userId: string) {
-  const { url, serviceRoleKey } = getSupabaseServiceEnv()
-  const admin = createAdminClient(url, serviceRoleKey)
+  const admin = createServiceClient()
   const { error } = await admin
     .from('usuarios')
     .update({ debe_cambiar_password: false })

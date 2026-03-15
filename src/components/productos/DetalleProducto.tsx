@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { FormProducto } from './FormProducto'
 import { AjusteStock } from './AjusteStock'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { hasLowStock, isLowStock } from '@/lib/utils/stock'
 import {
   Package, Pencil, ArrowUpCircle, ArrowDownCircle, RefreshCw,
@@ -168,7 +168,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stock por bodega */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
             <Warehouse className="h-4 w-4 text-blue-500" /> Stock por bodega
           </h3>
@@ -198,7 +198,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
         </div>
 
         {/* Variantes */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
             <Layers className="h-4 w-4 text-purple-500" /> Variantes
           </h3>
@@ -219,7 +219,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
         </div>
 
         {/* Info adicional */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
             <TrendingUp className="h-4 w-4 text-green-500" /> Información
           </h3>
@@ -259,7 +259,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       </div>
 
       {/* Movimientos */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={cn(cardCls, 'p-5')}>
         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
           <Clock className="h-4 w-4 text-gray-400" /> Últimos movimientos de inventario
         </h3>

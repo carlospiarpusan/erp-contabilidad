@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit2, Check, X, ExternalLink } from 'lucide-react'
+import { cn, cardCls } from '@/utils/cn'
 
 interface Transportadora {
   id: string; nombre: string; whatsapp: string | null; url_rastreo: string | null; activa: boolean
@@ -74,7 +75,7 @@ export function FormTransportadoras({ transportadoras: inicial }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+    <div className={cn(cardCls, 'overflow-hidden')}>
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
         <h3 className="text-sm font-semibold text-gray-700">{inicial.length} transportadora{inicial.length !== 1 ? 's' : ''}</h3>
         <Button size="sm" variant="outline" onClick={() => setAdding(true)} disabled={adding}>

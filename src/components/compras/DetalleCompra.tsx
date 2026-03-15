@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha, cardCls , cn } from '@/utils/cn'
 import Link from 'next/link'
 import { ShoppingCart, Truck, Warehouse, CheckCircle, XCircle, CreditCard, Printer } from 'lucide-react'
 
@@ -159,7 +159,7 @@ export function DetalleCompra({ compra, formasPago }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Info proveedor */}
         <div className="lg:col-span-1 flex flex-col gap-4">
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+          <div className={`${cardCls} p-4`}>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Truck className="h-4 w-4 text-orange-500" /> Proveedor
             </h3>
@@ -172,7 +172,7 @@ export function DetalleCompra({ compra, formasPago }: Props) {
               {compra.proveedor?.telefono && <dd className="text-gray-500">{compra.proveedor.telefono}</dd>}
             </dl>
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+          <div className={`${cardCls} p-4`}>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Warehouse className="h-4 w-4 text-gray-400" /> Recepción
             </h3>
@@ -184,7 +184,7 @@ export function DetalleCompra({ compra, formasPago }: Props) {
         </div>
 
         {/* Líneas */}
-        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn('lg:col-span-2', cardCls, 'p-5')}>
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Artículos recibidos</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -224,7 +224,7 @@ export function DetalleCompra({ compra, formasPago }: Props) {
 
       {/* Pagos */}
       {(compra.recibos ?? []).length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-green-500" /> Pagos realizados
           </h3>

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId } from '@/lib/db/maestros'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import Link from 'next/link'
 import { ChevronLeft, AlertTriangle } from 'lucide-react'
 
@@ -97,7 +97,7 @@ export default async function CuentasPorPagarPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {grupos.map(({ proveedor, facturas, total: totProv }) => (
-            <div key={proveedor?.id ?? '__sin__'} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+            <div key={proveedor?.id ?? '__sin__'} className={cn(cardCls, 'overflow-hidden')}>
               <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
                 <div>
                   <p className="font-semibold text-gray-800 dark:text-white text-sm">{proveedor?.razon_social ?? 'Sin proveedor'}</p>

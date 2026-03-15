@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Wrench, ChevronRight, CheckCircle, XCircle } from 'lucide-react'
-import { formatFecha } from '@/utils/cn'
+import { formatFecha , cardCls , cn } from '@/utils/cn'
 
 interface Servicio {
   id: string; numero: number; tipo: string; estado: string; prioridad: string
@@ -104,7 +104,7 @@ export function DetalleServicio({ servicio }: Props) {
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={cn(cardCls, 'p-5')}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100">
@@ -159,7 +159,7 @@ export function DetalleServicio({ servicio }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cliente */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Cliente</p>
           <p className="font-semibold text-gray-900">{servicio.cliente?.razon_social ?? '—'}</p>
           {servicio.cliente?.numero_documento && <p className="text-sm text-gray-500 mt-0.5">{servicio.cliente.numero_documento}</p>}
@@ -168,7 +168,7 @@ export function DetalleServicio({ servicio }: Props) {
         </div>
 
         {/* Descripción del servicio */}
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Servicio solicitado</p>
           <p className="text-gray-800">{servicio.servicio}</p>
           {servicio.direccion && (
@@ -181,7 +181,7 @@ export function DetalleServicio({ servicio }: Props) {
       </div>
 
       {/* Notas técnicas */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={cn(cardCls, 'p-5')}>
         <p className="text-xs font-semibold text-gray-500 uppercase mb-4">Notas técnicas</p>
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">

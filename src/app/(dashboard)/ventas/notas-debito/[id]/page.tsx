@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { TrendingUp, Printer, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
@@ -66,7 +66,7 @@ export default async function NotaDebitoDetailPage({ params }: { params: Promise
 
       {/* Info grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <p className="text-xs font-medium text-gray-500 mb-2">CLIENTE</p>
           <p className="font-semibold text-gray-900 dark:text-white">{cliente?.razon_social ?? '—'}</p>
           <p className="text-sm text-gray-500">{cliente?.tipo_documento} {cliente?.numero_documento}</p>
@@ -92,7 +92,7 @@ export default async function NotaDebitoDetailPage({ params }: { params: Promise
       </div>
 
       {/* Líneas */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={cn(cardCls, 'overflow-hidden')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
             <tr>
@@ -119,7 +119,7 @@ export default async function NotaDebitoDetailPage({ params }: { params: Promise
 
       {/* Totales */}
       <div className="flex justify-end">
-        <div className="w-64 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 space-y-2 text-sm">
+        <div className={cn('w-64', cardCls, 'p-4 space-y-2 text-sm')}>
           <div className="flex justify-between text-gray-600">
             <span>Subtotal</span><span className="font-mono">{formatCOP(nd.subtotal)}</span>
           </div>

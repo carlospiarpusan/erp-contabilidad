@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, FileCheck, XCircle } from 'lucide-react'
+import { cardCls } from '@/utils/cn'
 
 interface Props {
   facturaId: string
@@ -58,7 +59,7 @@ export function GestionDianFactura({ facturaId, dianEstado, cufe, qrUrl }: Props
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+    <div className={`${cardCls} p-4`}>
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Facturación electrónica (DIAN)</h3>
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTADO_COLOR[dianEstado ?? ''] ?? 'bg-gray-100 text-gray-600'}`}>

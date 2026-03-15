@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha, cardCls } from '@/utils/cn'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -58,7 +58,7 @@ export function ListaGastos({ gastos: inicial, total }: Props) {
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={`overflow-x-auto ${cardCls}`}>
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>

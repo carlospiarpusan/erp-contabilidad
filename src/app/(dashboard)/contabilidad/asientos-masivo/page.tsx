@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Zap, RefreshCw, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { cn, cardCls } from '@/utils/cn'
 
 interface Pendiente { tipo: string; pendientes: number }
 interface Generado  { tipo: string; documento: string; asiento_id: string }
@@ -86,7 +87,7 @@ export default function AsientosMasivoPage() {
       </div>
 
       {/* Estado pendientes */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={cn(cardCls, 'p-5')}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Documentos sin asiento contable</h2>
           <button onClick={cargarPendientes} disabled={cargando}
@@ -156,7 +157,7 @@ export default function AsientosMasivoPage() {
 
       {/* Resultados */}
       {generados !== null && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <div className="flex items-center gap-2 mb-4">
             <CheckCircle className="h-5 w-5 text-emerald-600" />
             <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">

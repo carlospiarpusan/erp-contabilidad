@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getPyG } from '@/lib/db/informes'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import { TrendingUp, Download } from 'lucide-react'
 import Link from 'next/link'
 
@@ -29,7 +29,7 @@ function SeccionPyG({
   colorClass: string
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+    <div className={cn(cardCls, 'p-5')}>
       <h3 className={`font-bold text-sm uppercase tracking-wide mb-3 ${colorClass}`}>{titulo}</h3>
       <table className="w-full text-sm">
         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">

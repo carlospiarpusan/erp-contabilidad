@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Save } from 'lucide-react'
+import { cn, cardCls } from '@/utils/cn'
 
 interface Tipo { tipo: string; label: string; desc: string }
 interface Cuenta { id: string; codigo: string; descripcion: string; nivel: number }
@@ -43,7 +44,7 @@ export function FormCuentasEspeciales({ tipos, mapaActual, cuentas }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+    <div className={cn(cardCls, 'overflow-hidden')}>
       <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 bg-violet-50 dark:bg-violet-900/10">
         <p className="text-xs text-violet-700 dark:text-violet-400">
           Estas cuentas se usan automáticamente al generar asientos contables. Asigna cuentas del nivel 4 (subcuentas).

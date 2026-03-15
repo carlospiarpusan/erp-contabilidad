@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { Upload, CheckCircle, XCircle, FileText, Download } from 'lucide-react'
 import { parseCSVText } from '@/lib/utils/csv'
+import { cn, cardCls } from '@/utils/cn'
 
 type Entidad = 'clientes' | 'proveedores' | 'productos' | 'facturas-compra'
 
@@ -155,7 +156,7 @@ export function ImportarCSV() {
       </div>
 
       {/* Formato esperado */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={cn(cardCls, 'p-5')}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Columnas del CSV para {entidad}</h3>
           <button onClick={descargarEjemplo}
@@ -194,7 +195,7 @@ export function ImportarCSV() {
 
       {/* Preview */}
       {filas.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+        <div className={cn(cardCls, 'overflow-hidden')}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Vista previa — {filas.length} fila{filas.length !== 1 ? 's' : ''} detectadas
@@ -245,7 +246,7 @@ export function ImportarCSV() {
 
       {/* Resultados */}
       {completado && resultados.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={cn(cardCls, 'p-5')}>
           <div className="flex gap-6 mb-4">
             <div className="flex items-center gap-2 text-emerald-600">
               <CheckCircle className="h-5 w-5" />

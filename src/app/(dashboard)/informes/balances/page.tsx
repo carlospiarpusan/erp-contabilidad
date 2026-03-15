@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getInformeBalances } from '@/lib/db/informes'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import { BarChart3 } from 'lucide-react'
 
 interface PageProps {
@@ -75,7 +75,7 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
       )}
 
       {/* Gráfico de barras mensual */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-6">
+      <div className={cn(cardCls, 'p-6')}>
         <h3 className="text-sm font-semibold text-gray-700 mb-4">Evolución mensual {anio}</h3>
         <div className="flex items-end gap-2 h-48">
           {meses.map(m => (
@@ -112,7 +112,7 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla mensual con comparativa año anterior */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
+      <div className={cn(cardCls, 'overflow-x-auto')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

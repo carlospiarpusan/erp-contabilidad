@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/modal'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { UserPlus, UserCheck, UserX } from 'lucide-react'
+import { cn, cardCls } from '@/utils/cn'
 
 
 
@@ -75,7 +76,7 @@ export function ListaUsuarios({ usuarios: init, roles }: Props) {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={cn('overflow-hidden', cardCls)}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>

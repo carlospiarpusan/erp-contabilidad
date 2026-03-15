@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha, cardCls } from '@/utils/cn'
 import type { FormaPagoRecaudoVenta, SistecreditoMesPendiente } from '@/lib/db/ventas'
 
 interface Props {
@@ -95,7 +95,7 @@ export function PagoMensualSistecredito({ meses: initialMeses, formasPago }: Pro
 
   return (
     <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-4`}>
         <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Meses pendientes</h2>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           Selecciona el mes vendido que Sistecrédito ya te pagó.
@@ -138,7 +138,7 @@ export function PagoMensualSistecredito({ meses: initialMeses, formasPago }: Pro
       <div className="flex flex-col gap-6">
         {mesSeleccionado && (
           <>
-            <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+            <form onSubmit={handleSubmit} className={`${cardCls} p-5`}>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800/70">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Mes de venta</p>
@@ -213,7 +213,7 @@ export function PagoMensualSistecredito({ meses: initialMeses, formasPago }: Pro
               </div>
             </form>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+            <div className={`${cardCls} p-5`}>
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Facturas incluidas</h2>

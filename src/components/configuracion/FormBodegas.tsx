@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Plus, Star, Edit2, Check, X } from 'lucide-react'
+import { cn, cardCls } from '@/utils/cn'
 
 interface Bodega {
   id: string; codigo: string | null; nombre: string; principal: boolean; activa: boolean
@@ -74,7 +75,7 @@ export function FormBodegas({ bodegas: inicial }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={cn(cardCls, 'overflow-hidden')}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h3 className="text-sm font-semibold text-gray-700">{bodegas.length} bodega{bodegas.length !== 1 ? 's' : ''}</h3>
           <Button size="sm" variant="outline" onClick={() => setAdding(true)} disabled={adding}>

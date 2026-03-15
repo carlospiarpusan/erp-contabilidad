@@ -1,29 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-
-const SELECT_PEDIDO = `
-  id, numero, prefijo, fecha, fecha_vencimiento, estado, subtotal, total_iva, total_descuento, total, observaciones, created_at,
-  cliente:cliente_id(id, razon_social, numero_documento, email, telefono),
-  bodega:bodega_id(id, nombre)
-`
-const SELECT_LINEA = `
-  id, descripcion, cantidad, precio_unitario, descuento_porcentaje, subtotal, total_iva, total,
-  producto:producto_id(id, codigo, descripcion, precio_venta),
-  impuesto:impuesto_id(id, descripcion, porcentaje)
-`
-
-type PedidosFilters = {
-  estado?: string
-  desde?: string
-  hasta?: string
-}
-
-function applyPedidosFilters<T>(query: T, params: PedidosFilters) {
-  let nextQuery = query as any
-  if (params.estado) nextQuery = nextQuery.eq('estado', params.estado)
-  if (params.desde) nextQuery = nextQuery.gte('fecha', params.desde)
-  if (params.hasta) nextQuery = nextQuery.lte('fecha', params.hasta)
-  return nextQuery as T
-}
+import { SELECT_DOC_HEADER, SELECT_DOC_LINEA, applyDateFilters } from './shared'
 
 export async function getPedidos(params?: {
   estado?: string; desde?: string; hasta?: string; limit?: number; offset?: number
@@ -31,10 +7,10 @@ export async function getPedidos(params?: {
   const supabase = await createClient()
   const { estado, desde, hasta, limit = 50, offset = 0 } = params ?? {}
 
-  const q = applyPedidosFilters(
+  const q = applyDateFilters(
     supabase
       .from('documentos')
-      .select(SELECT_PEDIDO, { count: 'exact' })
+      .select(SELECT_DOC_HEADER, { count: 'exact' })
       .eq('tipo', 'pedido')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1),
@@ -46,19 +22,21 @@ export async function getPedidos(params?: {
   return { pedidos: data ?? [], total: count ?? 0 }
 }
 
-export async function getResumenPedidos(params?: PedidosFilters) {
+export async function getResumenPedidos(params?: {
+  estado?: string; desde?: string; hasta?: string
+}) {
   const supabase = await createClient()
   const filters = params ?? {}
 
   const [countRes, rowsRes] = await Promise.all([
-    applyPedidosFilters(
+    applyDateFilters(
       supabase
         .from('documentos')
         .select('id', { count: 'exact', head: true })
         .eq('tipo', 'pedido'),
       filters
     ),
-    applyPedidosFilters(
+    applyDateFilters(
       supabase
         .from('documentos')
         .select('estado, total')
@@ -85,7 +63,7 @@ export async function getPedidoById(id: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('documentos')
-    .select(`${SELECT_PEDIDO}, lineas:documentos_lineas(${SELECT_LINEA})`)
+    .select(`${SELECT_DOC_HEADER}, lineas:documentos_lineas(${SELECT_DOC_LINEA})`)
     .eq('id', id).eq('tipo', 'pedido').single()
   if (error) throw error
   return data

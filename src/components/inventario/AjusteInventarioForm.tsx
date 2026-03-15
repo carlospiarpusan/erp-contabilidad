@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, CheckCircle, Plus, Minus } from 'lucide-react'
+import { cardCls } from '@/utils/cn'
 
 interface ProductoSimple {
   id: string
@@ -172,7 +173,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-4`}>
         <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Bodega</label>
         <select
           value={bodegaId}
@@ -187,7 +188,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
         </select>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-4`}>
         <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Agregar producto</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -220,7 +221,7 @@ export function AjusteInventarioForm({ bodegas }: Props) {
       </div>
 
       {filas.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className={`overflow-hidden ${cardCls}`}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50 dark:border-gray-800 dark:bg-gray-800/50">

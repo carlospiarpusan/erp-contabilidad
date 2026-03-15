@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { FormRecibo } from './FormRecibo'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha, cardCls } from '@/utils/cn'
 import Link from 'next/link'
 import { FileText, User, CreditCard, Warehouse, CheckCircle, XCircle, Printer, MessageCircle } from 'lucide-react'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
@@ -154,7 +154,7 @@ export function DetalleFactura({ factura, formasPago }: Props) {
           { label: 'Total',      value: formatCOP(factura.total),    color: 'text-blue-700 text-xl' },
           { label: 'Saldo',      value: formatCOP(saldo),            color: saldo > 0 ? 'text-orange-600' : 'text-green-700' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+          <div key={k.label} className={`${cardCls} p-4`}>
             <p className="text-xs text-gray-500">{k.label}</p>
             <p className={`font-bold mt-1 ${k.color}`}>{k.value}</p>
           </div>
@@ -164,7 +164,7 @@ export function DetalleFactura({ factura, formasPago }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Info cliente + factura */}
         <div className="lg:col-span-1 flex flex-col gap-4">
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+          <div className={`${cardCls} p-4`}>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <User className="h-4 w-4 text-blue-500" /> Cliente
             </h3>
@@ -177,7 +177,7 @@ export function DetalleFactura({ factura, formasPago }: Props) {
               {factura.cliente?.telefono && <dd className="text-gray-500">{factura.cliente.telefono}</dd>}
             </dl>
           </div>
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+          <div className={`${cardCls} p-4`}>
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Warehouse className="h-4 w-4 text-gray-400" /> Datos de despacho
             </h3>
@@ -198,7 +198,7 @@ export function DetalleFactura({ factura, formasPago }: Props) {
         </div>
 
         {/* Líneas */}
-        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={`lg:col-span-2 ${cardCls} p-5`}>
           <h3 className="text-sm font-semibold text-gray-700 mb-4">Artículos</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -238,7 +238,7 @@ export function DetalleFactura({ factura, formasPago }: Props) {
 
       {/* Recibos */}
       {(factura.recibos ?? []).length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+        <div className={`${cardCls} p-5`}>
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-green-500" /> Pagos registrados
           </h3>

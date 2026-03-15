@@ -20,6 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { canAccessModule, getRoleLabel, type AppModule } from '@/lib/auth/permissions'
 import { getSession } from '@/lib/auth/session'
+import { cardCls } from '@/utils/cn'
 
 type HelpCard = {
   title: string

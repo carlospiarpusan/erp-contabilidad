@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { RemoteLookup } from '@/components/ui/remote-lookup'
+import { cardCls } from '@/utils/cn'
 
 interface ClienteOption {
   id: string
@@ -35,7 +36,7 @@ export function FiltrosInformeFacturas({
   const [selectedClienteLabel, setSelectedClienteLabel] = useState(clienteLabel ?? '')
 
   return (
-    <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+    <form className={`flex flex-wrap gap-3 ${cardCls} p-4`}>
       <input type="hidden" name="cliente_id" value={selectedClienteId} />
 
       <div className="flex flex-col gap-1">

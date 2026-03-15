@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 import { Plus, Trash2 } from 'lucide-react'
 
 interface Impuesto {
@@ -145,7 +145,7 @@ export function FormNotaDebito({ impuestos }: { impuestos: Impuesto[] }) {
     <form onSubmit={guardar} className="flex flex-col gap-6">
 
       {/* Cliente */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Cliente *</p>
         {cliente ? (
           <div className="flex items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 px-4 py-3">
@@ -169,7 +169,7 @@ export function FormNotaDebito({ impuestos }: { impuestos: Impuesto[] }) {
       </div>
 
       {/* Factura origen (opcional) */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-5">
+      <div className={`${cardCls} p-5`}>
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Factura de referencia <span className="text-gray-400 font-normal">(opcional)</span></p>
         {facturaId ? (
           <div className="flex items-center justify-between rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 px-4 py-2">
@@ -196,7 +196,7 @@ export function FormNotaDebito({ impuestos }: { impuestos: Impuesto[] }) {
       </div>
 
       {/* Líneas */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={`${cardCls} overflow-hidden`}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Líneas de cargo</p>
           <button type="button" onClick={agregarLinea}

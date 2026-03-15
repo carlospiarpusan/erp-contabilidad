@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getAsientos } from '@/lib/db/contabilidad'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { RevertirAsientoButton } from '@/components/contabilidad/RevertirAsientoButton'
@@ -85,13 +85,13 @@ export default async function AsientosPage({ searchParams }: PageProps) {
 
       <div className="flex flex-col gap-4">
         {asientos.length === 0 ? (
-          <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-10 text-center text-gray-400">
+          <div className={cn(cardCls, 'p-10 text-center text-gray-400')}>
             No hay asientos contables
           </div>
         ) : asientos.map((a) => {
           const lineas = (a.lineas ?? []) as unknown as { id: string; descripcion?: string | null; debe: number; haber: number; cuenta?: { codigo: string; descripcion: string } | null }[]
           return (
-            <div key={a.id} className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <div key={a.id} className={cn('overflow-x-auto', cardCls)}>
               <div className="min-w-[980px]">
                 {/* Header */}
                 <div className="grid grid-cols-[110px_120px_minmax(220px,1fr)_140px_200px] items-start gap-3 border-b border-gray-100 px-4 py-3 dark:border-gray-800">

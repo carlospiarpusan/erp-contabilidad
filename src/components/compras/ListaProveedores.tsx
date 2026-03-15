@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Truck, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Search } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
+import { cn, cardCls } from '@/utils/cn'
 
 interface Proveedor {
   id: string
@@ -235,7 +236,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
       )}
 
       {/* Tabla */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={cn('overflow-x-auto', cardCls)}>
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>

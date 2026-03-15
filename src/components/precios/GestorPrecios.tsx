@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/ui/modal'
 import { RemoteLookup } from '@/components/ui/remote-lookup'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import { Plus, Pencil, Trash2, Tag } from 'lucide-react'
 
 interface Precio {
@@ -178,7 +178,7 @@ export function GestorPrecios({ precios: init, grupos }: Props) {
       ) : (
         <div className="flex flex-col gap-6">
           {Object.entries(agrupados).map(([nombre, items]) => (
-            <div key={nombre} className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <div key={nombre} className={cn('overflow-hidden', cardCls)}>
               <div className="flex items-center justify-between border-b border-blue-100 bg-blue-50 px-5 py-4">
                 <div>
                   <h3 className="font-semibold text-blue-900">{nombre}</h3>

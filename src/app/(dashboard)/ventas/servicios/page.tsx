@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
-import { formatFecha } from '@/utils/cn'
+import { formatFecha , cardCls } from '@/utils/cn'
 import { Badge } from '@/components/ui/badge'
 import { Wrench, Plus } from 'lucide-react'
 import Link from 'next/link'
@@ -97,7 +97,7 @@ export default async function ServiciosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabs + tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={cardCls}>
         <div className="flex flex-wrap gap-1 p-2 border-b border-gray-100">
           {TABS.map(t => (
             <Link key={t.key} href={t.key ? `/ventas/servicios?estado=${t.key}` : '/ventas/servicios'}

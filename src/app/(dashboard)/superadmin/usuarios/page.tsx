@@ -7,6 +7,7 @@ import { hasSupabaseServiceEnv } from '@/lib/supabase/config'
 import { Users } from 'lucide-react'
 import { NuevoUsuarioForm } from '@/components/superadmin/NuevoUsuarioForm'
 import { GestionarUsuario } from '@/components/superadmin/GestionarUsuario'
+import { cn, cardCls } from '@/utils/cn'
 
 function adminClient() {
   return createServiceClient()
@@ -55,7 +56,7 @@ export default async function SuperadminUsuariosPage() {
         <NuevoUsuarioForm empresas={empresas ?? []} roles={roles ?? []} />
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
+      <div className={cn(cardCls, 'overflow-x-auto')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
             <tr>

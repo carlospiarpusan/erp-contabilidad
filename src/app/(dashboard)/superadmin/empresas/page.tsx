@@ -7,6 +7,7 @@ import { hasSupabaseServiceEnv } from '@/lib/supabase/config'
 import Link from 'next/link'
 import { Building2, Users, Plus } from 'lucide-react'
 import { NuevaEmpresaForm } from '@/components/superadmin/NuevaEmpresaForm'
+import { cn, cardCls } from '@/utils/cn'
 
 function adminClient() {
   return createServiceClient()
@@ -47,7 +48,7 @@ export default async function SuperadminEmpresasPage() {
       </div>
 
       {/* Tabla empresas */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={cn(cardCls, 'overflow-hidden')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
             <tr>

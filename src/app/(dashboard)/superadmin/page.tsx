@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth/session'
 import { getEstadisticasGlobales } from '@/lib/db/superadmin'
 import { hasSupabaseServiceEnv } from '@/lib/supabase/config'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import Link from 'next/link'
 import {
   Building2, Users, TrendingUp, ShoppingCart,
@@ -129,7 +129,7 @@ export default async function SuperadminHomePage() {
       </div>
 
       {/* Tabla de empresas */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+      <div className={cn(cardCls, 'overflow-hidden')}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-gray-400" />

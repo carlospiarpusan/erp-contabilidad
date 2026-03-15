@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { Plus, Pencil, ToggleLeft, ToggleRight } from 'lucide-react'
+import { cardCls } from '@/utils/cn'
 
 interface Acreedor {
   id: string; razon_social: string; contacto?: string | null
@@ -67,7 +68,7 @@ export function ListaAcreedores({ acreedores: inicial, total }: Props) {
       <div className="mb-4 flex justify-end">
         <Button size="sm" onClick={abrirNuevo}><Plus className="h-4 w-4 mr-1" /> Nuevo acreedor</Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={`overflow-x-auto ${cardCls}`}>
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50">
             <tr>

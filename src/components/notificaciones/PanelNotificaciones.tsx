@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Bell, CheckCheck, Loader2 } from 'lucide-react'
+import { cardCls } from '@/utils/cn'
 
 interface Notificacion {
   id: string
@@ -90,7 +91,7 @@ export function PanelNotificaciones() {
           No tienes notificaciones registradas.
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className={cardCls}>
           <ul className="divide-y divide-gray-100 dark:divide-gray-800">
             {items.map((n) => (
               <li key={n.id} className={`p-4 ${n.leida ? 'bg-white' : 'bg-blue-50/50'}`}>

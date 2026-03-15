@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getProductos, getFamilias } from '@/lib/db/productos'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import { LayoutGrid, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { hasLowStock } from '@/lib/utils/stock'
@@ -39,7 +39,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros */}
-      <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
+      <form className={cn('flex flex-wrap gap-3', cardCls, 'p-4')}>
         <div className="flex-1 min-w-48 flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Buscar</label>
           <input type="text" name="q" defaultValue={busqueda} placeholder="Código, descripción..."
@@ -63,7 +63,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
       {/* Cuadrícula */}
       {productos.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 p-12 text-center text-gray-400">
+        <div className={cn(cardCls, 'p-12 text-center text-gray-400')}>
           No se encontraron productos
         </div>
       ) : (
@@ -75,7 +75,7 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
 
             return (
               <Link key={p.id} href={`/productos/${p.id}`}
-                className="group flex flex-col rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden hover:shadow-md transition-shadow">
+                className={cn('group flex flex-col', cardCls, 'overflow-hidden hover:shadow-md transition-shadow')}>
                 {/* Placeholder imagen */}
                 <div className="h-36 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
                   <span className="text-3xl font-bold text-blue-200 select-none">

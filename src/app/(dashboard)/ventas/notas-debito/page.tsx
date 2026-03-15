@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls } from '@/utils/cn'
 import { TrendingUp, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -60,7 +60,7 @@ export default async function NotasDebitoPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros + tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={cardCls}>
         <form className="flex gap-2 p-3 border-b border-gray-100 dark:border-gray-800">
           <input type="date" name="desde" defaultValue={desde}
             className="h-8 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500" />

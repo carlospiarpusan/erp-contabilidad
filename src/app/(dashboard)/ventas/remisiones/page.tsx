@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getRemisiones, getEstadisticasRemisiones } from '@/lib/db/remisiones'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls } from '@/utils/cn'
 import { Badge } from '@/components/ui/badge'
 import { Truck, Plus } from 'lucide-react'
 import Link from 'next/link'
@@ -79,7 +79,7 @@ export default async function RemisionesPage({ searchParams }: PageProps) {
       </div>
 
       {/* Filtros y tabs */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className={cardCls}>
         <div className="flex flex-wrap gap-1 p-2 border-b border-gray-100">
           {TABS.map(t => {
             const params = new URLSearchParams({ desde, hasta })

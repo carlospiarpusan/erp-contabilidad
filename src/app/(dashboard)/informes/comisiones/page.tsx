@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId } from '@/lib/db/maestros'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP , cardCls , cn } from '@/utils/cn'
 import Link from 'next/link'
 import { ChevronLeft, Users } from 'lucide-react'
 
@@ -115,7 +115,7 @@ export default async function ComisionesPage({ searchParams }: PageProps) {
       {resumen.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-12">Sin ventas con colaborador asignado en este período</p>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+        <div className={cn(cardCls, 'overflow-hidden')}>
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">

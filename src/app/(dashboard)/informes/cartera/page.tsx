@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { getInformeCartera } from '@/lib/db/informes'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import Link from 'next/link'
 import { ChevronLeft, AlertTriangle } from 'lucide-react'
 import { RecordatorioCobroButton } from '@/components/shared/RecordatorioCobroButton'
@@ -66,7 +66,7 @@ export default async function CarteraPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {grupos.map(({ deudor, facturas, total: totCliente }) => (
-            <div key={deudor.id ?? '__sistecredito__'} className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+            <div key={deudor.id ?? '__sistecredito__'} className={cn(cardCls, 'overflow-hidden')}>
               <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-800/50">
                 <div>
                   <p className="font-semibold text-gray-800 dark:text-white text-sm">{deudor.razon_social}</p>

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { RemoteLookup } from '@/components/ui/remote-lookup'
-import { formatCOP } from '@/utils/cn'
+import { formatCOP, cardCls } from '@/utils/cn'
 import type { Bodega, Impuesto } from '@/types'
 import { AlertCircle, Plus, Trash2 } from 'lucide-react'
 
@@ -206,7 +206,7 @@ export function RemotePurchaseDocumentForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-5`}>
         <h3 className="mb-4 text-sm font-semibold text-gray-700">{mode === 'compra' ? 'Datos de la compra' : 'Informacion general'}</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-1 sm:col-span-2">
@@ -272,7 +272,7 @@ export function RemotePurchaseDocumentForm({
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+      <div className={`${cardCls} p-5`}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-700">{mode === 'compra' ? 'Articulos' : 'Productos a ordenar'}</h3>
           <Button type="button" size="sm" variant="outline" onClick={agregarLinea}>

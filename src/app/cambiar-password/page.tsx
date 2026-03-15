@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Lock, ShieldCheck } from 'lucide-react'
 
+const inputCls = 'flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900/80 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-amber-400'
+
 export default function CambiarPasswordPage() {
   const router = useRouter()
   const [newPassword, setNewPassword] = useState('')
@@ -73,7 +75,7 @@ export default function CambiarPasswordPage() {
                 required
                 autoFocus
                 minLength={6}
-                className="flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900/80 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-amber-400"
+                className={inputCls}
               />
             </div>
 
@@ -86,7 +88,7 @@ export default function CambiarPasswordPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="flex h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:border-gray-600 dark:bg-gray-900/80 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-amber-400"
+                className={inputCls}
               />
             </div>
 

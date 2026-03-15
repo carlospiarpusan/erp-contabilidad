@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Pencil, Check, X } from 'lucide-react'
+import { cardCls , cn } from '@/utils/cn'
 
 interface Consecutivo {
   id: string; tipo: string; descripcion: string
@@ -45,7 +46,7 @@ export function GestionConsecutivos({ consecutivos: inicial }: Props) {
   const inputCls = 'rounded-lg border border-gray-200 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <div className={cn('overflow-x-auto', cardCls)}>
       <table className="w-full text-sm">
         <thead className="border-b border-gray-100 bg-gray-50">
           <tr>

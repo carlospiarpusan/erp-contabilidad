@@ -1,46 +1,20 @@
 import { createClient } from '@/lib/supabase/server'
-
-const SELECT_COTIZACION = `
-  id, numero, prefijo, fecha, fecha_vencimiento, estado, subtotal, total_iva, total_descuento, total, observaciones, created_at,
-  cliente:cliente_id(id, razon_social, numero_documento, email, telefono),
-  bodega:bodega_id(id, nombre)
-`
-
-const SELECT_LINEA = `
-  id, descripcion, cantidad, precio_unitario, descuento_porcentaje, subtotal, total_iva, total,
-  producto:producto_id(id, codigo, descripcion, precio_venta),
-  impuesto:impuesto_id(id, descripcion, porcentaje)
-`
-
-type CotizacionesFilters = {
-  busqueda?: string
-  estado?: string
-  desde?: string
-  hasta?: string
-}
-
-function applyCotizacionesFilters<T>(query: T, params: CotizacionesFilters) {
-  let nextQuery = query as any
-  if (params.estado) nextQuery = nextQuery.eq('estado', params.estado)
-  if (params.desde) nextQuery = nextQuery.gte('fecha', params.desde)
-  if (params.hasta) nextQuery = nextQuery.lte('fecha', params.hasta)
-  if (params.busqueda) nextQuery = nextQuery.or(`numero::text.ilike.%${params.busqueda}%`)
-  return nextQuery as T
-}
+import { SELECT_DOC_HEADER, SELECT_DOC_LINEA, applyDateFilters } from './shared'
 
 // ── Cotizaciones ─────────────────────────────────────────────────────────────
 
-export async function getCotizaciones(params?: CotizacionesFilters & {
+export async function getCotizaciones(params?: {
+  busqueda?: string; estado?: string; desde?: string; hasta?: string
   limit?: number
   offset?: number
 }) {
   const supabase = await createClient()
   const { busqueda, estado, desde, hasta, limit = 50, offset = 0 } = params ?? {}
 
-  const q = applyCotizacionesFilters(
+  const q = applyDateFilters(
     supabase
       .from('documentos')
-      .select(SELECT_COTIZACION, { count: 'exact' })
+      .select(SELECT_DOC_HEADER, { count: 'exact' })
       .eq('tipo', 'cotizacion')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1),
@@ -52,19 +26,21 @@ export async function getCotizaciones(params?: CotizacionesFilters & {
   return { cotizaciones: data ?? [], total: count ?? 0 }
 }
 
-export async function getResumenCotizaciones(params?: CotizacionesFilters) {
+export async function getResumenCotizaciones(params?: {
+  busqueda?: string; estado?: string; desde?: string; hasta?: string
+}) {
   const supabase = await createClient()
   const filters = params ?? {}
 
   const [countRes, rowsRes] = await Promise.all([
-    applyCotizacionesFilters(
+    applyDateFilters(
       supabase
         .from('documentos')
         .select('id', { count: 'exact', head: true })
         .eq('tipo', 'cotizacion'),
       filters
     ),
-    applyCotizacionesFilters(
+    applyDateFilters(
       supabase
         .from('documentos')
         .select('estado, total')
@@ -91,7 +67,7 @@ export async function getCotizacionById(id: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('documentos')
-    .select(`${SELECT_COTIZACION}, lineas:documentos_lineas(${SELECT_LINEA})`)
+    .select(`${SELECT_DOC_HEADER}, lineas:documentos_lineas(${SELECT_DOC_LINEA})`)
     .eq('id', id).eq('tipo', 'cotizacion').single()
   if (error) throw error
   return data
@@ -186,7 +162,7 @@ export async function getOrdenCompraById(id: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('documentos')
-    .select(`${SELECT_ORDEN}, lineas:documentos_lineas(${SELECT_LINEA})`)
+    .select(`${SELECT_ORDEN}, lineas:documentos_lineas(${SELECT_DOC_LINEA})`)
     .eq('id', id).eq('tipo', 'orden_compra').single()
   if (error) throw error
   return data

@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { getInformeFacturas } from '@/lib/db/informes'
 import { getClienteById } from '@/lib/db/clientes'
 import { FiltrosInformeFacturas } from '@/components/informes/FiltrosInformeFacturas'
-import { formatCOP, formatFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { FileText } from 'lucide-react'
 import Link from 'next/link'
 
@@ -71,7 +71,7 @@ export default async function InformeFacturasPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-x-auto">
+      <div className={cn(cardCls, 'overflow-x-auto')}>
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
