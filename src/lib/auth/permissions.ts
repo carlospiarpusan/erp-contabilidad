@@ -11,6 +11,7 @@ export type AppModule =
   | 'compras'
   | 'gastos'
   | 'contabilidad'
+  | 'tesoreria'
   | 'informes'
   | 'configuracion'
   | 'notificaciones'
@@ -77,6 +78,7 @@ export const MODULE_ACCESS = {
   compras: { read: ACCOUNTING_ROLES, manage: ACCOUNTING_ROLES },
   gastos: { read: ACCOUNTING_ROLES, manage: ACCOUNTING_ROLES },
   contabilidad: { read: ACCOUNTING_ROLES, manage: ACCOUNTING_ROLES },
+  tesoreria: { read: ACCOUNTING_ROLES, manage: ACCOUNTING_ROLES },
   informes: { read: INFORMES_ROLES, manage: INFORMES_ROLES },
   configuracion: { read: ADMIN_ROLES, manage: ADMIN_ROLES },
   notificaciones: { read: TENANT_ROLES, manage: TENANT_ROLES },
@@ -92,7 +94,8 @@ const PAGE_ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/compras', module: 'compras' },
   { prefix: '/gastos', module: 'gastos' },
   { prefix: '/informes', module: 'informes' },
-  { prefix: '/inventario/ajuste', module: 'inventario' },
+  { prefix: '/inventario', module: 'inventario' },
+  { prefix: '/tesoreria', module: 'tesoreria' },
   { prefix: '/notificaciones', module: 'notificaciones' },
   { prefix: '/productos', module: 'productos' },
   { prefix: '/clientes', module: 'clientes' },
@@ -109,7 +112,12 @@ const API_ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/api/usuarios', module: 'configuracion', exact: true },
   { prefix: '/api/contabilidad', module: 'contabilidad' },
   { prefix: '/api/ventas/recibos/sistecredito', module: 'contabilidad' },
-  { prefix: '/api/inventario/ajuste', module: 'inventario' },
+  { prefix: '/api/inventario', module: 'inventario' },
+  { prefix: '/api/tesoreria/pagos-proveedores', module: 'tesoreria' },
+  { prefix: '/api/tesoreria/cuentas-bancarias', module: 'tesoreria' },
+  { prefix: '/api/tesoreria/movimientos-bancarios', module: 'tesoreria' },
+  { prefix: '/api/tesoreria/conciliaciones', module: 'tesoreria' },
+  { prefix: '/api/tesoreria', module: 'tesoreria' },
   { prefix: '/api/compras', module: 'compras' },
   { prefix: '/api/gastos', module: 'gastos' },
   { prefix: '/api/clientes', module: 'clientes' },

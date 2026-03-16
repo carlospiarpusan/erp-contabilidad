@@ -1,0 +1,37 @@
+export const dynamic = 'force-dynamic'
+
+import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/auth/session'
+import { redirect } from 'next/navigation'
+import { Vault } from 'lucide-react'
+import { CajaDiaria } from '@/components/tesoreria/CajaDiaria'
+
+export default async function CajaDiariaPage() {
+  const session = await getSession()
+  if (!session) redirect('/login')
+
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('cajas')
+    .select('*')
+    .eq('empresa_id', session.empresa_id)
+    .order('nombre')
+
+  const cajas = (data ?? []) as { id: string; nombre: string; descripcion?: string }[]
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100">
+          <Vault className="h-5 w-5 text-teal-600" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Caja Diaria</h1>
+          <p className="text-sm text-gray-500">Apertura, cierre y movimientos de caja</p>
+        </div>
+      </div>
+
+      <CajaDiaria cajas={cajas} />
+    </div>
+  )
+}

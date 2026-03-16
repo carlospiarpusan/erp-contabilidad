@@ -1,8 +1,10 @@
 import type { ElementType } from 'react'
 import {
+  ArrowLeftRight,
   BarChart3,
   Bell,
   BookOpen,
+  Landmark,
   LayoutDashboard,
   Package,
   Receipt,
@@ -11,6 +13,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Users,
+  Warehouse,
 } from 'lucide-react'
 import { canAccessModule, getRolesForModule, type AppModule, type AppRole } from '@/lib/auth/permissions'
 
@@ -95,10 +98,19 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     children: [
       { label: 'Artículos', href: '/productos' },
       { label: 'Stock bajo', href: '/productos/stock-bajo' },
-      { label: 'Ajuste inventario', href: '/inventario/ajuste', module: 'inventario' },
       { label: 'Catálogo', href: '/productos/catalogo' },
       { label: 'Fabricantes', href: '/productos/fabricantes' },
       { label: 'Familias', href: '/productos/familias' },
+    ],
+  },
+  {
+    label: 'Inventario',
+    icon: Warehouse,
+    module: 'inventario',
+    children: [
+      { label: 'Kardex', href: '/inventario/kardex' },
+      { label: 'Traslados', href: '/inventario/traslados' },
+      { label: 'Ajuste inventario', href: '/inventario/ajuste' },
     ],
   },
   {
@@ -112,6 +124,17 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     ],
   },
   {
+    label: 'Tesorería',
+    icon: Landmark,
+    module: 'tesoreria',
+    children: [
+      { label: 'Caja Diaria', href: '/tesoreria/caja' },
+      { label: 'Cuentas Bancarias', href: '/tesoreria/cuentas-bancarias' },
+      { label: 'Conciliación Bancaria', href: '/tesoreria/conciliacion' },
+      { label: 'Pagos a Proveedores', href: '/tesoreria/pagos-proveedores' },
+    ],
+  },
+  {
     label: 'Contabilidad',
     icon: BookOpen,
     module: 'contabilidad',
@@ -119,6 +142,8 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
       { label: 'Asientos', href: '/contabilidad/asientos' },
       { label: 'PUC Cuentas', href: '/contabilidad/cuentas' },
       { label: 'Cuentas Especiales', href: '/contabilidad/cuentas-especiales' },
+      { label: 'Centros de Costo', href: '/contabilidad/centros-costo' },
+      { label: 'Retenciones', href: '/contabilidad/retenciones' },
       { label: 'Ejercicios', href: '/contabilidad/ejercicios' },
       { label: 'Impuestos', href: '/contabilidad/impuestos' },
       { label: 'Formas de Pago', href: '/contabilidad/formas-pago' },
