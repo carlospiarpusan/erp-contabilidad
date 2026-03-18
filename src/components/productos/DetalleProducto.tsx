@@ -242,7 +242,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
                 <dd className="text-gray-700 dark:text-gray-200">{(producto.impuesto as { porcentaje: number }).porcentaje}%</dd>
               </div>
             )}
-            {producto.precio_venta2 && (
+            {producto.precio_venta2 !== null && producto.precio_venta2 !== undefined && (
               <div className="flex justify-between">
                 <dt className="text-gray-500 dark:text-gray-400">P. mayorista</dt>
                 <dd className="text-gray-700 dark:text-gray-200">{formatCOP(producto.precio_venta2)}</dd>

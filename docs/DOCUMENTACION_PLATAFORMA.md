@@ -59,6 +59,7 @@ Navegacion y permisos se controlan desde `Sidebar` y validaciones de sesion.
 
 ### Informes
 - Balances, cartera, PyG, libro mayor, reportes por documentos y reportes de inventario.
+- Centro de exportaciones en `/informes/exportaciones` para descargar reportes y maestros desde un punto único.
 
 ### Configuracion
 - Empresa, usuarios, bodegas, transportadoras, auditoria e importaciones.
@@ -156,6 +157,14 @@ Flujo recomendado:
 3. Deploy preview en Vercel.
 4. Prueba funcional por modulo.
 5. Merge a `main`.
+
+## 9.1 Exportaciones
+
+Buenas prácticas implementadas:
+- Agrupación por tipo: operativas, contables y maestras.
+- Filtros previos a la descarga para periodos y cortes.
+- Formato consistente por endpoint y nombres de archivo previsibles.
+- Preparado para evolucionar a historial de exportaciones y formatos adicionales.
 
 ## 10. Documentacion complementaria
 

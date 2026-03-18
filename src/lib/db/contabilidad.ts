@@ -264,19 +264,6 @@ export async function updateConsecutivo(
   return data
 }
 
-// ── PUC CRUD ──────────────────────────────────────────────────────────────────
-
-export async function getCuentaPUCById(id: string) {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('cuentas_puc')
-    .select('id, codigo, descripcion, tipo, nivel, naturaleza, cuenta_padre_id, activa')
-    .eq('id', id)
-    .single()
-  if (error) throw error
-  return data
-}
-
 export async function createCuentaPUC(fields: {
   codigo: string
   descripcion: string

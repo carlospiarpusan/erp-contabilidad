@@ -4,6 +4,14 @@ import { getCompras, createCompra } from '@/lib/db/compras'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
 
+function getErrorStatus(error: unknown) {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const code = String((error as { code?: string }).code ?? '')
+    if (code === 'P0001' || code.startsWith('23')) return 400
+  }
+  return 500
+}
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession()
@@ -20,7 +28,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(result)
   } catch (e) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }
 
@@ -53,6 +61,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id }, { status: 201 })
   } catch (e) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }

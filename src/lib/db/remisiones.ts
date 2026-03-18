@@ -70,14 +70,13 @@ export async function getRemisionById(id: string) {
 }
 
 export async function createRemision(params: {
-  empresa_id: string; ejercicio_id: string; cliente_id: string
+  ejercicio_id: string; cliente_id: string
   bodega_id: string; fecha: string; vencimiento: string
   observaciones?: string
   lineas: { producto_id: string; impuesto_id?: string | null; descripcion?: string; cantidad: number; precio_unitario: number; descuento_porcentaje?: number }[]
 }) {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc('crear_remision', {
-    p_empresa_id: params.empresa_id,
     p_ejercicio_id: params.ejercicio_id,
     p_cliente_id: params.cliente_id,
     p_bodega_id: params.bodega_id,

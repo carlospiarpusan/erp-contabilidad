@@ -172,6 +172,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
       { label: 'Artículos', href: '/informes/articulos' },
       { label: 'Clientes', href: '/informes/clientes' },
       { label: 'Recibos', href: '/informes/recibos' },
+      { label: 'Exportaciones', href: '/informes/exportaciones' },
     ],
   },
   {

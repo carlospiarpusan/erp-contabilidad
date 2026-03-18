@@ -18,7 +18,7 @@ export default function ImportarFacturaElectronicaPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Importar factura electrónica</h1>
-          <p className="text-sm text-gray-500">Sube el XML DIAN de tu proveedor y actualiza inventario automáticamente</p>
+          <p className="text-sm text-gray-500">Sube el XML, ZIP o PDF del proveedor y actualiza inventario automáticamente</p>
         </div>
       </div>
 

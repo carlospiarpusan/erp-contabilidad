@@ -36,16 +36,6 @@ export async function getEjercicioActivo() {
   return data
 }
 
-export async function getEjercicios() {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('ejercicios')
-    .select('*')
-    .order('año', { ascending: false })
-  if (error) throw error
-  return data ?? []
-}
-
 export async function getColaboradores() {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -53,18 +43,6 @@ export async function getColaboradores() {
     .select('*')
     .eq('activo', true)
     .order('nombre')
-  if (error) throw error
-  return data ?? []
-}
-
-export async function getConsecutivosPorTipo(tipo: string) {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('consecutivos')
-    .select('*')
-    .eq('tipo', tipo)
-    .eq('activo', true)
-    .order('created_at')
   if (error) throw error
   return data ?? []
 }

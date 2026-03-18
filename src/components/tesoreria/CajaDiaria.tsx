@@ -58,6 +58,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
 
   /* ─── Derived ─── */
   const turnoActual = turnos.find(t => t.caja_id === cajaId && t.estado === 'abierto')
+  const turnoActualId = turnoActual?.id ?? ''
   const turnosHistoricos = turnos
     .filter(t => t.caja_id === cajaId && t.estado !== 'abierto')
     .slice(0, 10)
@@ -96,9 +97,9 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
   useEffect(() => { cargarTurnos() }, [cargarTurnos])
 
   useEffect(() => {
-    if (turnoActual) cargarMovimientos(turnoActual.id)
+    if (turnoActualId) cargarMovimientos(turnoActualId)
     else setMovimientos([])
-  }, [turnoActual?.id, cargarMovimientos])
+  }, [turnoActualId, cargarMovimientos])
 
   /* ─── Handlers ─── */
   async function crearCaja() {

@@ -1,15 +1,23 @@
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL
-const ANON_KEY      = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const SERVICE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY
+function requiredEnv(name) {
+  const value = process.env[name]?.trim()
+  if (!value) throw new Error(`Falta la variable de entorno requerida: ${name}`)
+  return value
+}
+
+const SUPABASE_URL = requiredEnv('NEXT_PUBLIC_SUPABASE_URL')
+const ANON_KEY = requiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+const SERVICE_KEY = requiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+const TEST_EMAIL = requiredEnv('TEST_LOGIN_EMAIL')
+const TEST_PASSWORD = requiredEnv('TEST_LOGIN_PASSWORD')
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { autoRefreshToken: false, persistSession: false } })
 const anon  = createClient(SUPABASE_URL, ANON_KEY)
 
 const { data: session, error: loginErr } = await anon.auth.signInWithPassword({
-  email: 'esperanzatengana@hotmail.com',
-  password: '27104393'
+  email: TEST_EMAIL,
+  password: TEST_PASSWORD
 })
 if (loginErr) { console.log('LOGIN ERROR:', loginErr.message); process.exit(1) }
 console.log('Login OK, user_id:', session.user.id)

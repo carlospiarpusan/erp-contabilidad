@@ -107,9 +107,10 @@ const PAGE_ROUTE_RULES: readonly RouteRule[] = [
 
 const API_ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/api/superadmin', module: 'superadmin' },
+  { prefix: '/api/perfil', module: 'perfil' },
   { prefix: '/api/auditoria', module: 'configuracion' },
   { prefix: '/api/configuracion', module: 'configuracion' },
-  { prefix: '/api/usuarios', module: 'configuracion', exact: true },
+  { prefix: '/api/usuarios', module: 'configuracion' },
   { prefix: '/api/contabilidad', module: 'contabilidad' },
   { prefix: '/api/ventas/recibos/sistecredito', module: 'contabilidad' },
   { prefix: '/api/inventario', module: 'inventario' },
@@ -127,9 +128,11 @@ const API_ROUTE_RULES: readonly RouteRule[] = [
   { prefix: '/api/email', module: 'ventas' },
   { prefix: '/api/import', module: 'configuracion' },
   { prefix: '/api/export/compras', module: 'compras' },
+  { prefix: '/api/export/proveedores', module: 'compras' },
   { prefix: '/api/export/pyg', module: 'contabilidad' },
   { prefix: '/api/export/balance-situacion', module: 'contabilidad' },
   { prefix: '/api/export/sumas-saldos', module: 'contabilidad' },
+  { prefix: '/api/export/clientes', module: 'clientes' },
   { prefix: '/api/export/inventario', module: 'productos' },
   { prefix: '/api/export/ventas', module: 'informes' },
   { prefix: '/api/informes', module: 'informes' },

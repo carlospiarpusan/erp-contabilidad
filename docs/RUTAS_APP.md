@@ -4,7 +4,7 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 
 ## Total
 
-- Paginas: 99
+- Paginas: 100
 
 ## Lista completa
 
@@ -57,6 +57,7 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 - `/informes/comisiones/page.tsx`
 - `/informes/cotizaciones/page.tsx`
 - `/informes/cuentas-por-pagar/page.tsx`
+- `/informes/exportaciones/page.tsx`
 - `/informes/facturas/page.tsx`
 - `/informes/libro-mayor/page.tsx`
 - `/informes/pedidos/page.tsx`

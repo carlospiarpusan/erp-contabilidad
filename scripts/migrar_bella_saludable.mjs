@@ -5,11 +5,18 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
-import { parse } from 'path'
 
 // ── Supabase Admin Client (service role — bypasa RLS) ──────────────────────────
-const SUPABASE_URL = 'https://ijsqelnhxmrryyxtsxfn.supabase.co'
-const SERVICE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlqc3FlbG5oeG1ycnl5eHRzeGZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjYwODMyNiwiZXhwIjoyMDg4MTg0MzI2fQ.yyLj8-1fZC7-lIth1nxoAWPdlSP-ZXy5eQA-njfGet0'
+function requiredEnv(name) {
+  const value = process.env[name]?.trim()
+  if (!value) throw new Error(`Falta la variable de entorno requerida: ${name}`)
+  return value
+}
+
+const SUPABASE_URL = requiredEnv('NEXT_PUBLIC_SUPABASE_URL')
+const SERVICE_KEY = requiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+const ADMIN_EMAIL = requiredEnv('MIGRAR_BELLA_SALUDABLE_ADMIN_EMAIL')
+const ADMIN_PASSWORD = requiredEnv('MIGRAR_BELLA_SALUDABLE_ADMIN_PASSWORD')
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false }
@@ -42,15 +49,15 @@ async function insert(table, rows, label) {
 async function crearUsuarioAuth() {
   log('Creando usuario en Supabase Auth…')
   const { data, error } = await admin.auth.admin.createUser({
-    email: 'esperanzatengana@hotmail.com',
-    password: '27104393',
+    email: ADMIN_EMAIL,
+    password: ADMIN_PASSWORD,
     email_confirm: true,
   })
   if (error) {
     if (error.message.includes('already been registered') || error.message.includes('already exists')) {
       log('Usuario ya existe, buscando…')
       const { data: list } = await admin.auth.admin.listUsers()
-      const user = list?.users?.find(u => u.email === 'esperanzatengana@hotmail.com')
+      const user = list?.users?.find(u => u.email === ADMIN_EMAIL)
       if (user) return user.id
       throw new Error('No se pudo encontrar el usuario existente')
     }
@@ -74,7 +81,7 @@ async function crearEmpresa() {
       departamento:'Nariño',
       pais:        'Colombia',
       telefono:    '3173321410',
-      email:       'esperanzatengana@hotmail.com',
+      email:       ADMIN_EMAIL,
       regimen:     'simplificado',
       tipo_org:    'persona_natural',
     }, { onConflict: 'nit' })
@@ -101,7 +108,7 @@ async function crearUsuarioTabla(userId, empresaId) {
     empresa_id: empresaId,
     rol_id:     rolId,
     nombre:     'Maria Esperanza Tengana',
-    email:      'esperanzatengana@hotmail.com',
+    email:      ADMIN_EMAIL,
     activo:     true,
   }, { onConflict: 'id' })
   if (error) throw error
@@ -181,7 +188,7 @@ async function seedDatosBase(eid) {
 
   // Colaboradores
   await insert('colaboradores', [
-    { empresa_id: eid, nombre: 'Maria Esperanza Tengana', email: 'esperanzatengana@hotmail.com', activo: true },
+    { empresa_id: eid, nombre: 'Maria Esperanza Tengana', email: ADMIN_EMAIL, activo: true },
     { empresa_id: eid, nombre: 'Martha Jurado', activo: true },
     { empresa_id: eid, nombre: 'Pilar Revelo',  activo: true },
   ], 'Colaboradores')
@@ -443,8 +450,7 @@ async function main() {
 
     console.log('\n=== MIGRACIÓN COMPLETADA ===')
     console.log(`Empresa ID: ${empresaId}`)
-    console.log(`Usuario:    esperanzatengana@hotmail.com`)
-    console.log(`Contraseña: 27104393`)
+    console.log(`Usuario ID: ${userId}`)
   } catch (err) {
     console.error('\n[ERROR]', err.message)
     process.exit(1)

@@ -34,7 +34,7 @@ export function FormPerfil({ usuario }: Props) {
     e.preventDefault()
     setSavingP(true)
     setMsgPerfil('')
-    const res = await fetch(`/api/usuarios/${usuario.id}`, {
+    const res = await fetch('/api/perfil', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre, telefono: telefono || null }),

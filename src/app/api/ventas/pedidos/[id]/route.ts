@@ -49,12 +49,16 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
         descripcion?: string | null; cantidad: number; precio_unitario: number; descuento_porcentaje: number
       }[]
 
-      const [empresa_id, ejercicio_id] = await Promise.all([getEmpresaId(), getEjercicioActivo()])
+      const [empresa_id, ejercicio] = await Promise.all([getEmpresaId(), getEjercicioActivo()])
+      if (!ejercicio?.id) {
+        return NextResponse.json({ error: 'No hay ejercicio activo' }, { status: 400 })
+      }
       const bodega = pedido.bodega as { id?: string } | null
       const hoy = new Date().toISOString().split('T')[0]
 
       const facturaId = await createFactura({
-        empresa_id, ejercicio_id,
+        empresa_id,
+        ejercicio_id: ejercicio.id,
         cliente_id:        (pedido.cliente as { id?: string } | null)?.id ?? '',
         bodega_id:         bodega?.id ?? '',
         forma_pago_id:     forma_pago_id ?? '',

@@ -5,6 +5,12 @@ import { puedeAcceder } from '@/lib/auth/session'
 import { revalidateTag } from 'next/cache'
 import { getInventarioStatsTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
 
+function normalizeOptionalPrice(value: unknown) {
+  if (value === '' || value == null) return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession()
@@ -48,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       familia_id:    rest.familia_id    || null,
       fabricante_id: rest.fabricante_id || null,
       impuesto_id:   rest.impuesto_id   || null,
-      precio_venta2: rest.precio_venta2 > 0 ? rest.precio_venta2 : null,
+      precio_venta2: normalizeOptionalPrice(rest.precio_venta2),
     }
     const producto = await updateProducto(id, datos)
     revalidateTag(getInventarioStatsTag(session.empresa_id), 'max')

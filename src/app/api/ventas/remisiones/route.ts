@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRemisiones, createRemision } from '@/lib/db/remisiones'
-import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
+import { getEjercicioActivo } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
@@ -34,10 +34,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Campos requeridos: cliente, bodega y al menos una línea' }, { status: 400 })
     }
 
-    const [empresa_id, ejercicio_id] = await Promise.all([getEmpresaId(), getEjercicioActivo()])
+    const ejercicio = await getEjercicioActivo()
+    if (!ejercicio?.id) {
+      return NextResponse.json({ error: 'No hay ejercicio activo' }, { status: 400 })
+    }
     const hoy = new Date().toISOString().split('T')[0]
     const id = await createRemision({
-      empresa_id, ejercicio_id, cliente_id, bodega_id,
+      ejercicio_id: ejercicio.id, cliente_id, bodega_id,
       fecha: fecha ?? hoy, vencimiento: vencimiento ?? hoy, observaciones, lineas,
     })
     return NextResponse.json({ id }, { status: 201 })

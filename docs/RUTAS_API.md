@@ -4,7 +4,12 @@ Inventario de endpoints detectados en `src/app/api`.
 
 ## Total
 
-- Endpoints: 95
+- Endpoints: 98
+
+## Notas relevantes
+
+- `/api/import/factura-electronica/parse/route.ts`: acepta `XML`, `ZIP` y `PDF`; soporta `AttachedDocument` DIAN con `Invoice` embebida y, si el ZIP incluye PDF, usa ese PDF para enriquecer codigos detallados del proveedor antes de homologar productos. Si se sube un `PDF` suelto, intenta importar cabecera y lineas desde el texto visible del documento.
+- `/api/import/factura-electronica/confirmar/route.ts`: exige todas las lineas resueltas, registra compatibilidades proveedor-producto, confirma la compra de forma atomica y sincroniza stock, precio de compra e IVA del producto.
 
 ## Lista completa
 
@@ -50,9 +55,11 @@ Inventario de endpoints detectados en `src/app/api`.
 - `/api/email/recordatorio-cobro/route.ts`
 - `/api/email/remision/route.ts`
 - `/api/export/balance-situacion/route.ts`
+- `/api/export/clientes/route.ts`
 - `/api/export/compras/route.ts`
 - `/api/export/inventario/route.ts`
 - `/api/export/pyg/route.ts`
+- `/api/export/proveedores/route.ts`
 - `/api/export/sumas-saldos/route.ts`
 - `/api/export/ventas/route.ts`
 - `/api/export/ventas-por-medio-pago/route.ts`
@@ -72,6 +79,7 @@ Inventario de endpoints detectados en `src/app/api`.
 - `/api/informes/cartera/route.ts`
 - `/api/inventario/ajuste/route.ts`
 - `/api/notificaciones/route.ts`
+- `/api/perfil/route.ts`
 - `/api/productos/[id]/route.ts`
 - `/api/productos/fabricantes/[id]/route.ts`
 - `/api/productos/fabricantes/route.ts`

@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { updatePerfilPropio, updateUsuario } from '@/lib/db/usuarios'
+import { updateUsuario } from '@/lib/db/usuarios'
 import { getSession } from '@/lib/auth/session'
 import { ROLE_IDS } from '@/lib/auth/permissions'
 import { z } from 'zod'
 
 const ROLES_USUARIOS_ADMIN = new Set(['admin'])
 const SUPERADMIN_ROLE_ID = ROLE_IDS.superadmin
-
-const selfPatchSchema = z.object({
-  nombre: z.string().trim().min(2).max(120).optional(),
-  telefono: z.string().trim().max(30).nullable().optional(),
-}).strict()
 
 const adminPatchSchema = z.object({
   nombre: z.string().trim().min(2).max(120).optional(),
@@ -28,17 +23,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const { id } = await params
     const rawBody: unknown = await req.json()
-    const isSelf = session.id === id
-
-    if (isSelf) {
-      const parsed = selfPatchSchema.safeParse(rawBody)
-      if (!parsed.success || Object.keys(parsed.data).length === 0) {
-        return NextResponse.json({ error: 'Solo puedes actualizar nombre o teléfono' }, { status: 400 })
-      }
-
-      const updated = await updatePerfilPropio(session.id, parsed.data)
-      return NextResponse.json(updated)
-    }
 
     if (!ROLES_USUARIOS_ADMIN.has(session.rol)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 })

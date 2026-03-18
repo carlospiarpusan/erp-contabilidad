@@ -289,26 +289,3 @@ export async function getResumenCliente(cliente_id: string) {
     ultimas_facturas: rows.slice(0, 5),
   }
 }
-
-// ── Deudores ──────────────────────────────────────────────────
-
-export async function getClienteDeudores(limit = 10) {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('documentos')
-    .select(`
-      cliente_id,
-      cliente:clientes(id, razon_social, telefono, email),
-      total,
-      forma_pago:forma_pago_id(descripcion),
-      fecha_vencimiento
-    `)
-    .eq('tipo', 'factura_venta')
-    .eq('estado', 'pendiente')
-    .lt('fecha_vencimiento', new Date().toISOString().split('T')[0])
-    .order('fecha_vencimiento')
-    .limit(limit)
-
-  if (error) throw error
-  return (data ?? []).filter((row) => !isSistecreditoFormaPago(row.forma_pago as { descripcion?: string } | null))
-}

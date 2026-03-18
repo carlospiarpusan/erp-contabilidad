@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 /supabase/.temp
+import-productos.js
 
 # debug
 npm-debug.log*
