@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { deleteProducto, getProductoById, updateProducto } from '@/lib/db/productos'
 import { getSession } from '@/lib/auth/session'
 import { puedeAcceder } from '@/lib/auth/session'
-import { revalidateTag } from 'next/cache'
-import { getInventarioStatsTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 function normalizeOptionalPrice(value: unknown) {
   if (value === '' || value == null) return null
@@ -57,8 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       precio_venta2: normalizeOptionalPrice(rest.precio_venta2),
     }
     const producto = await updateProducto(id, datos)
-    revalidateTag(getInventarioStatsTag(session.empresa_id), 'max')
-    revalidateTag(getStockBajoTag(session.empresa_id), 'max')
+    revalidateInventoryDependentViews(session.empresa_id)
     return NextResponse.json(producto)
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
@@ -75,8 +73,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     const { id } = await params
     const result = await deleteProducto(id)
-    revalidateTag(getInventarioStatsTag(session.empresa_id), 'max')
-    revalidateTag(getStockBajoTag(session.empresa_id), 'max')
+    revalidateInventoryDependentViews(session.empresa_id)
     return NextResponse.json(result)
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })

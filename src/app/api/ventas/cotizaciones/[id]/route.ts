@@ -4,6 +4,7 @@ import { createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 interface Ctx { params: Promise<{ id: string }> }
 
@@ -83,6 +84,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       await supabase.from('documentos').update({
         documento_origen_id: id,
       }).eq('id', facturaId)
+
+      revalidateInventoryDependentViews(empresa_id, { includeVentasStats: true })
 
       return NextResponse.json({ id: facturaId })
     }

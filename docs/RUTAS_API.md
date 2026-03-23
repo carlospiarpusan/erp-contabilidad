@@ -4,12 +4,14 @@ Inventario de endpoints detectados en `src/app/api`.
 
 ## Total
 
-- Endpoints: 98
+- Endpoints: 100
 
 ## Notas relevantes
 
 - `/api/import/factura-electronica/parse/route.ts`: acepta `XML`, `ZIP` y `PDF`; soporta `AttachedDocument` DIAN con `Invoice` embebida y, si el ZIP incluye PDF, usa ese PDF para enriquecer codigos detallados del proveedor antes de homologar productos. Si se sube un `PDF` suelto, intenta importar cabecera y lineas desde el texto visible del documento.
 - `/api/import/factura-electronica/confirmar/route.ts`: exige todas las lineas resueltas, registra compatibilidades proveedor-producto, confirma la compra de forma atomica y sincroniza stock, precio de compra e IVA del producto.
+- `/api/import/cuentas-puc/route.ts`: importa o actualiza cuentas PUC por `codigo`, con soporte para `codigo_padre`.
+- `/api/import/asientos-contables/route.ts`: agrupa lineas por `referencia` y crea asientos manuales balanceados usando `codigo_cuenta`.
 
 ## Lista completa
 
@@ -73,9 +75,11 @@ Nota: todas las rutas `/api/export/*` aceptan `format=csv|xlsx`; si no se envía
 - `/api/gastos/tipos/route.ts`
 - `/api/health/route.ts`
 - `/api/import/clientes/route.ts`
+- `/api/import/cuentas-puc/route.ts`
 - `/api/import/factura-electronica/confirmar/route.ts`
 - `/api/import/factura-electronica/parse/route.ts`
 - `/api/import/facturas-compra/route.ts`
+- `/api/import/asientos-contables/route.ts`
 - `/api/import/productos/route.ts`
 - `/api/import/proveedores/route.ts`
 - `/api/informes/cartera/route.ts`

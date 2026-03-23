@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getClientes, getGruposClientes, getEstadisticasClientes } from '@/lib/db/clientes'
 import { ListaClientes } from '@/components/clientes/ListaClientes'
-import { Users, UserCheck, CreditCard, UserX, Trophy, AlertCircle } from 'lucide-react'
+import { Users, UserCheck, CreditCard, UserX, Trophy, AlertCircle, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { cardCls, formatCOP } from '@/utils/cn'
@@ -97,12 +97,21 @@ export default async function ClientesPage({ searchParams }: PageProps) {
             <p className="text-sm text-gray-500">Gestión de clientes y grupos</p>
           </div>
         </div>
-        <Link
-          href="/clientes/grupos"
-          className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
-        >
-          Gestionar grupos →
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/configuracion/importar?entidad=clientes"
+            className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700 hover:bg-blue-100 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            Migrar / Importar
+          </Link>
+          <Link
+            href="/clientes/grupos"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
+          >
+            Gestionar grupos →
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

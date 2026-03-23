@@ -1,4 +1,4 @@
-import { strToU8, zipSync } from 'fflate'
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 
 export type ParsedCSV = {
   headers: string[]
@@ -19,6 +19,42 @@ function detectDelimiter(headerLine: string): ',' | ';' | '\t' {
 
 function normalize(value: string) {
   return value.trim().replace(/\r$/, '')
+}
+
+const HEADER_ALIASES: Record<string, string> = {
+  activa: 'activo',
+  codigo_de_barras: 'codigo_barras',
+  contacto_principal: 'contacto',
+  documento: 'numero_documento',
+  f_proveedor: 'fecha',
+  impuesto_iva: 'impuesto',
+  iva: 'impuesto',
+  n_factura_proveedor: 'numero_externo',
+  nit_cc: 'numero_documento',
+  no_factura_proveedor: 'numero_externo',
+  numero_factura_proveedor: 'numero_externo',
+  precio_compra: 'precio_compra',
+  precio_mayorista: 'precio_venta2',
+  precio_venta: 'precio_venta',
+  razon_social: 'razon_social',
+  stock_actual: 'stock_actual',
+  stock_inicial: 'stock_actual',
+  stock_minimo: 'stock_minimo',
+  telefono: 'telefono',
+  tipo_documento: 'tipo_documento',
+  unidad: 'unidad_medida',
+}
+
+function normalizeHeader(value: string) {
+  const normalized = value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_+/g, '_')
+
+  return HEADER_ALIASES[normalized] ?? normalized
 }
 
 function splitCSVLine(line: string, delimiter: string): string[] {
@@ -62,8 +98,7 @@ export function parseCSVText(input: string): ParsedCSV {
 
   const delimiter = detectDelimiter(lines[0])
   const headers = splitCSVLine(lines[0], delimiter)
-    .map((h) => h.toLowerCase())
-    .map((h) => h.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+    .map(normalizeHeader)
 
   const rows = lines.slice(1).map((line) => {
     const values = splitCSVLine(line, delimiter)
@@ -75,6 +110,144 @@ export function parseCSVText(input: string): ParsedCSV {
   })
 
   return { headers, rows, delimiter }
+}
+
+function getXmlFile(files: Record<string, Uint8Array>, path: string) {
+  const normalized = path.replace(/^\/+/, '').replace(/\\/g, '/')
+  return files[normalized] ?? null
+}
+
+function parseXmlDocument(xml: string) {
+  const parser = new DOMParser()
+  return parser.parseFromString(xml, 'application/xml')
+}
+
+function getElementsByLocalName(node: Document | Element, localName: string) {
+  return Array.from(node.getElementsByTagNameNS('*', localName))
+}
+
+function getFirstElementByLocalName(node: Document | Element, localName: string) {
+  return getElementsByLocalName(node, localName)[0] ?? null
+}
+
+function getNodeText(node: Element | null | undefined) {
+  if (!node) return ''
+  const textNodes = getElementsByLocalName(node, 't')
+  if (textNodes.length > 0) return textNodes.map((item) => item.textContent ?? '').join('')
+  return node.textContent ?? ''
+}
+
+function columnIndexFromRef(cellRef: string) {
+  const letters = cellRef.replace(/\d+/g, '').toUpperCase()
+  let index = 0
+
+  for (let i = 0; i < letters.length; i += 1) {
+    index = (index * 26) + (letters.charCodeAt(i) - 64)
+  }
+
+  return Math.max(index - 1, 0)
+}
+
+function readSharedStrings(files: Record<string, Uint8Array>) {
+  const shared = getXmlFile(files, 'xl/sharedStrings.xml')
+  if (!shared) return []
+
+  const xml = parseXmlDocument(strFromU8(shared))
+  return getElementsByLocalName(xml, 'si').map((item) => getNodeText(item))
+}
+
+function resolveWorksheetPath(files: Record<string, Uint8Array>) {
+  const workbookFile = getXmlFile(files, 'xl/workbook.xml')
+  const relsFile = getXmlFile(files, 'xl/_rels/workbook.xml.rels')
+  if (!workbookFile || !relsFile) {
+    throw new Error('El archivo XLSX no contiene workbook válido')
+  }
+
+  const workbookXml = parseXmlDocument(strFromU8(workbookFile))
+  const relsXml = parseXmlDocument(strFromU8(relsFile))
+
+  const firstSheet = getFirstElementByLocalName(workbookXml, 'sheet')
+  const relationId = firstSheet?.getAttribute('r:id') ?? firstSheet?.getAttribute('id')
+  if (!relationId) {
+    throw new Error('No se encontró una hoja dentro del XLSX')
+  }
+
+  const relation = getElementsByLocalName(relsXml, 'Relationship')
+    .find((item) => item.getAttribute('Id') === relationId)
+
+  const target = relation?.getAttribute('Target')
+  if (!target) {
+    throw new Error('No se pudo resolver la hoja principal del XLSX')
+  }
+
+  if (target.startsWith('/')) return target.slice(1)
+  if (target.startsWith('xl/')) return target
+  return `xl/${target.replace(/^\/+/, '')}`
+}
+
+function readWorksheetRows(files: Record<string, Uint8Array>, worksheetPath: string, sharedStrings: string[]) {
+  const worksheetFile = getXmlFile(files, worksheetPath)
+  if (!worksheetFile) {
+    throw new Error('No se encontró la hoja principal del XLSX')
+  }
+
+  const xml = parseXmlDocument(strFromU8(worksheetFile))
+  const rows = getElementsByLocalName(xml, 'row')
+  const matrix: string[][] = []
+
+  for (const row of rows) {
+    const cells = getElementsByLocalName(row, 'c')
+    const values: string[] = []
+    let nextIndex = 0
+
+    for (const cell of cells) {
+      const ref = cell.getAttribute('r') ?? ''
+      const columnIndex = ref ? columnIndexFromRef(ref) : nextIndex
+      const type = cell.getAttribute('t') ?? ''
+      let value = ''
+
+      if (type === 'inlineStr') {
+        value = getNodeText(getFirstElementByLocalName(cell, 'is'))
+      } else {
+        const rawValue = getFirstElementByLocalName(cell, 'v')?.textContent ?? ''
+        if (type === 's') {
+          value = sharedStrings[Number.parseInt(rawValue, 10)] ?? ''
+        } else if (type === 'b') {
+          value = rawValue === '1' ? 'true' : 'false'
+        } else {
+          value = rawValue
+        }
+      }
+
+      values[columnIndex] = value
+      nextIndex = columnIndex + 1
+    }
+
+    matrix.push(values)
+  }
+
+  return matrix.filter((row) => row.some((cell) => String(cell ?? '').trim() !== ''))
+}
+
+export function parseXlsxBuffer(input: ArrayBuffer | Uint8Array): ParsedCSV {
+  const files = unzipSync(input instanceof Uint8Array ? input : new Uint8Array(input))
+  const sharedStrings = readSharedStrings(files)
+  const worksheetPath = resolveWorksheetPath(files)
+  const rowsMatrix = readWorksheetRows(files, worksheetPath, sharedStrings)
+
+  if (rowsMatrix.length < 2) return { headers: [], rows: [], delimiter: ',' }
+
+  const headers = rowsMatrix[0].map((header) => normalizeHeader(String(header ?? '').trim()))
+  const rows = rowsMatrix.slice(1).map((values) => {
+    const row: Record<string, string> = {}
+    headers.forEach((header, index) => {
+      if (!header) return
+      row[header] = String(values[index] ?? '').trim()
+    })
+    return row
+  })
+
+  return { headers, rows, delimiter: ',' }
 }
 
 function escapeCsvCell(value: CsvCell) {
@@ -258,6 +431,13 @@ function createXlsxBuffer(params: { headers: string[]; rows: CsvCell[][]; sheetN
   return zipSync(files, { level: 6 })
 }
 
+export function createXlsxBlob(params: { headers: string[]; rows: CsvCell[][]; sheetName: string }) {
+  const body = createXlsxBuffer(params)
+  return new Blob([new Uint8Array(body)], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+}
+
 export function resolveExportFormat(input: string | null | undefined): ExportFormat {
   return String(input ?? '').toLowerCase() === 'xlsx' ? 'xlsx' : 'csv'
 }
@@ -301,14 +481,10 @@ export async function createXlsxResponse(params: {
   sheetName: string
 }) {
   const rows = await collectRows(params.rows)
-  const body = createXlsxBuffer({
+  const blob = createXlsxBlob({
     headers: params.headers,
     rows,
     sheetName: params.sheetName,
-  })
-  const stableBody = new Uint8Array(body)
-  const blob = new Blob([stableBody], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   })
 
   return new Response(blob, {

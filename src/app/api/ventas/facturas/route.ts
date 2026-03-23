@@ -3,8 +3,7 @@ import { getFacturas, createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
 import { toErrorMsg } from '@/lib/utils/errors'
-import { revalidateTag } from 'next/cache'
-import { getInventarioStatsTag, getReportTag, getStockBajoTag, getVentasStatsTag } from '@/lib/cache/empresa-tags'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,10 +56,7 @@ export async function POST(req: NextRequest) {
       lineas,
     })
 
-    revalidateTag(getVentasStatsTag(empresa_id), 'max')
-    revalidateTag(getInventarioStatsTag(empresa_id), 'max')
-    revalidateTag(getStockBajoTag(empresa_id), 'max')
-    revalidateTag(getReportTag(empresa_id), 'max')
+    revalidateInventoryDependentViews(empresa_id, { includeVentasStats: true })
 
     return NextResponse.json({ id: doc_id }, { status: 201 })
   } catch (e: unknown) {

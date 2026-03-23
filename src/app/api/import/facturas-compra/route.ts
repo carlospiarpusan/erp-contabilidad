@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
-import { getSession } from '@/lib/auth/session'
+import { getSession, puedeAcceder } from '@/lib/auth/session'
+import { registrarAuditoria } from '@/lib/auditoria'
 
 // Importación histórica de facturas de compra desde CSV.
 // No mueve stock ni genera asiento (son datos históricos).
@@ -10,6 +11,9 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!puedeAcceder(session.rol, 'configuracion', 'manage')) {
+      return NextResponse.json({ error: 'Sin permisos para importar datos' }, { status: 403 })
+    }
     const { filas } = await req.json()
     if (!Array.isArray(filas) || filas.length === 0) {
       return NextResponse.json({ error: 'No se recibieron filas' }, { status: 400 })
@@ -33,6 +37,15 @@ export async function POST(req: NextRequest) {
       .eq('tipo', 'factura_compra')
       .single()
 
+    const { data: ultimoDocumento } = await supabase
+      .from('documentos')
+      .select('numero')
+      .eq('empresa_id', empresa_id)
+      .eq('tipo', 'factura_compra')
+      .order('numero', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
     // Cargar proveedores (para buscar por NIT)
     const { data: proveedores } = await supabase
       .from('proveedores')
@@ -44,8 +57,27 @@ export async function POST(req: NextRequest) {
       if (p.numero_documento) mapaProveedores[p.numero_documento.trim()] = p.id
     }
 
+    const proveedorIds = [...new Set(Object.values(mapaProveedores))]
+    const existingKeys = new Set<string>()
+    if (proveedorIds.length > 0) {
+      const { data: documentosExistentes, error: existingErr } = await supabase
+        .from('documentos')
+        .select('proveedor_id, numero_externo')
+        .eq('empresa_id', empresa_id)
+        .eq('tipo', 'factura_compra')
+        .in('proveedor_id', proveedorIds)
+
+      if (existingErr) throw existingErr
+      for (const documento of documentosExistentes ?? []) {
+        if (documento.proveedor_id && documento.numero_externo) {
+          existingKeys.add(`${documento.proveedor_id}::${String(documento.numero_externo).trim()}`)
+        }
+      }
+    }
+
     const resultados = []
-    let consecutivo = (serie?.consecutivo_actual ?? 0) + 1
+    let consecutivo = Math.max(serie?.consecutivo_actual ?? 0, ultimoDocumento?.numero ?? 0) + 1
+    const seenKeys = new Set<string>()
 
     for (let i = 0; i < filas.length; i++) {
       const f = filas[i] as Record<string, string>
@@ -71,6 +103,14 @@ export async function POST(req: NextRequest) {
         resultados.push({ fila, estado: 'error', mensaje: 'fecha es requerida (YYYY-MM-DD)' })
         continue
       }
+      if (fecha < String(ejercicio.fecha_inicio) || fecha > String(ejercicio.fecha_fin)) {
+        resultados.push({
+          fila,
+          estado: 'error',
+          mensaje: `fecha fuera del ejercicio activo (${ejercicio.fecha_inicio} a ${ejercicio.fecha_fin})`,
+        })
+        continue
+      }
       if (!total_str || isNaN(Number(total_str))) {
         resultados.push({ fila, estado: 'error', mensaje: 'total inválido' })
         continue
@@ -79,6 +119,16 @@ export async function POST(req: NextRequest) {
       const proveedor_id = mapaProveedores[nit_proveedor]
       if (!proveedor_id) {
         resultados.push({ fila, estado: 'error', mensaje: `Proveedor con NIT ${nit_proveedor} no encontrado` })
+        continue
+      }
+
+      const duplicateKey = `${proveedor_id}::${numero_externo}`
+      if (seenKeys.has(duplicateKey)) {
+        resultados.push({ fila, estado: 'error', mensaje: `Factura repetida en el archivo: ${numero_externo}` })
+        continue
+      }
+      if (existingKeys.has(duplicateKey)) {
+        resultados.push({ fila, estado: 'error', mensaje: `La factura ${numero_externo} ya existe para ese proveedor` })
         continue
       }
 
@@ -145,9 +195,26 @@ export async function POST(req: NextRequest) {
           .eq('id', serie.id)
       }
       consecutivo++
+      seenKeys.add(duplicateKey)
+      existingKeys.add(duplicateKey)
 
       resultados.push({ fila, estado: 'ok', mensaje: `${prefijo}${num}` })
     }
+
+    await registrarAuditoria({
+      empresa_id: session.empresa_id,
+      usuario_id: session.id,
+      tabla: 'import_facturas_compra',
+      accion: 'INSERT',
+      datos_nuevos: {
+        entidad: 'facturas-compra',
+        total: filas.length,
+        exitosos: resultados.filter((item) => item.estado === 'ok').length,
+        fallidos: resultados.filter((item) => item.estado === 'error').length,
+        detalle: 'Carga historica de facturas de compra sin mover inventario.',
+      },
+      ip: req.headers.get('x-forwarded-for'),
+    })
 
     return NextResponse.json({ resultados })
   } catch (e: unknown) {

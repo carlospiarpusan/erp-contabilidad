@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const destino = email_destino || cliente?.email
     if (!destino) return NextResponse.json({ error: 'El cliente no tiene email registrado' }, { status: 400 })
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://erp.tudominio.com'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://clovent.co'
     const resend = getResend()
 
     const { error } = await resend.emails.send({

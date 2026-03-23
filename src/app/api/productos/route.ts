@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ajustarStock, createProducto, deleteProducto, getProductos } from '@/lib/db/productos'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { toErrorMsg } from '@/lib/utils/errors'
-import { revalidateTag } from 'next/cache'
-import { getInventarioStatsTag, getReportTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 function normalizeOptionalPrice(value: unknown) {
   if (value === '' || value == null) return null
@@ -91,9 +90,7 @@ export async function POST(req: NextRequest) {
       throw error
     }
 
-    revalidateTag(getInventarioStatsTag(session.empresa_id), 'max')
-    revalidateTag(getStockBajoTag(session.empresa_id), 'max')
-    revalidateTag(getReportTag(session.empresa_id), 'max')
+    revalidateInventoryDependentViews(session.empresa_id)
     return NextResponse.json(producto, { status: 201 })
   } catch (e: unknown) {
     return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })

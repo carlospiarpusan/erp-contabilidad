@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { getAsientos } from '@/lib/db/contabilidad'
 import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Upload } from 'lucide-react'
 import Link from 'next/link'
 import { RevertirAsientoButton } from '@/components/contabilidad/RevertirAsientoButton'
 
@@ -47,7 +47,14 @@ export default async function AsientosPage({ searchParams }: PageProps) {
           <p className="text-sm text-gray-500">{total} asiento{total !== 1 ? 's' : ''} registrado{total !== 1 ? 's' : ''}</p>
         </div>
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Link
+          href="/configuracion/importar?entidad=asientos-contables"
+          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+        >
+          <Upload className="h-4 w-4" />
+          Migrar / Importar
+        </Link>
         <Link
           href="/contabilidad/asientos/nuevo"
           className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"

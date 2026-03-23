@@ -185,7 +185,7 @@ export default async function PrintCotizacionPage({ params }: PageProps) {
         <div className="mt-8 pt-6 border-t border-gray-200 text-xs text-gray-400 flex justify-between items-end">
           <div>
             <p>Esta cotización no constituye factura de venta. Válida sujeta a disponibilidad de inventario.</p>
-            <p className="mt-1">Generado por ERP Contable · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}</p>
+            <p className="mt-1">Generado por ClovEnt · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}</p>
           </div>
           <QRDocumento url={docUrl} size={64} />
         </div>

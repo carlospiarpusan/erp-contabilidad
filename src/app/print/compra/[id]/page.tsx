@@ -117,7 +117,7 @@ export default async function PrintCompraPage({ params }: PageProps) {
         )}
 
         <p className="text-center text-xs text-gray-400 mt-8 border-t border-gray-100 pt-4">
-          Generado por ERP Contable · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}
+          Generado por ClovEnt · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}
         </p>
       </div>
     </div>

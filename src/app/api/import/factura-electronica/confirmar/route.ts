@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getEjercicioActivo } from '@/lib/db/maestros'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { createServiceClient } from '@/lib/supabase/service'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 type LineaConfirmada = {
   descripcion: string
@@ -590,6 +591,7 @@ export async function POST(req: NextRequest) {
 
       if (error) throw error
 
+      revalidateInventoryDependentViews(session.empresa_id)
       return NextResponse.json({ ok: true, id: data })
     } catch (error) {
       if (!isMissingImportRpc(error)) throw error
@@ -606,6 +608,7 @@ export async function POST(req: NextRequest) {
         ejercicio,
       })
 
+      revalidateInventoryDependentViews(session.empresa_id)
       return NextResponse.json({ ok: true, id, mode: 'fallback' })
     }
   } catch (error) {

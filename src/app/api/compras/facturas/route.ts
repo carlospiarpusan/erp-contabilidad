@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCompras, createCompra } from '@/lib/db/compras'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 function getErrorStatus(error: unknown) {
   if (typeof error === 'object' && error !== null && 'code' in error) {
@@ -58,6 +59,8 @@ export async function POST(req: NextRequest) {
       observaciones: body.observaciones,
       lineas,
     })
+
+    revalidateInventoryDependentViews(empresa_id)
 
     return NextResponse.json({ id }, { status: 201 })
   } catch (e) {

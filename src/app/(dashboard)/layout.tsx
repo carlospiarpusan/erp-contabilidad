@@ -11,16 +11,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (session.debe_cambiar_password) redirect('/cambiar-password')
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="clovent-grid flex h-screen overflow-hidden">
       <Sidebar rol={session.rol} empresaNombre={session.empresa_nombre} />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
         <Header
-          titulo="ERP Contable"
+          titulo="ClovEnt"
           userName={session.nombre}
           userEmail={session.email}
           userRol={session.rol}
         />
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50/50 dark:bg-gray-950">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,rgba(19,148,135,0.10),transparent_70%)]" />
+        <main className="relative flex-1 overflow-y-auto px-6 py-6">
           {children}
         </main>
       </div>

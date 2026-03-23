@@ -4,7 +4,7 @@ import '../globals.css'
 
 const geist = Geist({ subsets: ['latin'] })
 
-export const metadata: Metadata = { title: 'Impresión — ERP Contable' }
+export const metadata: Metadata = { title: 'Impresión', description: 'Documentos imprimibles de ClovEnt' }
 
 export default function PrintLayout({ children }: { children: React.ReactNode }) {
   return (

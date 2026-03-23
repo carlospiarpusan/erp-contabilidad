@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { getCompras, getEstadisticasCompras, getProveedorById } from '@/lib/db/compras'
 import { ListaCompras } from '@/components/compras/ListaCompras'
 import { formatCOP } from '@/utils/cn'
-import { ShoppingCart, Clock, CheckCircle, TrendingDown, Zap } from 'lucide-react'
+import { ShoppingCart, Clock, CheckCircle, TrendingDown, Upload, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 interface PageProps {
@@ -37,11 +37,18 @@ export default async function ComprasPage({ searchParams }: PageProps) {
             <p className="text-sm text-gray-500">{total} factura{total !== 1 ? 's' : ''} registrada{total !== 1 ? 's' : ''}</p>
           </div>
         </div>
-        <Link href="/compras/facturas/importar"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors">
-          <Zap className="h-4 w-4" />
-          Importar factura DIAN
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/configuracion/importar?entidad=facturas-compra"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-orange-200 bg-orange-50 text-orange-700 text-sm font-medium hover:bg-orange-100 transition-colors">
+            <Upload className="h-4 w-4" />
+            Migrar / Importar
+          </Link>
+          <Link href="/compras/facturas/importar"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors">
+            <Zap className="h-4 w-4" />
+            Importar factura DIAN
+          </Link>
+        </div>
       </div>
 
       {/* KPIs */}

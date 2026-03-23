@@ -3,6 +3,7 @@ import { getRemisionById, updateEstadoRemision } from '@/lib/db/remisiones'
 import { createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 interface Params { params: Promise<{ id: string }> }
 
@@ -86,6 +87,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       })
 
       await updateEstadoRemision(id, 'facturada')
+      revalidateInventoryDependentViews(empresa_id, { includeVentasStats: true })
       return NextResponse.json({ id: facturaId })
     }
 

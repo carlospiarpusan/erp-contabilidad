@@ -1,11 +1,16 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Upload, CheckCircle, XCircle, FileText, Download } from 'lucide-react'
-import { parseCSVText } from '@/lib/utils/csv'
+import { useEffect, useRef, useState } from 'react'
+import { Upload, CheckCircle, XCircle, FileText, Download, FileSpreadsheet } from 'lucide-react'
+import { createXlsxBlob, parseCSVText, parseXlsxBuffer } from '@/lib/utils/csv'
+import {
+  type ImportEntity,
+  IMPORT_COLUMNS,
+  IMPORT_ENTITY_META,
+  IMPORT_ENTITY_ORDER,
+  IMPORT_EXAMPLE_ROWS,
+} from '@/lib/import/migration'
 import { cn, cardCls } from '@/utils/cn'
-
-type Entidad = 'clientes' | 'proveedores' | 'productos' | 'facturas-compra'
 
 interface ResultadoFila {
   fila: number
@@ -14,59 +19,37 @@ interface ResultadoFila {
   datos?: Record<string, string>
 }
 
-const COLUMNAS: Record<Entidad, { campo: string; label: string; requerido: boolean }[]> = {
-  'facturas-compra': [
-    { campo: 'nit_proveedor', label: 'NIT Proveedor', requerido: true },
-    { campo: 'numero_externo', label: 'N° Factura Proveedor', requerido: true },
-    { campo: 'fecha', label: 'Fecha (YYYY-MM-DD)', requerido: true },
-    { campo: 'total', label: 'Total', requerido: true },
-    { campo: 'subtotal', label: 'Subtotal (sin IVA)', requerido: false },
-    { campo: 'iva', label: 'IVA', requerido: false },
-    { campo: 'descripcion', label: 'Descripción', requerido: false },
-    { campo: 'observaciones', label: 'Observaciones', requerido: false },
-  ],
-  clientes: [
-    { campo: 'razon_social', label: 'Razón Social', requerido: true },
-    { campo: 'numero_documento', label: 'NIT/CC', requerido: true },
-    { campo: 'tipo_documento', label: 'Tipo Doc (NIT/CC/CE)', requerido: false },
-    { campo: 'email', label: 'Email', requerido: false },
-    { campo: 'telefono', label: 'Teléfono', requerido: false },
-    { campo: 'direccion', label: 'Dirección', requerido: false },
-    { campo: 'ciudad', label: 'Ciudad', requerido: false },
-  ],
-  proveedores: [
-    { campo: 'razon_social', label: 'Razón Social', requerido: true },
-    { campo: 'numero_documento', label: 'NIT/CC', requerido: true },
-    { campo: 'contacto', label: 'Contacto', requerido: false },
-    { campo: 'email', label: 'Email', requerido: false },
-    { campo: 'telefono', label: 'Teléfono', requerido: false },
-    { campo: 'direccion', label: 'Dirección', requerido: false },
-  ],
-  productos: [
-    { campo: 'codigo', label: 'Código', requerido: true },
-    { campo: 'descripcion', label: 'Descripción', requerido: true },
-    { campo: 'precio_venta', label: 'Precio Venta', requerido: true },
-    { campo: 'precio_compra', label: 'Precio Compra', requerido: false },
-    { campo: 'stock_actual', label: 'Stock Inicial', requerido: false },
-    { campo: 'stock_minimo', label: 'Stock Mínimo', requerido: false },
-    { campo: 'unidad_medida', label: 'Unidad', requerido: false },
-  ],
+function generarCSVEjemplo(entidad: ImportEntity): string {
+  const header = IMPORT_COLUMNS[entidad].map((column) => column.campo).join(',')
+  return `${header}\n${IMPORT_EXAMPLE_ROWS[entidad].join(',')}`
 }
 
-function generarCSVEjemplo(entidad: Entidad): string {
-  const cols = COLUMNAS[entidad]
-  const header = cols.map(c => c.campo).join(',')
-  const ejemplo: Record<Entidad, string> = {
-    'facturas-compra': '900123456,FV-001,2025-01-15,119000,100000,19000,Mercancía general,',
-    clientes: 'Juan Pérez,123456789,CC,juan@email.com,3001234567,Calle 1 #2-3,Pasto',
-    proveedores: 'Distribuciones SA,900123456,Contacto Ventas,ventas@dist.com,6021234567,Av Principal 45',
-    productos: 'PROD001,Producto Ejemplo,25000,15000,100,10,UND',
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function getEntidadNote(entidad: ImportEntity) {
+  switch (entidad) {
+    case 'facturas-compra':
+      return 'Las facturas historicas no mueven stock. El proveedor debe existir previamente.'
+    case 'productos':
+      return 'Si incluyes stock_actual o stock_minimo, se aplican sobre la bodega principal de la empresa.'
+    case 'cuentas-puc':
+      return 'Importa primero clases y grupos si vas a usar codigo_padre; asi el enlace padre se resuelve sin errores.'
+    case 'asientos-contables':
+      return 'Cada referencia se agrupa como un asiento. Debe y haber deben cuadrar exactamente.'
+    default:
+      return IMPORT_ENTITY_META[entidad].validationHint
   }
-  return `${header}\n${ejemplo[entidad]}`
 }
 
-export function ImportarCSV() {
-  const [entidad, setEntidad] = useState<Entidad>('clientes')
+export function ImportarCSV({ initialEntidad = 'clientes' }: { initialEntidad?: ImportEntity }) {
+  const [entidad, setEntidad] = useState<ImportEntity>(initialEntidad)
   const [filas, setFilas] = useState<Record<string, string>[]>([])
   const [resultados, setResultados] = useState<ResultadoFila[]>([])
   const [importando, setImportando] = useState(false)
@@ -74,43 +57,80 @@ export function ImportarCSV() {
   const [completado, setCompletado] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  function descargarEjemplo() {
+  useEffect(() => {
+    setEntidad(initialEntidad)
+    setFilas([])
+    setResultados([])
+    setCompletado(false)
+    setError(null)
+    if (fileRef.current) fileRef.current.value = ''
+  }, [initialEntidad])
+
+  function descargarEjemploCSV() {
     const csv = generarCSVEjemplo(entidad)
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `ejemplo_${entidad}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `ejemplo_${entidad}.csv`)
   }
 
-  function onArchivo(e: React.ChangeEvent<HTMLInputElement>) {
+  function descargarEjemploXlsx() {
+    const columnas = IMPORT_COLUMNS[entidad].map((columna) => columna.campo)
+    const ejemplo = IMPORT_EXAMPLE_ROWS[entidad]
+    downloadBlob(
+      createXlsxBlob({
+        headers: columnas,
+        rows: [ejemplo],
+        sheetName: `Importar ${entidad}`,
+      }),
+      `ejemplo_${entidad}.xlsx`
+    )
+  }
+
+  async function onArchivo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     setResultados([])
     setCompletado(false)
     setError(null)
 
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      try {
-        const texto = ev.target?.result as string
-        const parsedCsv = parseCSVText(texto)
-        const parsed = parsedCsv.rows
-        if (parsed.length === 0) { setError('El archivo no contiene datos válidos'); return }
-        const requeridas = COLUMNAS[entidad].filter(c => c.requerido).map(c => c.campo.toLowerCase())
-        const faltantes = requeridas.filter(c => !parsedCsv.headers.includes(c))
-        if (faltantes.length > 0) {
-          setError(`Faltan columnas obligatorias: ${faltantes.join(', ')}`)
-          return
-        }
-        setFilas(parsed)
-      } catch {
-        setError('Error al leer el archivo')
+    try {
+      const fileName = file.name.toLowerCase()
+      const isXlsx = fileName.endsWith('.xlsx')
+      const isCsv = fileName.endsWith('.csv') || fileName.endsWith('.txt')
+
+      if (!isCsv && !isXlsx) {
+        setError('Formato no soportado. Sube un archivo CSV o XLSX.')
+        return
       }
+
+      const parsedFile = isXlsx
+        ? parseXlsxBuffer(await file.arrayBuffer())
+        : parseCSVText(await file.text())
+
+      const parsed = parsedFile.rows
+      if (parsed.length === 0) {
+        setError('El archivo no contiene datos validos')
+        return
+      }
+
+      const requeridas = IMPORT_COLUMNS[entidad].filter((column) => column.requerido).map((column) => column.campo.toLowerCase())
+      const faltantes = requeridas.filter((field) => !parsedFile.headers.includes(field))
+      if (faltantes.length > 0) {
+        setError(`Faltan columnas obligatorias: ${faltantes.join(', ')}`)
+        return
+      }
+
+      setFilas(parsed)
+    } catch {
+      setError('Error al leer el archivo')
     }
-    reader.readAsText(file, 'UTF-8')
+  }
+
+  function cambiarEntidad(nextEntidad: ImportEntity) {
+    setEntidad(nextEntidad)
+    setFilas([])
+    setResultados([])
+    setCompletado(false)
+    setError(null)
+    if (fileRef.current) fileRef.current.value = ''
   }
 
   async function importar() {
@@ -119,7 +139,7 @@ export function ImportarCSV() {
     setError(null)
 
     try {
-      const res = await fetch(`/api/import/${entidad}`, {
+      const res = await fetch(IMPORT_ENTITY_META[entidad].apiPath, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ filas }),
@@ -137,91 +157,126 @@ export function ImportarCSV() {
     }
   }
 
-  const exitosos  = resultados.filter(r => r.estado === 'ok').length
-  const fallidos  = resultados.filter(r => r.estado === 'error').length
-  const columnas  = COLUMNAS[entidad]
+  const exitosos = resultados.filter((row) => row.estado === 'ok').length
+  const fallidos = resultados.filter((row) => row.estado === 'error').length
+  const columnas = IMPORT_COLUMNS[entidad]
+  const meta = IMPORT_ENTITY_META[entidad]
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Tabs entidad */}
-      <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-        {(['clientes', 'proveedores', 'productos', 'facturas-compra'] as Entidad[]).map(e => (
-          <button key={e} onClick={() => { setEntidad(e); setFilas([]); setResultados([]); setCompletado(false) }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-              entidad === e ? 'bg-white dark:bg-gray-900 shadow text-teal-600 font-semibold' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-            }`}>
-            {e === 'facturas-compra' ? 'Facturas Compra' : e}
-          </button>
-        ))}
+      <div className={cn(cardCls, 'p-4')}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+            <FileSpreadsheet className="h-4 w-4 text-teal-600" />
+            Importacion rapida por entidad
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {IMPORT_ENTITY_ORDER.map((item) => (
+              <button
+                key={item}
+                onClick={() => cambiarEntidad(item)}
+                className={cn(
+                  'rounded-xl border px-3 py-2 text-left text-sm transition-colors',
+                  entidad === item
+                    ? 'border-teal-200 bg-teal-50 text-teal-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/50'
+                )}
+              >
+                <span className="block font-medium">{IMPORT_ENTITY_META[item].shortLabel}</span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400">{IMPORT_ENTITY_META[item].description}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Formato esperado */}
       <div className={cn(cardCls, 'p-5')}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Columnas del CSV para {entidad}</h3>
-          <button onClick={descargarEjemplo}
-            className="flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700 hover:underline">
-            <Download className="h-3.5 w-3.5" />
-            Descargar ejemplo
-          </button>
+        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{meta.label}</h3>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{meta.description}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={descargarEjemploCSV}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-100"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Plantilla CSV
+            </button>
+            <button
+              onClick={descargarEjemploXlsx}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-100"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Plantilla XLSX
+            </button>
+          </div>
         </div>
+
         <div className="flex flex-wrap gap-2">
-          {columnas.map(c => (
-            <span key={c.campo}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium ${c.requerido ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'}`}>
-              {c.campo} {c.requerido ? '*' : ''}
+          {columnas.map((column) => (
+            <span
+              key={column.campo}
+              className={cn(
+                'rounded-full px-2.5 py-1 text-xs font-medium',
+                column.requerido ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
+              )}
+            >
+              {column.campo} {column.requerido ? '*' : ''}
             </span>
           ))}
         </div>
-        <p className="text-xs text-gray-400 mt-2">* Los campos marcados son obligatorios. Primera fila = encabezados.</p>
-      {entidad === 'facturas-compra' && (
-        <p className="text-xs text-amber-600 mt-2 bg-amber-50 rounded px-3 py-2 border border-amber-200">
-          Las facturas importadas se crean como históricas (no mueven stock). Usa <strong>Contabilidad → Generar Asientos</strong> para contabilizarlas.
-          El proveedor debe existir previamente en el sistema.
+
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          {getEntidadNote(entidad)}
         </p>
-      )}
       </div>
 
-      {/* Subir archivo */}
-      <div className="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 p-8 text-center">
-        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Arrastra un archivo CSV o</p>
-        <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-600 text-white text-sm hover:bg-teal-700">
+      <div className="rounded-xl border-2 border-dashed border-gray-300 p-8 text-center dark:border-gray-700">
+        <Upload className="mx-auto mb-3 h-8 w-8 text-gray-400" />
+        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-200">Sube tu archivo de migracion</p>
+        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">Formatos soportados: CSV y XLSX. La primera fila debe contener encabezados.</p>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700">
           <FileText className="h-4 w-4" />
-          Seleccionar archivo CSV
-          <input ref={fileRef} type="file" accept=".csv,.txt" className="hidden" onChange={onArchivo} />
+          Seleccionar archivo
+          <input ref={fileRef} type="file" accept=".csv,.txt,.xlsx" className="hidden" onChange={onArchivo} />
         </label>
       </div>
 
-      {/* Preview */}
       {filas.length > 0 && (
         <div className={cn(cardCls, 'overflow-hidden')}>
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-800">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Vista previa — {filas.length} fila{filas.length !== 1 ? 's' : ''} detectadas
+              Vista previa: {filas.length} fila{filas.length !== 1 ? 's' : ''} detectadas
             </p>
-            <button onClick={importar} disabled={importando}
-              className="px-4 py-1.5 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:opacity-50">
+            <button
+              onClick={importar}
+              disabled={importando}
+              className="rounded-lg bg-teal-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+            >
               {importando ? 'Importando...' : `Importar ${filas.length} registros`}
             </button>
           </div>
-          <div className="overflow-x-auto max-h-64 overflow-y-auto">
+          <div className="max-h-64 overflow-x-auto overflow-y-auto">
             <table className="w-full text-xs">
-              <thead className="bg-gray-50 dark:bg-gray-800/50 sticky top-0">
+              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/50">
                 <tr>
                   <th className="px-3 py-2 text-left text-gray-500">#</th>
-                  {columnas.map(c => (
-                    <th key={c.campo} className="px-3 py-2 text-left text-gray-600">{c.label}</th>
+                  {columnas.map((column) => (
+                    <th key={column.campo} className="px-3 py-2 text-left text-gray-600 dark:text-gray-300">
+                      {column.label}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {filas.slice(0, 10).map((f, i) => (
-                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-3 py-1.5 text-gray-400">{i + 1}</td>
-                    {columnas.map(c => (
-                      <td key={c.campo} className="px-3 py-1.5 text-gray-700 dark:text-gray-300 max-w-32 truncate">
-                        {f[c.campo] ?? '—'}
+                {filas.slice(0, 10).map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-3 py-1.5 text-gray-400">{index + 1}</td>
+                    {columnas.map((column) => (
+                      <td key={column.campo} className="max-w-48 truncate px-3 py-1.5 text-gray-700 dark:text-gray-300">
+                        {row[column.campo] ?? '—'}
                       </td>
                     ))}
                   </tr>
@@ -229,7 +284,7 @@ export function ImportarCSV() {
                 {filas.length > 10 && (
                   <tr>
                     <td colSpan={columnas.length + 1} className="px-3 py-2 text-center text-gray-400">
-                      ... y {filas.length - 10} filas más
+                      ... y {filas.length - 10} filas mas
                     </td>
                   </tr>
                 )}
@@ -239,15 +294,15 @@ export function ImportarCSV() {
         </div>
       )}
 
-      {/* Error */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
       )}
 
-      {/* Resultados */}
       {completado && resultados.length > 0 && (
         <div className={cn(cardCls, 'p-5')}>
-          <div className="flex gap-6 mb-4">
+          <div className="mb-4 flex flex-wrap gap-6">
             <div className="flex items-center gap-2 text-emerald-600">
               <CheckCircle className="h-5 w-5" />
               <span className="font-semibold">{exitosos} importados</span>
@@ -259,15 +314,17 @@ export function ImportarCSV() {
               </div>
             )}
           </div>
-          {fallidos > 0 && (
+          {fallidos > 0 ? (
             <div className="space-y-1.5">
-              {resultados.filter(r => r.estado === 'error').map(r => (
-                <div key={r.fila} className="flex items-start gap-2 text-sm text-red-600 bg-red-50 rounded px-3 py-1.5">
-                  <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span>Fila {r.fila}: {r.mensaje}</span>
+              {resultados.filter((row) => row.estado === 'error').map((row) => (
+                <div key={`${row.fila}-${row.mensaje ?? ''}`} className="flex items-start gap-2 rounded px-3 py-1.5 text-sm text-red-600">
+                  <XCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>Fila {row.fila}: {row.mensaje}</span>
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-300">La importacion termino sin errores.</p>
           )}
         </div>
       )}

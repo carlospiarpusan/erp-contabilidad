@@ -10,6 +10,12 @@
   --app-border: #d8e0ed;
   --app-text: #1d2636;
   --app-text-muted: #586379;
+  --app-accent: #139487;
+  --app-accent-strong: #0d766b;
+  --app-accent-soft: #d9f6f1;
+  --app-accent-contrast: #f3fffc;
+  --app-glow: rgba(19, 148, 135, 0.18);
+  --app-shadow: 0 20px 60px rgba(20, 32, 54, 0.08);
   --app-selection: color-mix(in srgb, #4f7dff 24%, transparent);
   --app-scrollbar-thumb: #c6cfdd;
   --app-scrollbar-thumb-hover: #a9b5c8;
@@ -25,6 +31,12 @@
   --app-border: #2d3a4e;
   --app-text: #d8e1ef;
   --app-text-muted: #9aa8be;
+  --app-accent: #2fc7b5;
+  --app-accent-strong: #66dbc9;
+  --app-accent-soft: rgba(47, 199, 181, 0.12);
+  --app-accent-contrast: #071713;
+  --app-glow: rgba(47, 199, 181, 0.16);
+  --app-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
   --app-selection: color-mix(in srgb, #8aa8ff 34%, transparent);
   --app-scrollbar-thumb: #44526a;
   --app-scrollbar-thumb-hover: #56647d;
@@ -59,9 +71,13 @@ body {
 
 body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  background: var(--app-bg);
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--app-accent) 10%, transparent) 0, transparent 32%),
+    radial-gradient(circle at top right, rgba(78, 124, 255, 0.10) 0, transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--app-surface) 92%, #f7fbff) 0%, var(--app-bg) 44%, var(--app-bg) 100%);
   color: var(--app-text);
   text-rendering: optimizeLegibility;
+  background-attachment: fixed;
 }
 
 ::selection {
@@ -90,4 +106,54 @@ textarea {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--app-scrollbar-thumb-hover);
+}
+
+.clovent-grid {
+  position: relative;
+  isolation: isolate;
+}
+
+.clovent-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--app-border) 42%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--app-border) 42%, transparent) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 82%);
+  opacity: 0.45;
+  z-index: -1;
+}
+
+.clovent-panel {
+  background: color-mix(in srgb, var(--app-surface) 84%, white);
+  border: 1px solid color-mix(in srgb, var(--app-border) 82%, white);
+  box-shadow: var(--app-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.dark .clovent-panel {
+  background: color-mix(in srgb, var(--app-surface) 90%, #0b111a);
+  border-color: color-mix(in srgb, var(--app-border) 90%, transparent);
+}
+
+.clovent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.32rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--app-accent-soft) 88%, white);
+  color: var(--app-accent-strong);
+  border: 1px solid color-mix(in srgb, var(--app-accent) 16%, transparent);
+}
+
+.dark .clovent-chip {
+  color: var(--app-accent-strong);
 }

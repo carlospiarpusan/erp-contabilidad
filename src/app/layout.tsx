@@ -5,8 +5,28 @@ import './globals.css'
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'ERP Contable — Maria Esperanza Tengana',
-  description: 'Sistema de gestión empresarial y contabilidad',
+  metadataBase: new URL('https://clovent.co'),
+  title: {
+    default: 'ClovEnt',
+    template: '%s | ClovEnt',
+  },
+  description: 'ERP para ventas, compras, inventario y contabilidad.',
+  alternates: {
+    canonical: 'https://clovent.co',
+  },
+  openGraph: {
+    title: 'ClovEnt',
+    description: 'ERP para ventas, compras, inventario y contabilidad.',
+    url: 'https://clovent.co',
+    siteName: 'ClovEnt',
+    locale: 'es_CO',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ClovEnt',
+    description: 'ERP para ventas, compras, inventario y contabilidad.',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

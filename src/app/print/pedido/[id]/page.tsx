@@ -207,7 +207,7 @@ export default async function PrintPedidoPage({ params }: PageProps) {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          Generado por ERP Contable · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}
+          Generado por ClovEnt · {empresa?.nombre} · {new Date().toLocaleDateString('es-CO')}
         </p>
       </div>
     </div>

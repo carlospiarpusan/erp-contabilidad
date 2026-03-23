@@ -92,7 +92,7 @@ export function FormPerfil({ usuario }: Props) {
     try {
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
-        friendlyName: 'ERP Contable',
+        friendlyName: 'ClovEnt',
       })
       if (error || !data?.id || !data.totp?.qr_code) throw error ?? new Error('No se pudo iniciar MFA')
       setPendingFactorId(data.id)

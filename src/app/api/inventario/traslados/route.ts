@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
-import { revalidateTag } from 'next/cache'
-import { getInventarioStatsTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 const ROLES_TRASLADO = new Set(['admin', 'contador'])
 
@@ -95,8 +94,7 @@ export async function POST(req: NextRequest) {
 
     if (rpcError) throw rpcError
 
-    revalidateTag(getInventarioStatsTag(session.empresa_id), 'max')
-    revalidateTag(getStockBajoTag(session.empresa_id), 'max')
+    revalidateInventoryDependentViews(session.empresa_id)
 
     return NextResponse.json(traslado, { status: 201 })
   } catch (e: unknown) {

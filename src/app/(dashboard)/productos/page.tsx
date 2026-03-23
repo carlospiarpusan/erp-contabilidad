@@ -1,7 +1,7 @@
 import { getProductos, getFamilias, getFabricantes, getImpuestos, getEstadisticasInventario, getBodegas } from '@/lib/db/productos'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { ListaProductos } from '@/components/productos/ListaProductos'
-import { Package, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react'
+import { Package, AlertTriangle, CheckCircle, BarChart3, Upload } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -42,6 +42,9 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           <p className="text-sm text-gray-500">Inventario, precios y variantes</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/configuracion/importar?entidad=productos" className="flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-sm text-orange-700 hover:bg-orange-100 transition-colors">
+            <Upload className="h-4 w-4" /> Migrar / Importar
+          </Link>
           <a href="/api/export/inventario?format=csv" download className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <BarChart3 className="h-4 w-4" /> CSV
           </a>

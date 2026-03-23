@@ -388,13 +388,24 @@ async function siguienteNumeroAsiento(supabase: Awaited<ReturnType<typeof create
 async function ejercicioActivoId(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data, error } = await supabase
     .from('ejercicios')
-    .select('id')
+    .select('id, fecha_inicio, fecha_fin')
     .eq('estado', 'activo')
     .order('año', { ascending: false })
     .limit(1)
     .single()
   if (error || !data?.id) throw new Error('No hay ejercicio contable activo')
-  return data.id as string
+  return {
+    id: data.id as string,
+    fecha_inicio: String(data.fecha_inicio),
+    fecha_fin: String(data.fecha_fin),
+  }
+}
+
+function validarFechaEnEjercicio(fecha: string, ejercicio: { fecha_inicio: string; fecha_fin: string }) {
+  if (!fecha) throw new Error('La fecha es requerida')
+  if (fecha < ejercicio.fecha_inicio || fecha > ejercicio.fecha_fin) {
+    throw new Error(`La fecha debe estar dentro del ejercicio activo (${ejercicio.fecha_inicio} a ${ejercicio.fecha_fin})`)
+  }
 }
 
 export async function createAsientoManual(fields: {
@@ -404,18 +415,19 @@ export async function createAsientoManual(fields: {
 }) {
   const { supabase, empresa_id } = await getCurrentEmpresaId()
   const { total } = validarLineasPartidaDoble(fields.lineas)
-  const [numero, ejercicio_id, auth] = await Promise.all([
+  const [numero, ejercicio, auth] = await Promise.all([
     siguienteNumeroAsiento(supabase, empresa_id),
     ejercicioActivoId(supabase),
     supabase.auth.getUser(),
   ])
+  validarFechaEnEjercicio(fields.fecha, ejercicio)
 
   const created_by = auth.data.user?.id ?? null
   const { data: asiento, error: asientoErr } = await supabase
     .from('asientos')
     .insert({
       empresa_id,
-      ejercicio_id,
+      ejercicio_id: ejercicio.id,
       numero,
       tipo: 'manual',
       tipo_doc: 'manual',
@@ -454,6 +466,7 @@ export async function updateAsientoManual(
   fields: Partial<{ fecha: string; concepto: string; lineas: AsientoLineaInput[] }>
 ) {
   const supabase = await createClient()
+  const ejercicio = fields.fecha ? await ejercicioActivoId(supabase) : null
   const { data: actual, error: actualErr } = await supabase
     .from('asientos')
     .select('id, tipo, tipo_doc')
@@ -463,7 +476,10 @@ export async function updateAsientoManual(
   if (actual.tipo !== 'manual') throw new Error('Solo se pueden editar asientos manuales')
 
   const updatePayload: Record<string, unknown> = {}
-  if (fields.fecha) updatePayload.fecha = fields.fecha
+  if (fields.fecha) {
+    validarFechaEnEjercicio(fields.fecha, ejercicio!)
+    updatePayload.fecha = fields.fecha
+  }
   if (fields.concepto !== undefined) updatePayload.concepto = fields.concepto.trim()
 
   if (fields.lineas) {

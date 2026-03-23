@@ -18,7 +18,7 @@ export async function GET(req: Request) {
       while (true) {
         const { data, error } = await supabase
           .from('productos')
-          .select('codigo, descripcion, precio_venta, precio_compra, unidad_medida, activo, familia:familia_id(nombre, descripcion), stock(cantidad, cantidad_minima)')
+          .select('codigo, codigo_barras, descripcion, precio_venta, precio_venta2, precio_compra, unidad_medida, activo, familia:familia_id(nombre, descripcion), impuesto:impuestos(codigo, descripcion, porcentaje), stock(cantidad, cantidad_minima)')
           .order('descripcion')
           .range(offset, offset + pageSize - 1)
 
@@ -29,17 +29,26 @@ export async function GET(req: Request) {
 
         for (const row of batch) {
           const familia = row.familia as { nombre?: string; descripcion?: string } | null
+          const impuesto = row.impuesto as { codigo?: string; descripcion?: string; porcentaje?: number } | null
           const stocks = Array.isArray(row.stock) ? row.stock : []
           const stockActual = stocks.reduce((sum, stock) => sum + Number(stock.cantidad ?? 0), 0)
           const stockMinimo = stocks.reduce((sum, stock) => sum + Number(stock.cantidad_minima ?? 0), 0)
+          const impuestoExport = impuesto?.codigo
+            ? impuesto.codigo
+            : (impuesto?.porcentaje ?? null) != null
+                ? `${impuesto?.porcentaje}%`
+                : (impuesto?.descripcion ?? '')
 
           yield [
             row.codigo ?? '',
+            row.codigo_barras ?? '',
             row.descripcion ?? '',
             familia?.descripcion ?? familia?.nombre ?? '',
             row.unidad_medida ?? '',
             row.precio_venta ?? 0,
+            row.precio_venta2 ?? 0,
             row.precio_compra ?? 0,
+            impuestoExport,
             stockActual,
             stockMinimo,
             row.activo ? 'Sí' : 'No',
@@ -54,7 +63,7 @@ export async function GET(req: Request) {
     return createExportResponse({
       format,
       baseFilename: `inventario-${new Date().toISOString().split('T')[0]}`,
-      headers: ['Código', 'Descripción', 'Familia', 'Unidad', 'Precio Venta', 'Precio Compra', 'Stock Actual', 'Stock Mínimo', 'Activo'],
+      headers: ['Código', 'Código de barras', 'Descripción', 'Familia', 'Unidad', 'Precio Venta', 'Precio Mayorista', 'Precio Compra', 'IVA', 'Stock Actual', 'Stock Mínimo', 'Activo'],
       rows: rows(),
       sheetName: 'Inventario',
     })

@@ -28,6 +28,7 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 - `/configuracion/colaboradores/page.tsx`
 - `/configuracion/empresa/page.tsx`
 - `/configuracion/importar/page.tsx`
+  - Centro de `Migración e Importación` para cargas masivas y onboarding de datos.
 - `/configuracion/perfil/page.tsx`
 - `/configuracion/transportadoras/page.tsx`
 - `/configuracion/usuarios/page.tsx`

@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ajustarStock } from '@/lib/db/productos'
 import { getSession } from '@/lib/auth/session'
 import { z } from 'zod'
-import { revalidateTag } from 'next/cache'
-import { getInventarioStatsTag, getReportTag, getStockBajoTag } from '@/lib/cache/empresa-tags'
+import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 const ROLES_AJUSTE_STOCK = new Set(['admin', 'contador'])
 
@@ -34,9 +33,7 @@ export async function POST(req: NextRequest) {
 
     const { producto_id, bodega_id, tipo, cantidad, notas } = parsed.data
     await ajustarStock({ producto_id, bodega_id, tipo, cantidad: Number(cantidad), notas })
-    revalidateTag(getInventarioStatsTag(session.empresa_id), 'max')
-    revalidateTag(getStockBajoTag(session.empresa_id), 'max')
-    revalidateTag(getReportTag(session.empresa_id), 'max')
+    revalidateInventoryDependentViews(session.empresa_id)
     return NextResponse.json({ ok: true })
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
