@@ -69,9 +69,14 @@ export function ListaCompras({ compras: inicial, total, proveedor_id, proveedorN
             </button>
           ))}
         </div>
-        <a href="/api/export/compras" download>
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />CSV</Button>
-        </a>
+        <div className="flex items-center gap-2">
+          <a href="/api/export/compras?format=csv" download>
+            <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />CSV</Button>
+          </a>
+          <a href="/api/export/compras?format=xlsx" download>
+            <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />XLSX</Button>
+          </a>
+        </div>
 
         <Link href="/compras/facturas/nueva">
           <Button size="sm">

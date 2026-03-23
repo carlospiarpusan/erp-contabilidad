@@ -27,7 +27,7 @@ function ExportCard({ item, today }: { item: ExportDefinition; today: Date }) {
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{item.title}</h3>
             <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-blue-700">
-              {item.format}
+              {item.formats.join(' / ')}
             </span>
           </div>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
@@ -61,15 +61,28 @@ function ExportCard({ item, today }: { item: ExportDefinition; today: Date }) {
         <div className="flex items-center justify-between gap-3">
           <div className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
             <Filter className="h-3.5 w-3.5" />
-            Descarga directa, sin pasos intermedios.
+            Descarga directa, en CSV o XLSX.
           </div>
-          <button
-            type="submit"
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700"
-          >
-            <Download className="h-4 w-4" />
-            Descargar CSV
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              name="format"
+              value="csv"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+            >
+              <Download className="h-4 w-4" />
+              CSV
+            </button>
+            <button
+              type="submit"
+              name="format"
+              value="xlsx"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700"
+            >
+              <Download className="h-4 w-4" />
+              XLSX
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -103,7 +116,7 @@ export default async function ExportacionesPage() {
       </div>
 
       <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 text-sm text-emerald-900 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-100">
-        Este módulo sigue el flujo habitual de software contable: elegir reporte, ajustar filtros y descargar un formato consistente. La primera versión centraliza CSV; la estructura queda lista para sumar historial y formatos adicionales.
+        Este módulo sigue el flujo habitual de software contable: elegir reporte, ajustar filtros y descargar un formato consistente. Ahora cada exportación soporta CSV y XLSX desde el mismo flujo.
       </div>
 
       {grouped.map((section) => (

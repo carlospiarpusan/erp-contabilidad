@@ -30,10 +30,16 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
           <h1 className="text-xl font-bold text-gray-900">Inventario Valorado</h1>
           <p className="text-sm text-gray-500">{productos.length} artículo{productos.length !== 1 ? 's' : ''}</p>
         </div>
-        <a href="/api/export/inventario" download
-           className="ml-auto flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-          Exportar CSV
-        </a>
+        <div className="ml-auto flex items-center gap-2">
+          <a href="/api/export/inventario?format=csv" download
+             className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            CSV
+          </a>
+          <a href="/api/export/inventario?format=xlsx" download
+             className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            XLSX
+          </a>
+        </div>
       </div>
 
       {/* Filtros */}

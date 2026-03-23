@@ -51,10 +51,16 @@ export default async function SumasYSaldosPage({ searchParams }: PageProps) {
         <input type="date" name="hasta" defaultValue={hasta}
           className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         <button type="submit" className="h-9 px-4 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700">Aplicar</button>
-        <Link href={`/api/export/sumas-saldos?desde=${desde}&hasta=${hasta}`}
-          className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
-          <Download className="h-4 w-4" /> CSV
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/api/export/sumas-saldos?desde=${desde}&hasta=${hasta}&format=csv`}
+            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+            <Download className="h-4 w-4" /> CSV
+          </Link>
+          <Link href={`/api/export/sumas-saldos?desde=${desde}&hasta=${hasta}&format=xlsx`}
+            className="h-9 px-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
+            <Download className="h-4 w-4" /> XLSX
+          </Link>
+        </div>
       </form>
 
       {/* KPIs */}

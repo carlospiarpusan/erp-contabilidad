@@ -37,13 +37,22 @@ export default async function InformeVentasPorMedioPagoPage({ searchParams }: Pa
           <h1 className="text-xl font-bold text-gray-900">Ventas por Medio de Pago</h1>
           <p className="text-sm text-gray-500">{resumen.total_facturas} factura{resumen.total_facturas !== 1 ? 's' : ''} en el período</p>
         </div>
-        <a
-          href={`/api/export/ventas-por-medio-pago?desde=${desde}&hasta=${hasta}${forma_pago_id ? `&forma_pago_id=${forma_pago_id}` : ''}`}
-          download
-          className="ml-auto flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-        >
-          Exportar CSV
-        </a>
+        <div className="ml-auto flex items-center gap-2">
+          <a
+            href={`/api/export/ventas-por-medio-pago?desde=${desde}&hasta=${hasta}${forma_pago_id ? `&forma_pago_id=${forma_pago_id}` : ''}&format=csv`}
+            download
+            className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+          >
+            CSV
+          </a>
+          <a
+            href={`/api/export/ventas-por-medio-pago?desde=${desde}&hasta=${hasta}${forma_pago_id ? `&forma_pago_id=${forma_pago_id}` : ''}&format=xlsx`}
+            download
+            className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+          >
+            XLSX
+          </a>
+        </div>
       </div>
 
       <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">

@@ -25,14 +25,14 @@ Referencias oficiales revisadas:
 Primera implementación:
 - Crear un `Centro de exportaciones` en `/informes/exportaciones`.
 - Centralizar el catálogo exportable en `src/lib/export/registry.ts`.
-- Mantener `CSV` como formato inicial estable.
+- Soportar `CSV` y `XLSX` desde las mismas rutas y filtros.
 - Cubrir exportaciones operativas, contables y maestras desde un solo punto.
 - Añadir exportaciones maestras faltantes: `clientes` y `proveedores`.
 
 Fases siguientes:
 1. Historial de exportaciones por usuario y empresa.
 2. Exportaciones asíncronas para datasets grandes.
-3. Formatos adicionales (`XLSX`, `PDF`, y fiscales si el negocio lo requiere).
+3. Formatos adicionales (`PDF` y fiscales si el negocio lo requiere).
 4. Presets guardados de filtros por usuario.
 
 ## Árbol de desarrollo
@@ -48,3 +48,8 @@ Dependencias existentes reutilizadas:
 - `src/app/api/export/*`
 - `src/lib/auth/permissions.ts`
 - `src/components/layout/navigation.ts`
+
+Estado actual:
+- Todas las rutas bajo `src/app/api/export/*` aceptan `?format=csv` o `?format=xlsx`.
+- El `Centro de exportaciones` permite descargar ambos formatos sin cambiar de pantalla.
+- Los accesos rápidos en ventas, compras, inventario e informes principales también exponen `CSV` y `XLSX`.

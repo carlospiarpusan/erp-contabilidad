@@ -1,7 +1,7 @@
 import { canAccessModule, type AppModule, type AppRole } from '@/lib/auth/permissions'
 
 export type ExportGroup = 'operativo' | 'contable' | 'maestro'
-export type ExportFormat = 'csv'
+export type ExportFormat = 'csv' | 'xlsx'
 export type ExportFieldType = 'date' | 'text'
 export type ExportFieldDefault = 'today' | 'startOfYear' | 'empty'
 
@@ -20,7 +20,7 @@ export interface ExportDefinition {
   route: string
   module: AppModule
   group: ExportGroup
-  format: ExportFormat
+  formats: readonly ExportFormat[]
   fields?: readonly ExportField[]
 }
 
@@ -38,7 +38,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/ventas',
     module: 'informes',
     group: 'operativo',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
     fields: [
       { name: 'desde', label: 'Desde', type: 'date', defaultValue: 'startOfYear' },
       { name: 'hasta', label: 'Hasta', type: 'date', defaultValue: 'today' },
@@ -51,7 +51,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/compras',
     module: 'compras',
     group: 'operativo',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
     fields: [
       { name: 'desde', label: 'Desde', type: 'date', defaultValue: 'startOfYear' },
       { name: 'hasta', label: 'Hasta', type: 'date', defaultValue: 'today' },
@@ -64,7 +64,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/inventario',
     module: 'productos',
     group: 'operativo',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
   },
   {
     id: 'clientes',
@@ -73,7 +73,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/clientes',
     module: 'clientes',
     group: 'maestro',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
   },
   {
     id: 'proveedores',
@@ -82,7 +82,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/proveedores',
     module: 'compras',
     group: 'maestro',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
   },
   {
     id: 'pyg',
@@ -91,7 +91,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/pyg',
     module: 'contabilidad',
     group: 'contable',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
     fields: [
       { name: 'desde', label: 'Desde', type: 'date', defaultValue: 'startOfYear' },
       { name: 'hasta', label: 'Hasta', type: 'date', defaultValue: 'today' },
@@ -104,7 +104,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/balance-situacion',
     module: 'contabilidad',
     group: 'contable',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
     fields: [
       { name: 'fecha', label: 'Fecha de corte', type: 'date', defaultValue: 'today' },
     ],
@@ -116,7 +116,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/sumas-saldos',
     module: 'contabilidad',
     group: 'contable',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
     fields: [
       { name: 'desde', label: 'Desde', type: 'date', defaultValue: 'startOfYear' },
       { name: 'hasta', label: 'Hasta', type: 'date', defaultValue: 'today' },
@@ -129,7 +129,7 @@ export const EXPORT_REGISTRY: readonly ExportDefinition[] = [
     route: '/api/export/ventas-por-medio-pago',
     module: 'informes',
     group: 'operativo',
-    format: 'csv',
+    formats: ['csv', 'xlsx'],
     fields: [
       { name: 'desde', label: 'Desde', type: 'date', defaultValue: 'startOfYear' },
       { name: 'hasta', label: 'Hasta', type: 'date', defaultValue: 'today' },

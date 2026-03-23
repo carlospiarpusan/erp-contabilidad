@@ -110,9 +110,14 @@ export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFi
           {estado && <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-bold">!</span>}
         </button>
 
-        <a href="/api/export/ventas" download>
-          <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />CSV</Button>
-        </a>
+        <div className="flex items-center gap-2">
+          <a href="/api/export/ventas?format=csv" download>
+            <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />CSV</Button>
+          </a>
+          <a href="/api/export/ventas?format=xlsx" download>
+            <Button variant="outline" size="sm"><Download className="h-4 w-4 mr-1" />XLSX</Button>
+          </a>
+        </div>
 
         <Link href="/ventas/facturas/nueva">
           <Button variant="success" size="sm"><Plus className="h-4 w-4 mr-1" />Nueva factura</Button>

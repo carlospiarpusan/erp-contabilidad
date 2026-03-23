@@ -63,6 +63,8 @@ Inventario de endpoints detectados en `src/app/api`.
 - `/api/export/sumas-saldos/route.ts`
 - `/api/export/ventas/route.ts`
 - `/api/export/ventas-por-medio-pago/route.ts`
+
+Nota: todas las rutas `/api/export/*` aceptan `format=csv|xlsx`; si no se envía, el default es `csv`.
 - `/api/gastos/[id]/route.ts`
 - `/api/gastos/acreedores/[id]/route.ts`
 - `/api/gastos/acreedores/route.ts`

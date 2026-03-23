@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
-import { createCsvResponse } from '@/lib/utils/csv'
+import { createExportResponse, resolveExportFormat } from '@/lib/utils/csv'
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const desde = searchParams.get('desde') ?? ''
     const hasta = searchParams.get('hasta') ?? ''
+    const format = resolveExportFormat(searchParams.get('format'))
 
     const supabase = await createClient()
     const pageSize = 500
@@ -58,10 +59,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return createCsvResponse({
-      filename: `ventas-${new Date().toISOString().split('T')[0]}.csv`,
+    return createExportResponse({
+      format,
+      baseFilename: `ventas-${new Date().toISOString().split('T')[0]}`,
       headers: ['Número', 'Prefijo', 'Fecha', 'Estado', 'Cliente', 'Documento', 'Subtotal', 'IVA', 'Descuento', 'Total'],
       rows: rows(),
+      sheetName: 'Ventas',
     })
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })

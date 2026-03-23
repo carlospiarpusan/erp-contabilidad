@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getInformeVentasPorMedioPago } from '@/lib/db/informes'
 import { getSession } from '@/lib/auth/session'
-
-function escapeCsv(value: string | number | null | undefined) {
-  const text = String(value ?? '')
-  return `"${text.replace(/"/g, '""')}"`
-}
+import { createExportResponse, resolveExportFormat } from '@/lib/utils/csv'
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,6 +12,7 @@ export async function GET(req: NextRequest) {
     const desde = searchParams.get('desde') ?? ''
     const hasta = searchParams.get('hasta') ?? ''
     const forma_pago_id = searchParams.get('forma_pago_id') ?? ''
+    const format = resolveExportFormat(searchParams.get('format'))
 
     const { medios } = await getInformeVentasPorMedioPago({
       desde: desde || undefined,
@@ -33,24 +30,22 @@ export async function GET(req: NextRequest) {
       'Ultima factura',
     ]
 
-    const csv = [
-      headers.join(','),
-      ...medios.map((medio) => ([
-        escapeCsv(medio.descripcion),
-        medio.facturas,
-        medio.pagadas,
-        medio.pendientes,
-        medio.ticket_promedio,
-        medio.total,
-        escapeCsv(medio.ultima_fecha ?? ''),
-      ].join(','))),
-    ].join('\n')
+    const rows = medios.map((medio) => ([
+      medio.descripcion,
+      medio.facturas,
+      medio.pagadas,
+      medio.pendientes,
+      medio.ticket_promedio,
+      medio.total,
+      medio.ultima_fecha ?? '',
+    ]))
 
-    return new NextResponse(`\uFEFF${csv}`, {
-      headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="ventas-por-medio-pago-${new Date().toISOString().split('T')[0]}.csv"`,
-      },
+    return createExportResponse({
+      format,
+      baseFilename: `ventas-por-medio-pago-${new Date().toISOString().split('T')[0]}`,
+      headers,
+      rows,
+      sheetName: 'Ventas medio pago',
     })
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
