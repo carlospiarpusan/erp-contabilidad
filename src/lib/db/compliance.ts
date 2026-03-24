@@ -345,55 +345,82 @@ export async function ensurePeriodoAbierto(options: {
     .maybeSingle()
 
   if (error || !data?.id) {
-    // Auto-crear ejercicio + periodos para el año si no existen
-    const año = new Date(options.fecha).getFullYear()
-    const { data: ejercicioExistente } = await supabase
+    // Auto-crear ejercicio + periodo para la fecha si no existen
+    const admin = maybeCreateServiceClient()
+    const db = admin ?? supabase
+    const empresaId = options.session.empresa_id
+    const fecha = new Date(options.fecha)
+    const año = fecha.getFullYear()
+    const mes = fecha.getMonth() + 1
+
+    // 1. Asegurar que exista el ejercicio para el año
+    const { data: ejercicioExistente } = await db
       .from('ejercicios')
       .select('id')
-      .eq('empresa_id', options.session.empresa_id)
+      .eq('empresa_id', empresaId)
       .eq('año', año)
       .maybeSingle()
 
-    if (!ejercicioExistente) {
-      const { error: insertError } = await supabase.from('ejercicios').insert({
-        empresa_id: options.session.empresa_id,
-        año,
-        descripcion: `Ejercicio ${año}`,
-        fecha_inicio: `${año}-01-01`,
-        fecha_fin: `${año}-12-31`,
-        estado: 'activo',
-      })
-      if (insertError) {
+    let ejercicioId = ejercicioExistente?.id as string | undefined
+
+    if (!ejercicioId) {
+      const { data: nuevoEj, error: insertError } = await db.from('ejercicios')
+        .insert({
+          empresa_id: empresaId,
+          año,
+          descripcion: `Ejercicio ${año}`,
+          fecha_inicio: `${año}-01-01`,
+          fecha_fin: `${año}-12-31`,
+          estado: 'activo',
+        })
+        .select('id')
+        .single()
+
+      if (insertError || !nuevoEj) {
         await logServerEvent({
           level: 'error',
           source: options.source,
           event: 'periodo_auto_creacion_fallida',
           session: options.session,
-          context: { fecha: options.fecha, año, error: insertError.message },
+          context: { fecha: options.fecha, año, error: insertError?.message },
         })
         throw new Error(`No existe periodo contable configurado para la fecha ${options.fecha}`)
       }
-      await logServerEvent({
-        level: 'info',
-        source: options.source,
-        event: 'periodo_auto_creado',
-        session: options.session,
-        context: { fecha: options.fecha, año },
-      })
+      ejercicioId = nuevoEj.id as string
     }
 
-    // Re-intentar buscar el periodo (el trigger ya generó los meses)
+    // 2. Re-intentar buscar el periodo (el trigger pudo haberlo creado)
     const { data: retry } = await supabase
       .from('periodos_contables')
       .select('*')
-      .eq('empresa_id', options.session.empresa_id)
+      .eq('empresa_id', empresaId)
       .lte('fecha_inicio', options.fecha)
       .gte('fecha_fin', options.fecha)
-      .order('fecha_inicio', { ascending: false })
       .limit(1)
       .maybeSingle()
 
-    if (!retry?.id) {
+    if (retry?.id) return retry
+
+    // 3. Fallback: crear el periodo directamente si el trigger no lo generó
+    const mesInicio = `${año}-${String(mes).padStart(2, '0')}-01`
+    const mesFin = new Date(año, mes, 0) // último día del mes
+    const mesFinalStr = `${año}-${String(mes).padStart(2, '0')}-${String(mesFin.getDate()).padStart(2, '0')}`
+
+    const { data: nuevoPeriodo, error: periodoError } = await db
+      .from('periodos_contables')
+      .upsert({
+        empresa_id: empresaId,
+        ejercicio_id: ejercicioId,
+        año,
+        mes,
+        fecha_inicio: mesInicio,
+        fecha_fin: mesFinalStr,
+        estado: 'abierto',
+      }, { onConflict: 'ejercicio_id,mes' })
+      .select('*')
+      .single()
+
+    if (periodoError || !nuevoPeriodo?.id) {
       await logServerEvent({
         level: 'warn',
         source: options.source,
@@ -401,12 +428,20 @@ export async function ensurePeriodoAbierto(options: {
         session: options.session,
         method: options.method,
         route: options.route,
-        context: { fecha: options.fecha, ...options.context },
+        context: { fecha: options.fecha, ...options.context, error: periodoError?.message },
       })
       throw new Error(`No existe periodo contable configurado para la fecha ${options.fecha}`)
     }
 
-    return retry
+    await logServerEvent({
+      level: 'info',
+      source: options.source,
+      event: 'periodo_auto_creado',
+      session: options.session,
+      context: { fecha: options.fecha, año, mes },
+    })
+
+    return nuevoPeriodo
   }
 
   if (data.estado === 'cerrado') {
