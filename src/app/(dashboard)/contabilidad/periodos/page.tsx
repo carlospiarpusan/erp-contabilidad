@@ -12,11 +12,11 @@ export default async function PeriodosContablesPage() {
 
   try {
     ;[ejercicios, periodos] = await Promise.all([
-      getEjerciciosAll(),
-      getPeriodosContables(),
+      getEjerciciosAll().catch(() => []),
+      getPeriodosContables().catch(() => []),
     ])
   } catch (e) {
-    loadError = e instanceof Error ? e.message : 'Error al cargar periodos contables'
+    loadError = e instanceof Error ? e.message : String(e ?? 'Error al cargar periodos contables')
   }
 
   return (

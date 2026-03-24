@@ -290,7 +290,12 @@ export async function getPeriodosContables(ejercicioId?: string) {
   if (ejercicioId) query = query.eq('ejercicio_id', ejercicioId)
 
   const { data, error } = await query
-  if (error) throw error
+  if (error) {
+    // Tabla puede no existir si la migración 037 no se ha aplicado
+    const msg = error.message ?? ''
+    if (error.code === '42P01' || msg.includes('does not exist') || msg.includes('schema cache')) return []
+    throw error
+  }
   return data ?? []
 }
 
