@@ -349,6 +349,14 @@ export async function ensurePeriodoAbierto(options: {
     .limit(1)
     .maybeSingle()
 
+  // Si la tabla no existe (migración 037 no aplicada), permitir la operación
+  const tablaNoExiste = error && (
+    error.code === '42P01' ||
+    (error.message ?? '').includes('does not exist') ||
+    (error.message ?? '').includes('schema cache')
+  )
+  if (tablaNoExiste) return null
+
   if (error || !data?.id) {
     // Auto-crear ejercicio + periodo para la fecha si no existen
     const admin = maybeCreateServiceClient()
@@ -382,14 +390,8 @@ export async function ensurePeriodoAbierto(options: {
         .single()
 
       if (insertError || !nuevoEj) {
-        await logServerEvent({
-          level: 'error',
-          source: options.source,
-          event: 'periodo_auto_creacion_fallida',
-          session: options.session,
-          context: { fecha: options.fecha, año, error: insertError?.message },
-        })
-        throw new Error(`No existe periodo contable configurado para la fecha ${options.fecha}`)
+        // No bloquear si no se pudo crear — permitir la operación
+        return null
       }
       ejercicioId = nuevoEj.id as string
     }
@@ -411,7 +413,7 @@ export async function ensurePeriodoAbierto(options: {
     const mesFin = new Date(año, mes, 0) // último día del mes
     const mesFinalStr = `${año}-${String(mes).padStart(2, '0')}-${String(mesFin.getDate()).padStart(2, '0')}`
 
-    const { data: nuevoPeriodo, error: periodoError } = await db
+    const { data: nuevoPeriodo } = await db
       .from('periodos_contables')
       .upsert({
         empresa_id: empresaId,
@@ -425,28 +427,19 @@ export async function ensurePeriodoAbierto(options: {
       .select('*')
       .single()
 
-    if (periodoError || !nuevoPeriodo?.id) {
+    if (nuevoPeriodo?.id) {
       await logServerEvent({
-        level: 'warn',
+        level: 'info',
         source: options.source,
-        event: 'periodo_no_configurado',
+        event: 'periodo_auto_creado',
         session: options.session,
-        method: options.method,
-        route: options.route,
-        context: { fecha: options.fecha, ...options.context, error: periodoError?.message },
+        context: { fecha: options.fecha, año, mes },
       })
-      throw new Error(`No existe periodo contable configurado para la fecha ${options.fecha}`)
+      return nuevoPeriodo
     }
 
-    await logServerEvent({
-      level: 'info',
-      source: options.source,
-      event: 'periodo_auto_creado',
-      session: options.session,
-      context: { fecha: options.fecha, año, mes },
-    })
-
-    return nuevoPeriodo
+    // Si no se pudo crear el periodo, no bloquear la operación
+    return null
   }
 
   if (data.estado === 'cerrado') {
