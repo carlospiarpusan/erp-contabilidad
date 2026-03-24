@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getKPIs, getUltimasFacturas, getAlertasStock, getFacturasVencidas, getResumenMensual } from '@/lib/db/dashboard'
+import { getKPIs, getUltimasFacturas, getAlertasSinRotacion, getAlertasStock, getFacturasVencidas, getResumenMensual } from '@/lib/db/dashboard'
 import { getSession } from '@/lib/auth/session'
 
 export async function GET(req: NextRequest) {
@@ -10,11 +10,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const año = parseInt(searchParams.get('año') ?? String(new Date().getFullYear()))
 
-    const [kpis, ultimas_facturas, alertas_stock, facturas_vencidas, resumen_mensual] =
+    const [kpis, ultimas_facturas, alertas_stock, alertas_sin_rotacion, facturas_vencidas, resumen_mensual] =
       await Promise.all([
         getKPIs(),
         getUltimasFacturas(),
         getAlertasStock(),
+        getAlertasSinRotacion(),
         getFacturasVencidas(),
         getResumenMensual(año),
       ])
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
       kpis,
       ultimas_facturas,
       alertas_stock,
+      alertas_sin_rotacion,
       facturas_vencidas,
       resumen_mensual,
     })

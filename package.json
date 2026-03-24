@@ -7,8 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
     "check": "npm run lint && npm run typecheck",
+    "deploy:check": "npm run lint && npm run typecheck && npm run build",
+    "deploy:preview": "npm run deploy:check && npx vercel@latest deploy --yes",
+    "deploy:prod": "npm run deploy:check && npx vercel@latest deploy --prod --yes",
+    "deploy:whoami": "npx vercel@latest whoami",
+    "deploy:inspect": "npx vercel@latest inspect",
     "test": "npm run typecheck",
     "qa:empresa": "node scripts/qa_empresa_prueba.mjs",
     "bench:app": "node scripts/bench_app.mjs",
@@ -20,6 +25,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@napi-rs/canvas": "^0.1.97",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
@@ -31,13 +37,15 @@
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.98.0",
     "@tanstack/react-table": "^8.21.3",
+    "@vercel/analytics": "^2.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "fast-xml-parser": "^5.5.6",
+    "fast-xml-parser": "^5.5.8",
     "fflate": "^0.8.2",
     "lucide-react": "^0.576.0",
-    "next": "16.1.6",
+    "next": "16.2.1",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^5.4.296",
     "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -53,8 +61,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "flatted": "^3.4.2"
   }
 }

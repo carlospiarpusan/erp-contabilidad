@@ -11,7 +11,6 @@ import Link from 'next/link'
 import { FileText, User, CreditCard, Warehouse, CheckCircle, XCircle, Printer, MessageCircle } from 'lucide-react'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
 import { DuplicarButton } from '@/components/shared/DuplicarButton'
-import { GestionDianFactura } from './GestionDianFactura'
 import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 import { ConfirmActionModal } from '@/components/shared/ConfirmActionModal'
 
@@ -189,12 +188,6 @@ export function DetalleFactura({ factura, formasPago }: Props) {
               {factura.observaciones && <div className="mt-2 text-xs text-gray-400 italic">{factura.observaciones}</div>}
             </dl>
           </div>
-          <GestionDianFactura
-            facturaId={factura.id}
-            dianEstado={factura.dian_estado}
-            cufe={factura.cufe}
-            qrUrl={factura.qr_url}
-          />
         </div>
 
         {/* Líneas */}

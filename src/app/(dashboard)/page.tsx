@@ -13,24 +13,25 @@ import {
 import {
   getKPIsDashboard, getResumenMensual,
   getUltimasFacturas, getUltimasCompras,
-  getAlertasStock, getFacturasVencidas, getTopClientes,
+  getAlertasSinRotacion, getAlertasStock, getFacturasVencidas, getTopClientes,
 } from '@/lib/db/dashboard'
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 async function cargarDatos() {
   try {
-    const [kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, facturasVencidas, topClientes] =
+    const [kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, alertasSinRotacion, facturasVencidas, topClientes] =
       await Promise.all([
         getKPIsDashboard(),
         getResumenMensual(),
         getUltimasFacturas(6),
         getUltimasCompras(4),
         getAlertasStock(),
+        getAlertasSinRotacion(10),
         getFacturasVencidas(),
         getTopClientes(),
       ])
-    return { kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, facturasVencidas, topClientes }
+    return { kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, alertasSinRotacion, facturasVencidas, topClientes }
   } catch {
     return null
   }
@@ -49,12 +50,12 @@ export default async function DashboardPage() {
     )
   }
 
-  const { kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, facturasVencidas, topClientes } = datos
+  const { kpis, resumen, ultimasFacturas, ultimasCompras, alertasStock, alertasSinRotacion, facturasVencidas, topClientes } = datos
   const mesActual = new Date().getMonth()
   const resumenFiltrado = resumen.filter(m => m.mes <= mesActual + 1)
   const maxVal = Math.max(...resumenFiltrado.flatMap(m => [m.ventas, m.compras, m.gastos]), 1)
   const puedeVerSugeridos = session ? ['admin', 'contador'].includes(session.rol) : false
-  const totalAlertas = alertasStock.length + facturasVencidas.length
+  const totalAlertas = alertasStock.length + alertasSinRotacion.length + facturasVencidas.length
 
   return (
     <div className="flex flex-col gap-5 max-w-[1400px]">
@@ -180,6 +181,14 @@ export default async function DashboardPage() {
                     <Lightbulb className="h-3.5 w-3.5" /> Sugeridos de compra
                   </p>
                   <p className="text-[11px] text-blue-600/70 dark:text-blue-500 mt-0.5">Pedido recomendado por rotación y stock</p>
+                </Link>
+              )}
+              {alertasSinRotacion.length > 0 && (
+                <Link href="/productos/sin-rotacion" className="rounded-lg bg-violet-50 dark:bg-violet-900/10 p-3 hover:bg-violet-100 dark:hover:bg-violet-900/20 transition-colors border border-violet-100 dark:border-violet-900/20">
+                  <p className="font-semibold text-violet-700 dark:text-violet-400 text-[13px]">Sin rotación</p>
+                  <p className="text-[11px] text-violet-700/70 dark:text-violet-500 mt-0.5">
+                    {alertasSinRotacion.length} producto{alertasSinRotacion.length !== 1 ? 's' : ''} con stock sin ventas recientes
+                  </p>
                 </Link>
               )}
               {facturasVencidas.length > 0 && (

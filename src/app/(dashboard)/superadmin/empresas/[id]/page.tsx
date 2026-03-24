@@ -7,6 +7,8 @@ import { hasSupabaseServiceEnv } from '@/lib/supabase/config'
 import Link from 'next/link'
 import { ArrowLeft, Building2 } from 'lucide-react'
 import { GestionUsuariosEmpresa } from '@/components/superadmin/GestionUsuariosEmpresa'
+import { NuevaEmpresaForm } from '@/components/superadmin/NuevaEmpresaForm'
+import { EliminarEmpresaButton } from '@/components/superadmin/EliminarEmpresaButton'
 import { cn, cardCls } from '@/utils/cn'
 
 function adminClient() {
@@ -59,6 +61,17 @@ export default async function EmpresaDetailPage({ params }: { params: Promise<{ 
             <p className="font-medium text-gray-900 dark:text-white">{f.value}</p>
           </div>
         ))}
+      </div>
+
+      <div className={cn(cardCls, 'p-5')}>
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-gray-900 dark:text-white">Editar escuela / empresa</h2>
+            <p className="text-sm text-gray-500">Actualiza datos comerciales, tributarios y de contacto.</p>
+          </div>
+          <EliminarEmpresaButton empresaId={id} empresaNombre={empresa.nombre} />
+        </div>
+        <NuevaEmpresaForm empresa={empresa} />
       </div>
 
       {/* Usuarios */}

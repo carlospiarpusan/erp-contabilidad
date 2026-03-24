@@ -4,19 +4,35 @@ Inventario de endpoints detectados en `src/app/api`.
 
 ## Total
 
-- Endpoints: 100
+- Endpoints: 134
 
 ## Notas relevantes
 
 - `/api/import/factura-electronica/parse/route.ts`: acepta `XML`, `ZIP` y `PDF`; soporta `AttachedDocument` DIAN con `Invoice` embebida y, si el ZIP incluye PDF, usa ese PDF para enriquecer codigos detallados del proveedor antes de homologar productos. Si se sube un `PDF` suelto, intenta importar cabecera y lineas desde el texto visible del documento.
 - `/api/import/factura-electronica/confirmar/route.ts`: exige todas las lineas resueltas, registra compatibilidades proveedor-producto, confirma la compra de forma atomica y sincroniza stock, precio de compra e IVA del producto.
+- `/api/configuracion/facturacion-electronica/route.ts`: queda desactivada con `410`; ClovEnt no ofrece facturación electrónica nativa y solo documenta integración externa.
+- `/api/ventas/facturas/[id]/dian/route.ts`: queda desactivada con `410`; se elimina la simulación de envío/estado DIAN nativo.
+- `/api/configuracion/regulacion/route.ts`: centraliza configuración regulatoria por empresa y vigencias UVT.
+- `/api/contabilidad/periodos/route.ts` y `/api/contabilidad/periodos/[id]/route.ts`: exponen consulta y gestión de periodos contables mensuales.
+- `/api/adjuntos/*`: gestiona adjuntos privados por tenant con descarga firmada.
+- `/api/documento-soporte/route.ts`: administra el estado y metadatos del documento soporte externo en compras.
+- `/api/jobs/*`: cola simple de validaciones operativas para soporte y exógena.
+- `/api/perfil/datos/export/route.ts` y `/api/perfil/consentimientos/route.ts`: capa mínima de privacidad para exportación de datos personales y registro de aceptación.
+- `/api/export/libro-diario/route.ts`, `/api/export/libro-mayor/route.ts`, `/api/export/auxiliares/route.ts`, `/api/export/retenciones/route.ts`, `/api/export/faltantes-soporte/route.ts`, `/api/export/exogena/route.ts`: salida auditable de cumplimiento contable y documental.
 - `/api/import/cuentas-puc/route.ts`: importa o actualiza cuentas PUC por `codigo`, con soporte para `codigo_padre`.
 - `/api/import/asientos-contables/route.ts`: agrupa lineas por `referencia` y crea asientos manuales balanceados usando `codigo_cuenta`.
+- `/api/import/inventario-inicial/route.ts`: carga existencias iniciales, stock minimo y costo sobre productos ya existentes en la bodega principal, sin mezclarlo con la migracion del catalogo.
+- `/api/superadmin/empresas/[id]/route.ts`: permite editar o eliminar una escuela / empresa completa desde `superadmin`; al eliminar, borra antes los usuarios autenticados asociados.
+- `/api/superadmin/usuarios/[id]/route.ts`: permite editar nombre, email, empresa, rol, estado y contraseña de cualquier usuario gestionado globalmente por `superadmin`, y también eliminarlo.
 
 ## Lista completa
 
+- `/api/adjuntos/[id]/download/route.ts`
+- `/api/adjuntos/[id]/route.ts`
+- `/api/adjuntos/route.ts`
 - `/api/auditoria/route.ts`
 - `/api/busqueda/route.ts`
+- `/api/auth/cambiar-password/route.ts`
 - `/api/auth/login/route.ts`
 - `/api/clientes/[id]/route.ts`
 - `/api/clientes/grupos/[id]/route.ts`
@@ -31,6 +47,8 @@ Inventario de endpoints detectados en `src/app/api`.
 - `/api/configuracion/bodegas/route.ts`
 - `/api/configuracion/colaboradores/route.ts`
 - `/api/configuracion/empresa/route.ts`
+- `/api/configuracion/facturacion-electronica/route.ts`
+- `/api/configuracion/regulacion/route.ts`
 - `/api/configuracion/transportadoras/route.ts`
 - `/api/contabilidad/asientos-masivo/route.ts`
 - `/api/contabilidad/asientos/[id]/revertir/route.ts`
@@ -47,7 +65,11 @@ Inventario de endpoints detectados en `src/app/api`.
 - `/api/contabilidad/formas-pago/route.ts`
 - `/api/contabilidad/impuestos/[id]/route.ts`
 - `/api/contabilidad/impuestos/route.ts`
+- `/api/contabilidad/periodos/[id]/route.ts`
+- `/api/contabilidad/periodos/route.ts`
+- `/api/contabilidad/retenciones/route.ts`
 - `/api/dashboard/route.ts`
+- `/api/documento-soporte/route.ts`
 - `/api/documentos/duplicar/route.ts`
 - `/api/email/cotizacion/route.ts`
 - `/api/email/factura/route.ts`
@@ -57,11 +79,17 @@ Inventario de endpoints detectados en `src/app/api`.
 - `/api/email/recordatorio-cobro/route.ts`
 - `/api/email/remision/route.ts`
 - `/api/export/balance-situacion/route.ts`
+- `/api/export/auxiliares/route.ts`
 - `/api/export/clientes/route.ts`
 - `/api/export/compras/route.ts`
+- `/api/export/exogena/route.ts`
+- `/api/export/faltantes-soporte/route.ts`
 - `/api/export/inventario/route.ts`
+- `/api/export/libro-diario/route.ts`
+- `/api/export/libro-mayor/route.ts`
 - `/api/export/pyg/route.ts`
 - `/api/export/proveedores/route.ts`
+- `/api/export/retenciones/route.ts`
 - `/api/export/sumas-saldos/route.ts`
 - `/api/export/ventas/route.ts`
 - `/api/export/ventas-por-medio-pago/route.ts`
@@ -79,12 +107,19 @@ Nota: todas las rutas `/api/export/*` aceptan `format=csv|xlsx`; si no se envía
 - `/api/import/factura-electronica/confirmar/route.ts`
 - `/api/import/factura-electronica/parse/route.ts`
 - `/api/import/facturas-compra/route.ts`
+- `/api/import/inventario-inicial/route.ts`
 - `/api/import/asientos-contables/route.ts`
 - `/api/import/productos/route.ts`
 - `/api/import/proveedores/route.ts`
 - `/api/informes/cartera/route.ts`
 - `/api/inventario/ajuste/route.ts`
+- `/api/inventario/kardex/route.ts`
+- `/api/inventario/traslados/route.ts`
+- `/api/jobs/route.ts`
+- `/api/jobs/run/route.ts`
 - `/api/notificaciones/route.ts`
+- `/api/perfil/consentimientos/route.ts`
+- `/api/perfil/datos/export/route.ts`
 - `/api/perfil/route.ts`
 - `/api/productos/[id]/route.ts`
 - `/api/productos/fabricantes/[id]/route.ts`
@@ -92,8 +127,17 @@ Nota: todas las rutas `/api/export/*` aceptan `format=csv|xlsx`; si no se envía
 - `/api/productos/familias/[id]/route.ts`
 - `/api/productos/familias/route.ts`
 - `/api/productos/route.ts`
+- `/api/superadmin/empresas/[id]/route.ts`
 - `/api/superadmin/empresas/[id]/usuarios/route.ts`
 - `/api/superadmin/empresas/route.ts`
+- `/api/superadmin/usuarios/[id]/route.ts`
+- `/api/tesoreria/cajas/route.ts`
+- `/api/tesoreria/conciliaciones/route.ts`
+- `/api/tesoreria/cuentas-bancarias/route.ts`
+- `/api/tesoreria/movimientos-bancarios/route.ts`
+- `/api/tesoreria/movimientos/route.ts`
+- `/api/tesoreria/pagos-proveedores/route.ts`
+- `/api/tesoreria/turnos/route.ts`
 - `/api/usuarios/[id]/route.ts`
 - `/api/usuarios/route.ts`
 - `/api/ventas/cotizaciones/[id]/route.ts`

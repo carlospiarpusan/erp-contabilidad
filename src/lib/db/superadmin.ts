@@ -92,6 +92,92 @@ function adminClient() {
   return createServiceClient()
 }
 
+type UserReferenceCleanupResult = {
+  ok: boolean
+  errors: string[]
+}
+
+type DeleteUserAdminResult = {
+  ok: boolean
+  error?: string
+  cleanupErrors: string[]
+}
+
+async function updateUserReference(
+  admin: SupabaseClient,
+  table: string,
+  column: string,
+  userId: string,
+  payload: Record<string, string | null>
+) {
+  const { error } = await admin
+    .from(table)
+    .update(payload)
+    .eq(column, userId)
+
+  if (error?.code === '42P01' || error?.code === '42703') {
+    return null
+  }
+
+  return error
+}
+
+export async function cleanupUserReferencesForDeletion(
+  admin: SupabaseClient,
+  userId: string,
+  replacementUserId: string
+): Promise<UserReferenceCleanupResult> {
+  const errors: string[] = []
+
+  const operations: Array<Promise<unknown>> = [
+    updateUserReference(admin, 'audit_log', 'usuario_id', userId, { usuario_id: null }),
+    updateUserReference(admin, 'notificaciones', 'usuario_id', userId, { usuario_id: null }),
+    updateUserReference(admin, 'productos_codigos_proveedor', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'documentos', 'aprobada_por', userId, { aprobada_por: null }),
+    updateUserReference(admin, 'documentos', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'recibos', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'asientos', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'stock_movimientos', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'traslados', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'cajas_movimientos', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'movimientos_bancarios', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'conciliaciones_bancarias', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'pagos_proveedores', 'created_by', userId, { created_by: null }),
+    updateUserReference(admin, 'cajas_turnos', 'usuario_id', userId, { usuario_id: replacementUserId }),
+  ]
+
+  const results = await Promise.all(operations)
+  for (const result of results) {
+    if (result && typeof result === 'object' && 'message' in result && typeof result.message === 'string') {
+      errors.push(result.message)
+    }
+  }
+
+  return { ok: errors.length === 0, errors }
+}
+
+export async function deleteUserWithCleanup(
+  admin: SupabaseClient,
+  userId: string,
+  replacementUserId: string
+): Promise<DeleteUserAdminResult> {
+  const cleanup = await cleanupUserReferencesForDeletion(admin, userId, replacementUserId)
+  const { error } = await admin.auth.admin.deleteUser(userId)
+
+  if (error) {
+    return {
+      ok: false,
+      error: error.message,
+      cleanupErrors: cleanup.errors,
+    }
+  }
+
+  return {
+    ok: true,
+    cleanupErrors: cleanup.errors,
+  }
+}
+
 async function getFallbackStats(admin: SupabaseClient): Promise<SuperadminStats> {
   const [
     { count: totalEmpresas },

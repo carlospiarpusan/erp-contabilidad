@@ -1,7 +1,7 @@
 import { getProductos, getFamilias, getFabricantes, getImpuestos, getEstadisticasInventario, getBodegas } from '@/lib/db/productos'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { ListaProductos } from '@/components/productos/ListaProductos'
-import { Package, AlertTriangle, CheckCircle, BarChart3, Upload } from 'lucide-react'
+import { Package, AlertTriangle, CheckCircle, BarChart3, Upload, Clock3 } from 'lucide-react'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -41,9 +41,12 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           <h2 className="text-xl font-bold text-gray-900">Artículos / Productos</h2>
           <p className="text-sm text-gray-500">Inventario, precios y variantes</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Link href="/configuracion/importar?entidad=productos" className="flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-1.5 text-sm text-orange-700 hover:bg-orange-100 transition-colors">
-            <Upload className="h-4 w-4" /> Migrar / Importar
+            <Upload className="h-4 w-4" /> Migrar catálogo
+          </Link>
+          <Link href="/configuracion/importar?entidad=inventario-inicial" className="flex items-center gap-1.5 rounded-lg border border-lime-200 bg-lime-50 px-3 py-1.5 text-sm text-lime-700 hover:bg-lime-100 transition-colors">
+            <Upload className="h-4 w-4" /> Importar inventario
           </Link>
           <a href="/api/export/inventario?format=csv" download className="flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
             <BarChart3 className="h-4 w-4" /> CSV
@@ -55,7 +58,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
         <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">
           <p className="text-xs text-gray-500">Total productos</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total.toLocaleString('es-CO')}</p>
@@ -68,6 +71,12 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           <p className="text-xs text-gray-500 flex items-center gap-1"><AlertTriangle className="h-3 w-3 text-orange-500" />Stock bajo</p>
           <p className={`text-2xl font-bold mt-1 ${stats.stockBajo > 0 ? 'text-orange-600' : 'text-gray-900 dark:text-gray-100'}`}>
             {stats.stockBajo.toLocaleString('es-CO')}
+          </p>
+        </Link>
+        <Link href="/productos/sin-rotacion" className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 hover:shadow-sm transition-shadow block">
+          <p className="text-xs text-gray-500 flex items-center gap-1"><Clock3 className="h-3 w-3 text-violet-500" />Sin rotación</p>
+          <p className={`text-2xl font-bold mt-1 ${stats.sinRotacion > 0 ? 'text-violet-600' : 'text-gray-900 dark:text-gray-100'}`}>
+            {stats.sinRotacion.toLocaleString('es-CO')}
           </p>
         </Link>
         <div className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4">

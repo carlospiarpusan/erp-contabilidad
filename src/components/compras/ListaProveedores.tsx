@@ -21,6 +21,7 @@ interface Proveedor {
   departamento?: string | null
   direccion?: string | null
   observaciones?: string | null
+  obligado_a_facturar?: boolean | null
   activo: boolean
 }
 
@@ -35,7 +36,7 @@ type DeleteProveedorResponse =
 
 const EMPTY: Partial<Proveedor> = {
   razon_social: '', contacto: '', tipo_documento: 'NIT',
-  numero_documento: '', email: '', telefono: '', ciudad: '',
+  numero_documento: '', email: '', telefono: '', ciudad: '', obligado_a_facturar: true,
 }
 
 function extractError(res: unknown): string {
@@ -244,6 +245,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">NIT / Documento</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Contacto</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Ciudad</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">Cumplimiento</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500">Estado</th>
               <th className="px-4 py-3"></th>
             </tr>
@@ -251,7 +253,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
           <tbody className="divide-y divide-gray-50">
             {filtrados.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                   No hay proveedores{busqueda ? ` para "${busqueda}"` : ''}
                 </td>
               </tr>
@@ -273,6 +275,15 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                   {p.email && <div className="text-xs text-gray-400">{p.email}</div>}
                 </td>
                 <td className="px-4 py-3 text-gray-600">{p.ciudad ?? '—'}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+                    p.obligado_a_facturar !== false
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-amber-50 text-amber-700'
+                  }`}>
+                    {p.obligado_a_facturar !== false ? 'Obligado a facturar' : 'Doc. soporte'}
+                  </span>
+                </td>
                 <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
                   <button onClick={() => toggleActivo(p)} title={p.activo ? 'Desactivar' : 'Activar'}>
                     {p.activo
@@ -363,6 +374,19 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                 onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={form.obligado_a_facturar !== false}
+                  onChange={e => setForm(f => ({ ...f, obligado_a_facturar: e.target.checked }))}
+                />
+                Obligado a facturar electrónicamente
+              </label>
+              <p className="mt-1 text-xs text-gray-400">
+                Si lo desactivas, las compras a este proveedor pueden exigir documento soporte externo.
+              </p>
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">

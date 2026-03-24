@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getStockBajo } from '@/lib/db/productos'
+import { getProductosSinRotacion, getStockBajo } from '@/lib/db/productos'
 
 export interface DashboardKPIs {
   facturado_anio: number
@@ -30,6 +30,15 @@ export interface DashboardAlertaStock {
   descripcion: string
   stock_actual: number
   stock_minimo: number
+}
+
+export interface DashboardAlertaSinRotacion {
+  id: string
+  codigo: string
+  descripcion: string
+  stock_actual: number
+  dias_sin_venta: number | null
+  valor_stock: number
 }
 
 export interface DashboardTopCliente {
@@ -259,6 +268,19 @@ export async function getAlertasStock(): Promise<DashboardAlertaStock[]> {
       stock_actual: toNumber(item.cantidad),
       stock_minimo: toNumber(item.cantidad_minima),
     }))
+}
+
+export async function getAlertasSinRotacion(limit = 20): Promise<DashboardAlertaSinRotacion[]> {
+  const items = await getProductosSinRotacion({ days: 90, limit })
+
+  return items.map((item) => ({
+    id: item.id,
+    codigo: item.codigo,
+    descripcion: item.descripcion,
+    stock_actual: item.stock_actual,
+    dias_sin_venta: item.dias_sin_venta,
+    valor_stock: item.valor_stock,
+  }))
 }
 
 export async function getFacturasVencidas(limit = 5) {

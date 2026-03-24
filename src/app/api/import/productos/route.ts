@@ -9,6 +9,18 @@ function parseNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+function readCell(fila: Record<string, string>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = fila[key]
+    if (value !== undefined) return value
+  }
+  return undefined
+}
+
+function hasValue(value: unknown) {
+  return String(value ?? '').trim() !== ''
+}
+
 function parseBoolean(value: unknown, fallback = true) {
   const normalized = String(value ?? '').trim().toLowerCase()
   if (!normalized) return fallback
@@ -156,8 +168,10 @@ export async function POST(req: NextRequest) {
       const precio_venta2 = precioVenta2Raw
         ? parseNumber(precioVenta2Raw)
         : (existing?.precio_venta2 ?? null)
-      const stock_actual = parseNumber(f.stock_actual ?? f.stock_inicial)
-      const stock_minimo = parseNumber(f.stock_minimo)
+      const stockActualRaw = readCell(f, 'stock_actual', 'stock_inicial')
+      const stockMinimoRaw = readCell(f, 'stock_minimo', 'cantidad_minima', 'minimo', 'stock_min')
+      const stock_actual = hasValue(stockActualRaw) ? parseNumber(stockActualRaw) : null
+      const stock_minimo = hasValue(stockMinimoRaw) ? parseNumber(stockMinimoRaw) : null
       const unidad_medida = f.unidad_medida?.trim() || f.unidad?.trim() || existing?.unidad_medida || 'UND'
       const codigoBarrasRaw = f.codigo_barras?.trim()
       const codigo_barras = codigoBarrasRaw ? codigoBarrasRaw : (existing?.codigo_barras ?? null)
@@ -185,6 +199,12 @@ export async function POST(req: NextRequest) {
       }
       if (precio_venta2 !== null && (!Number.isFinite(precio_venta2) || precio_venta2 < 0)) {
         return { fila: i + 2, estado: 'error', mensaje: 'precio_venta2 inválido' }
+      }
+      if (stock_actual !== null && (!Number.isFinite(stock_actual) || stock_actual < 0)) {
+        return { fila: i + 2, estado: 'error', mensaje: 'stock_actual inválido' }
+      }
+      if (stock_minimo !== null && (!Number.isFinite(stock_minimo) || stock_minimo < 0)) {
+        return { fila: i + 2, estado: 'error', mensaje: 'stock_minimo inválido' }
       }
 
       const payload = {
@@ -221,7 +241,7 @@ export async function POST(req: NextRequest) {
         activo,
       })
 
-      const tieneCamposStock = f.stock_actual !== undefined || f.stock_inicial !== undefined || f.stock_minimo !== undefined
+      const tieneCamposStock = stock_actual !== null || stock_minimo !== null
       if (bodegaId && producto?.id && tieneCamposStock) {
         const { data: stockExistente } = await supabase
           .from('stock')
@@ -232,9 +252,12 @@ export async function POST(req: NextRequest) {
           .maybeSingle()
 
         if (stockExistente?.id) {
+          const payload: { cantidad?: number; cantidad_minima?: number } = {}
+          if (stock_actual !== null) payload.cantidad = stock_actual
+          if (stock_minimo !== null) payload.cantidad_minima = stock_minimo
           const { error: stockErr } = await supabase
             .from('stock')
-            .update({ cantidad: stock_actual, cantidad_minima: stock_minimo })
+            .update(payload)
             .eq('id', stockExistente.id)
           if (stockErr) return { fila: i + 2, estado: 'error', mensaje: stockErr.message }
         } else {
@@ -244,8 +267,8 @@ export async function POST(req: NextRequest) {
               producto_id: producto.id,
               variante_id: null,
               bodega_id: bodegaId,
-              cantidad: stock_actual,
-              cantidad_minima: stock_minimo,
+              cantidad: stock_actual ?? 0,
+              cantidad_minima: stock_minimo ?? 0,
             })
           if (stockErr) return { fila: i + 2, estado: 'error', mensaje: stockErr.message }
         }

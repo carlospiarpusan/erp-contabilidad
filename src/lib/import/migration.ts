@@ -2,6 +2,7 @@ export type ImportEntity =
   | 'clientes'
   | 'proveedores'
   | 'productos'
+  | 'inventario-inicial'
   | 'facturas-compra'
   | 'cuentas-puc'
   | 'asientos-contables'
@@ -16,6 +17,7 @@ export const IMPORT_ENTITY_ORDER: readonly ImportEntity[] = [
   'clientes',
   'proveedores',
   'productos',
+  'inventario-inicial',
   'facturas-compra',
   'cuentas-puc',
   'asientos-contables',
@@ -48,6 +50,13 @@ export const IMPORT_ENTITY_META: Record<ImportEntity, {
     description: 'Migracion de catalogo, impuestos, precios y stock inicial.',
     validationHint: 'Upsert por empresa_id + codigo. Si informas stock, usa la bodega principal.',
     apiPath: '/api/import/productos',
+  },
+  'inventario-inicial': {
+    label: 'Inventario inicial',
+    shortLabel: 'Inventario',
+    description: 'Carga existencias iniciales, stock minimo y costo de compra sobre productos ya creados.',
+    validationHint: 'Requiere productos existentes por codigo. Actualiza la bodega principal de la empresa.',
+    apiPath: '/api/import/inventario-inicial',
   },
   'facturas-compra': {
     label: 'Facturas de compra historicas',
@@ -123,6 +132,12 @@ export const IMPORT_COLUMNS: Record<ImportEntity, ImportColumn[]> = {
     { campo: 'unidad_medida', label: 'Unidad', requerido: false },
     { campo: 'activo', label: 'Activo (si/no)', requerido: false },
   ],
+  'inventario-inicial': [
+    { campo: 'codigo', label: 'Codigo', requerido: true },
+    { campo: 'stock_actual', label: 'Stock Inicial', requerido: true },
+    { campo: 'stock_minimo', label: 'Stock Minimo', requerido: false },
+    { campo: 'precio_compra', label: 'Costo de compra', requerido: false },
+  ],
   'cuentas-puc': [
     { campo: 'codigo', label: 'Codigo', requerido: true },
     { campo: 'descripcion', label: 'Descripcion', requerido: true },
@@ -148,6 +163,7 @@ export const IMPORT_EXAMPLE_ROWS: Record<ImportEntity, string[]> = {
   clientes: ['Juan Perez', '123456789', 'CC', 'Contacto principal', 'juan@email.com', '3001234567', '3001234567', 'Calle 1 #2-3', 'Pasto', 'Narino', 'si'],
   proveedores: ['Distribuciones SA', '900123456', 'NIT', 'Contacto Ventas', 'ventas@dist.com', '6021234567', '3001234567', 'Pasto', 'Narino', 'Av Principal 45', 'si'],
   productos: ['PROD001', 'Producto Ejemplo', '25000', '22000', '15000', '19%', '7701234567890', 'General', '100', '10', 'UND', 'si'],
+  'inventario-inicial': ['PROD001', '100', '10', '15000'],
   'cuentas-puc': ['110505', 'Caja general', 'activo', '4', 'debito', '1105', 'si'],
   'asientos-contables': ['SALDO-APERTURA-001', '2026-01-01', 'Saldos iniciales', '110505', 'Caja principal', '500000', '0'],
 }

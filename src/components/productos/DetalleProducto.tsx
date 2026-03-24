@@ -44,22 +44,24 @@ const TIPO_LABELS: Record<string, { label: string; icon: typeof ArrowUpCircle; c
 
 export function DetalleProducto({ producto, bodegas, familias, fabricantes, impuestos, movimientos, canManage }: Props) {
   const router = useRouter()
+  const [productoActual, setProductoActual]   = useState(producto)
+  const [movimientosActuales]                 = useState(movimientos)
   const [modalEditar, setModalEditar]   = useState(false)
   const [modalAjuste, setModalAjuste]   = useState(false)
   const [cargando, setCargando]         = useState(false)
   const [eliminando, setEliminando]     = useState(false)
   const [error, setError]               = useState('')
 
-  const stockTotal = (producto.stock ?? []).reduce((s, st) => s + (st.cantidad ?? 0), 0)
-  const stockBajo  = hasLowStock(producto.stock)
-  const margen     = producto.precio_venta > 0
-    ? Math.round(((producto.precio_venta - producto.precio_compra) / producto.precio_venta) * 100)
+  const stockTotal = (productoActual.stock ?? []).reduce((s, st) => s + (st.cantidad ?? 0), 0)
+  const stockBajo  = hasLowStock(productoActual.stock)
+  const margen     = productoActual.precio_venta > 0
+    ? Math.round(((productoActual.precio_venta - productoActual.precio_compra) / productoActual.precio_venta) * 100)
     : 0
 
   async function handleGuardar(datos: Record<string, unknown>) {
     setCargando(true); setError('')
     try {
-      const res = await fetch(`/api/productos/${producto.id}`, {
+      const res = await fetch(`/api/productos/${productoActual.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos),
@@ -76,14 +78,14 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
 
   async function handleEliminar() {
     const confirmado = window.confirm(
-      `Vas a eliminar "${producto.descripcion}". Si tiene movimientos, stock o documentos relacionados se desactivará en lugar de borrarse.`
+          `Vas a eliminar "${productoActual.descripcion}". Si tiene movimientos, stock o documentos relacionados se desactivará en lugar de borrarse.`
     )
     if (!confirmado) return
 
     setEliminando(true)
     setError('')
     try {
-      const res = await fetch(`/api/productos/${producto.id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/productos/${productoActual.id}`, { method: 'DELETE' })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error ?? 'Error al eliminar producto')
       if (body?.message) window.alert(body.message)
@@ -106,23 +108,23 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{producto.descripcion}</h1>
-              <Badge variant={producto.activo ? 'success' : 'danger'}>{producto.activo ? 'Activo' : 'Inactivo'}</Badge>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{productoActual.descripcion}</h1>
+              <Badge variant={productoActual.activo ? 'success' : 'danger'}>{productoActual.activo ? 'Activo' : 'Inactivo'}</Badge>
               {stockBajo && (
                 <span className="flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900/25 dark:text-orange-300">
                   <AlertTriangle className="h-3 w-3" /> Stock bajo
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-sm font-mono text-gray-500 dark:text-gray-400">{producto.codigo}</p>
+            <p className="mt-0.5 text-sm font-mono text-gray-500 dark:text-gray-400">{productoActual.codigo}</p>
             <div className="flex flex-wrap gap-2 mt-1">
-              {(producto.familia as { nombre?: string } | null)?.nombre && (
-                <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs text-orange-700 dark:bg-orange-900/20 dark:text-orange-300">{(producto.familia as { nombre: string }).nombre}</span>
+              {(productoActual.familia as { nombre?: string } | null)?.nombre && (
+                <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs text-orange-700 dark:bg-orange-900/20 dark:text-orange-300">{(productoActual.familia as { nombre: string }).nombre}</span>
               )}
-              {(producto.fabricante as { nombre?: string } | null)?.nombre && (
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">{(producto.fabricante as { nombre: string }).nombre}</span>
+              {(productoActual.fabricante as { nombre?: string } | null)?.nombre && (
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">{(productoActual.fabricante as { nombre: string }).nombre}</span>
               )}
-              {producto.tiene_variantes && (
+              {productoActual.tiene_variantes && (
                 <span className="flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
                   <Layers className="h-3 w-3" /> Con variantes
                 </span>
@@ -154,10 +156,10 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Precio venta',   value: formatCOP(producto.precio_venta),  color: 'text-green-700 dark:text-green-300', bg: 'bg-green-50 dark:bg-green-900/20'  },
-          { label: 'Precio compra',  value: formatCOP(producto.precio_compra), color: 'text-gray-700 dark:text-gray-300',  bg: 'bg-gray-50 dark:bg-gray-950'   },
-          { label: 'Margen bruto',   value: `${margen}%`,                      color: margen >= 30 ? 'text-green-700 dark:text-green-300' : margen >= 15 ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300', bg: 'bg-white dark:bg-gray-900' },
-          { label: 'Stock total',    value: `${stockTotal.toLocaleString('es-CO')} ${producto.unidad_medida ?? 'UND'}`, color: stockBajo ? 'text-orange-700 dark:text-orange-300' : 'text-blue-700 dark:text-blue-300', bg: stockBajo ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-blue-50 dark:bg-blue-900/20' },
+          { label: 'Precio venta',   value: formatCOP(productoActual.precio_venta),  color: 'text-green-700 dark:text-green-300', bg: 'bg-green-50 dark:bg-green-900/20'  },
+          { label: 'Precio compra',  value: formatCOP(productoActual.precio_compra), color: 'text-gray-700 dark:text-gray-300',  bg: 'bg-gray-50 dark:bg-gray-950'   },
+          { label: 'Margen bruto',   value: `${margen}%`,                            color: margen >= 30 ? 'text-green-700 dark:text-green-300' : margen >= 15 ? 'text-yellow-700 dark:text-yellow-300' : 'text-red-700 dark:text-red-300', bg: 'bg-white dark:bg-gray-900' },
+          { label: 'Stock total',    value: `${stockTotal.toLocaleString('es-CO')} ${productoActual.unidad_medida ?? 'UND'}`, color: stockBajo ? 'text-orange-700 dark:text-orange-300' : 'text-blue-700 dark:text-blue-300', bg: stockBajo ? 'bg-orange-50 dark:bg-orange-900/20' : 'bg-blue-50 dark:bg-blue-900/20' },
         ].map(k => (
           <div key={k.label} className={`rounded-xl border border-gray-100 dark:border-gray-800 ${k.bg} p-4`}>
             <p className="text-xs text-gray-500 dark:text-gray-400">{k.label}</p>
@@ -172,11 +174,11 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
             <Warehouse className="h-4 w-4 text-blue-500" /> Stock por bodega
           </h3>
-          {(producto.stock ?? []).length === 0 ? (
+          {(productoActual.stock ?? []).length === 0 ? (
             <p className="text-sm text-gray-400 dark:text-gray-500">Sin registro de stock</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {(producto.stock ?? []).map(s => {
+              {(productoActual.stock ?? []).map(s => {
                 const bajo = isLowStock(s)
                 return (
                   <div key={s.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 dark:bg-gray-800/70">
@@ -202,13 +204,13 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
           <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
             <Layers className="h-4 w-4 text-purple-500" /> Variantes
           </h3>
-          {!((producto as any).producto_variantes ?? []).length ? (
+          {!((productoActual as any).producto_variantes ?? []).length ? (
             <p className="text-sm text-gray-400 dark:text-gray-500">
-              {producto.tiene_variantes ? 'Sin variantes registradas' : 'Producto sin variantes'}
+              {productoActual.tiene_variantes ? 'Sin variantes registradas' : 'Producto sin variantes'}
             </p>
           ) : (
             <div className="flex flex-col gap-1">
-              {((producto as any).producto_variantes ?? []).map((v: any) => (
+              {((productoActual as any).producto_variantes ?? []).map((v: any) => (
                 <div key={v.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-1.5 text-sm dark:bg-gray-800/70">
                   <span className="text-gray-700 dark:text-gray-200">{[v.talla, v.color].filter(Boolean).join(' / ') || v.sku}</span>
                   {v.precio_venta && <span className="font-mono text-gray-500 dark:text-gray-400">{formatCOP(v.precio_venta)}</span>}
@@ -224,34 +226,34 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
             <TrendingUp className="h-4 w-4 text-green-500" /> Información
           </h3>
           <dl className="flex flex-col gap-2 text-sm">
-            {producto.codigo_barras && (
+            {productoActual.codigo_barras && (
               <div className="flex justify-between">
                 <dt className="text-gray-500 dark:text-gray-400">Cód. barras</dt>
-                <dd className="font-mono text-gray-700 dark:text-gray-200">{producto.codigo_barras}</dd>
+                <dd className="font-mono text-gray-700 dark:text-gray-200">{productoActual.codigo_barras}</dd>
               </div>
             )}
-            {producto.unidad_medida && (
+            {productoActual.unidad_medida && (
               <div className="flex justify-between">
                 <dt className="text-gray-500 dark:text-gray-400">Unidad</dt>
-                <dd className="text-gray-700 dark:text-gray-200">{producto.unidad_medida}</dd>
+                <dd className="text-gray-700 dark:text-gray-200">{productoActual.unidad_medida}</dd>
               </div>
             )}
-            {(producto.impuesto as { porcentaje?: number } | null)?.porcentaje !== undefined && (
+            {(productoActual.impuesto as { porcentaje?: number } | null)?.porcentaje !== undefined && (
               <div className="flex justify-between">
                 <dt className="text-gray-500 dark:text-gray-400">IVA</dt>
-                <dd className="text-gray-700 dark:text-gray-200">{(producto.impuesto as { porcentaje: number }).porcentaje}%</dd>
+                <dd className="text-gray-700 dark:text-gray-200">{(productoActual.impuesto as { porcentaje: number }).porcentaje}%</dd>
               </div>
             )}
-            {producto.precio_venta2 !== null && producto.precio_venta2 !== undefined && (
+            {productoActual.precio_venta2 !== null && productoActual.precio_venta2 !== undefined && (
               <div className="flex justify-between">
                 <dt className="text-gray-500 dark:text-gray-400">P. mayorista</dt>
-                <dd className="text-gray-700 dark:text-gray-200">{formatCOP(producto.precio_venta2)}</dd>
+                <dd className="text-gray-700 dark:text-gray-200">{formatCOP(productoActual.precio_venta2)}</dd>
               </div>
             )}
-            {producto.created_at && (
+            {productoActual.created_at && (
               <div className="flex justify-between">
                 <dt className="text-gray-500 dark:text-gray-400">Creado</dt>
-                <dd className="text-gray-700 dark:text-gray-200">{formatFecha(producto.created_at)}</dd>
+                <dd className="text-gray-700 dark:text-gray-200">{formatFecha(productoActual.created_at)}</dd>
               </div>
             )}
           </dl>
@@ -263,7 +265,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
           <Clock className="h-4 w-4 text-gray-400" /> Últimos movimientos de inventario
         </h3>
-        {movimientos.length === 0 ? (
+        {movimientosActuales.length === 0 ? (
           <p className="text-sm text-gray-400 dark:text-gray-500">Sin movimientos registrados</p>
         ) : (
           <div className="overflow-x-auto">
@@ -278,7 +280,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                {movimientos.map(m => {
+                {movimientosActuales.map(m => {
                   const meta = TIPO_LABELS[m.tipo] ?? { label: m.tipo, icon: RefreshCw, color: 'text-gray-500 dark:text-gray-400 dark:text-gray-500' }
                   const Icon = meta.icon
                   return (
@@ -307,7 +309,7 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       {/* Modal editar */}
       <Modal open={modalEditar} onClose={() => setModalEditar(false)} titulo="Editar producto" size="xl">
         <FormProducto
-          inicial={producto}
+          inicial={productoActual}
           familias={familias}
           fabricantes={fabricantes}
           impuestos={impuestos}
@@ -320,11 +322,37 @@ export function DetalleProducto({ producto, bodegas, familias, fabricantes, impu
       </Modal>
 
       {/* Modal ajuste */}
-      <Modal open={modalAjuste} onClose={() => setModalAjuste(false)} titulo="Ajustar stock" size="sm">
+          <Modal open={modalAjuste} onClose={() => setModalAjuste(false)} titulo="Ajustar stock" size="sm">
         <AjusteStock
-          producto={producto}
+          producto={productoActual}
           bodegas={bodegas}
-          onDone={() => { setModalAjuste(false); router.refresh() }}
+          onDone={({ bodega_id, stock_final }) => {
+            setProductoActual((prev) => ({
+              ...prev,
+              stock: (prev.stock ?? []).some((stock) => stock.bodega_id === bodega_id)
+                ? (prev.stock ?? []).map((stock) => (
+                  stock.bodega_id === bodega_id
+                    ? { ...stock, cantidad: stock_final }
+                    : stock
+                ))
+                : [
+                  ...(prev.stock ?? []),
+                  {
+                    id: `local-${bodega_id}`,
+                    producto_id: prev.id,
+                    variante_id: null,
+                    bodega_id,
+                    cantidad: stock_final,
+                    cantidad_minima: 0,
+                    cantidad_maxima: null,
+                    updated_at: new Date().toISOString(),
+                    bodega: bodegas.find((bodega) => bodega.id === bodega_id) ?? null,
+                  } as any,
+                ],
+            }))
+            setModalAjuste(false)
+            router.refresh()
+          }}
           onCancel={() => setModalAjuste(false)}
         />
       </Modal>

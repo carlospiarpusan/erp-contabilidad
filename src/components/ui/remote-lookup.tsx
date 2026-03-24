@@ -23,6 +23,10 @@ type RemoteLookupProps<T extends LookupItem> = {
   minChars?: number
   disabled?: boolean
   className?: string
+  inputClassName?: string
+  panelClassName?: string
+  resultsClassName?: string
+  optionClassName?: string
 }
 
 export function RemoteLookup<T extends LookupItem>({
@@ -42,6 +46,10 @@ export function RemoteLookup<T extends LookupItem>({
   minChars = 0,
   disabled,
   className,
+  inputClassName,
+  panelClassName,
+  resultsClassName,
+  optionClassName,
 }: RemoteLookupProps<T>) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
@@ -144,11 +152,11 @@ export function RemoteLookup<T extends LookupItem>({
           }
           setOpen(true)
         }}
-        className="w-full h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+        className={`h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100 ${inputClassName ?? ''}`}
       />
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+        <div className={`absolute left-0 top-full z-30 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg ${panelClassName ?? ''}`}>
           {loading ? (
             <div className="px-3 py-2 text-sm text-gray-500">Buscando...</div>
           ) : items.length === 0 ? (
@@ -158,7 +166,7 @@ export function RemoteLookup<T extends LookupItem>({
                 : emptyMessage}
             </div>
           ) : (
-            <div className="max-h-64 overflow-y-auto">
+            <div className={`max-h-64 overflow-y-auto ${resultsClassName ?? ''}`}>
               {items.map((item) => (
                 <button
                   key={item.id}
@@ -168,7 +176,7 @@ export function RemoteLookup<T extends LookupItem>({
                     setQuery(getOptionLabel(item))
                     setOpen(false)
                   }}
-                  className={`flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-gray-50 ${item.id === value ? 'bg-blue-50' : ''}`}
+                  className={`flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-gray-50 ${item.id === value ? 'bg-blue-50' : ''} ${optionClassName ?? ''}`}
                 >
                   <span className="font-medium text-gray-800">{getOptionLabel(item)}</span>
                   {renderOptionDescription ? (

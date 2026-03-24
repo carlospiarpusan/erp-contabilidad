@@ -3,10 +3,47 @@ import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
 import { sanitizeSearchTerm } from '@/lib/utils/search'
 
+const COMPRA_DETAIL_SELECT_FULL = `
+      id, numero, prefijo, fecha, numero_externo,
+      subtotal, total_iva, total_descuento, total, estado, observaciones,
+      documento_soporte_requerido, documento_soporte_estado, proveedor_id,
+      proveedor:proveedor_id(id, razon_social, numero_documento, tipo_documento, email, telefono, obligado_a_facturar),
+      bodega:bodega_id(nombre),
+      lineas:documentos_lineas(
+        id, descripcion, cantidad, precio_unitario, descuento_porcentaje,
+        subtotal, total_descuento, total_iva, total,
+        producto:producto_id(codigo, descripcion),
+        impuesto:impuesto_id(porcentaje)
+      ),
+      recibos(id, numero, valor, fecha, observaciones, forma_pago:forma_pago_id(descripcion))
+    `
+
+const COMPRA_DETAIL_SELECT_LEGACY = `
+      id, numero, prefijo, fecha, numero_externo,
+      subtotal, total_iva, total_descuento, total, estado, observaciones,
+      proveedor_id,
+      proveedor:proveedor_id(id, razon_social, numero_documento, tipo_documento, email, telefono),
+      bodega:bodega_id(nombre),
+      lineas:documentos_lineas(
+        id, descripcion, cantidad, precio_unitario, descuento_porcentaje,
+        subtotal, total_descuento, total_iva, total,
+        producto:producto_id(codigo, descripcion),
+        impuesto:impuesto_id(porcentaje)
+      ),
+      recibos(id, numero, valor, fecha, observaciones, forma_pago:forma_pago_id(descripcion))
+    `
+
+function isMissingColumnError(error: unknown) {
+  if (typeof error !== 'object' || error === null) return false
+  const code = String((error as { code?: string }).code ?? '')
+  const message = String((error as { message?: string }).message ?? '')
+  return code === '42703' || message.includes('does not exist')
+}
+
 // ── Proveedores ──────────────────────────────────────────────────────────────
 
 const PROVEEDORES_SELECT_FULL = '*'
-const PROVEEDORES_SELECT_SELECTOR = 'id, razon_social, numero_documento, activo'
+const PROVEEDORES_SELECT_SELECTOR = 'id, razon_social, numero_documento, activo, obligado_a_facturar'
 
 export async function getProveedores(params?: {
   busqueda?: string
@@ -86,6 +123,7 @@ export async function createProveedor(proveedor: {
   ciudad?: string
   departamento?: string
   observaciones?: string
+  obligado_a_facturar?: boolean
 }) {
   const empresa_id = await getEmpresaId()
   const payload = cleanUUIDs({ ...proveedor, empresa_id, activo: true })
@@ -228,28 +266,41 @@ export async function getCompras(params?: {
   return { compras: data ?? [], total: count ?? 0 }
 }
 
-export async function getCompraById(id: string) {
+export async function getCompraById(id: string): Promise<any> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('documentos')
-    .select(`
-      id, numero, prefijo, fecha, numero_externo,
-      subtotal, total_iva, total_descuento, total, estado, observaciones,
-      proveedor:proveedor_id(razon_social, numero_documento, tipo_documento, email, telefono),
-      bodega:bodega_id(nombre),
-      lineas:documentos_lineas(
-        id, descripcion, cantidad, precio_unitario, descuento_porcentaje,
-        subtotal, total_iva, total,
-        producto:producto_id(codigo, descripcion),
-        impuesto:impuesto_id(porcentaje)
-      ),
-      recibos(id, numero, valor, fecha, observaciones, forma_pago:forma_pago_id(descripcion))
-    `)
-    .eq('id', id)
-    .eq('tipo', 'factura_compra')
-    .single()
-  if (error) throw error
-  return data
+  const fetchCompra = async (selectClause: string): Promise<{ data: any; error: any }> => {
+    const { data, error } = await supabase
+      .from('documentos')
+      .select(selectClause)
+      .eq('id', id)
+      .eq('tipo', 'factura_compra')
+      .single()
+    return { data, error }
+  }
+
+  const full = await fetchCompra(COMPRA_DETAIL_SELECT_FULL)
+  if (!full.error) return full.data
+  if (!isMissingColumnError(full.error)) throw full.error
+
+  const legacy = await fetchCompra(COMPRA_DETAIL_SELECT_LEGACY)
+  if (legacy.error) throw legacy.error
+  if (!legacy.data) throw new Error('Compra no encontrada')
+
+  const legacyData = legacy.data as unknown as Record<string, unknown> & {
+    proveedor?: Record<string, unknown> | null
+  }
+
+  return {
+    ...legacyData,
+    documento_soporte_requerido: false,
+    documento_soporte_estado: 'no_requerido',
+    proveedor: legacyData.proveedor
+      ? {
+        ...legacyData.proveedor,
+        obligado_a_facturar: null,
+      }
+      : legacyData.proveedor,
+  }
 }
 
 export async function createCompra(params: {

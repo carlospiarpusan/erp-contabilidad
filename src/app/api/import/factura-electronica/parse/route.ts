@@ -8,9 +8,10 @@ import {
   parseFacturaElectronicaPdf,
   readFacturaElectronicaInput,
   suggestPostingDate,
-  type CodigoProveedorMatch,
   type ProductoImportMatch,
 } from '@/lib/import/factura-electronica'
+
+export const runtime = 'nodejs'
 
 type ProveedorDisponible = {
   id: string
@@ -38,31 +39,15 @@ function getErrorStatus(error: unknown) {
       error.message.includes('XML') ||
       error.message.includes('Invoice') ||
       error.message.includes('ejercicio') ||
-      error.message.includes('archivo')
+      error.message.includes('archivo') ||
+      error.message.includes('codigo') ||
+      error.message.includes('linea') ||
+      error.message.includes('reconciliar')
     ) {
       return 400
     }
   }
   return 500
-}
-
-async function getEquivalenciasProveedor(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  proveedorId: string | null
-) {
-  if (!proveedorId) return [] as CodigoProveedorMatch[]
-
-  try {
-    const { data, error } = await supabase
-      .from('productos_codigos_proveedor')
-      .select('producto_id, codigo_proveedor, gtin')
-      .eq('proveedor_id', proveedorId)
-
-    if (error) throw error
-    return (data ?? []) as CodigoProveedorMatch[]
-  } catch {
-    return [] as CodigoProveedorMatch[]
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -78,10 +63,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No se recibio archivo' }, { status: 400 })
     }
 
-    const { rawXml, pdfText, sourceType } = await readFacturaElectronicaInput(file)
+    const { rawXml, pdfText, pdfPages, sourceType } = await readFacturaElectronicaInput(file)
+    if (sourceType === 'xml') {
+      return NextResponse.json({
+        error: 'El XML solo no es suficiente. Sube el PDF o el ZIP original con PDF para usar el codigo de cada articulo.',
+      }, { status: 400 })
+    }
     const parsed = sourceType === 'pdf'
-      ? parseFacturaElectronicaPdf(pdfText ?? '')
-      : parseFacturaElectronica(rawXml ?? '', { pdfText })
+      ? parseFacturaElectronicaPdf(pdfText ?? '', pdfPages)
+      : parseFacturaElectronica(rawXml ?? '', { pdfText, pdfPages })
 
     const [supabase, empresaId, ejercicio] = await Promise.all([
       createClient(),
@@ -122,12 +112,9 @@ export async function POST(req: NextRequest) {
     const productos = (productosData ?? []) as ProductoImportMatch[]
     const nitProveedor = normalizeDigits(parsed.cabecera.nit_proveedor)
     const proveedor = proveedores.find((item) => nitMatches(item.numero_documento, nitProveedor)) ?? null
-    const equivalencias = await getEquivalenciasProveedor(supabase, proveedor?.id ?? null)
     const lineas = buildFacturaImportMatches({
       lineas: parsed.lineas,
       productos,
-      proveedorId: proveedor?.id ?? null,
-      equivalencias,
     })
     const fechaContabilizacionSugerida = suggestPostingDate(parsed.cabecera.fecha_original, {
       fecha_inicio: String(ejercicio.fecha_inicio),

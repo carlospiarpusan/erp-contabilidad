@@ -82,7 +82,7 @@ export default async function PrintCompraPage({ params }: PageProps) {
             {lineas.map((l, i) => (
               <tr key={l.id ?? i} className="border-b border-gray-100">
                 <td className="py-2">
-                  <p className="text-gray-900">{l.producto?.descripcion ?? l.descripcion ?? '—'}</p>
+                  <p className="text-gray-900">{l.descripcion ?? l.producto?.descripcion ?? '—'}</p>
                   {l.producto?.codigo && <p className="text-xs text-gray-400 font-mono">{l.producto.codigo}</p>}
                 </td>
                 <td className="py-2 text-right text-gray-700">{l.cantidad}</td>

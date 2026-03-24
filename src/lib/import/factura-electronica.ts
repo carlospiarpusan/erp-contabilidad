@@ -1,6 +1,5 @@
 import { unzipSync } from 'fflate'
 import { XMLParser } from 'fast-xml-parser'
-import { PDFParse } from 'pdf-parse'
 
 type ParsedNode = Record<string, unknown> | string | number | boolean | null | undefined
 
@@ -14,12 +13,6 @@ export type ProductoImportMatch = {
   impuesto_id: string | null
 }
 
-export type CodigoProveedorMatch = {
-  producto_id: string
-  codigo_proveedor: string | null
-  gtin: string | null
-}
-
 export type FacturaImportSuggestion = {
   producto_id: string
   codigo: string
@@ -30,8 +23,7 @@ export type FacturaImportSuggestion = {
 
 export type FacturaImportLinea = {
   descripcion: string
-  codigo: string
-  codigo_proveedor: string
+  codigo_pdf: string
   gtin: string | null
   standard_scheme_id: string | null
   standard_scheme_name: string | null
@@ -39,6 +31,9 @@ export type FacturaImportLinea = {
   precio_unitario: number
   precio_referencia: number | null
   subtotal: number
+  subtotal_neto: number
+  total_descuento: number
+  descuento_porcentaje: number
   iva: number
   total: number
   porcentaje_iva: number
@@ -46,11 +41,9 @@ export type FacturaImportLinea = {
   producto_codigo: string | null
   producto_descripcion: string | null
   estado: 'encontrado' | 'no_encontrado' | 'sin_codigo'
-  match_source: 'gtin_codigo_barras' | 'equivalencia_gtin' | 'equivalencia_codigo_proveedor' | 'codigo_interno' | 'sin_match'
+  match_source: 'codigo_interno' | 'sin_match'
   sugerencias: FacturaImportSuggestion[]
   grupo_clave: string
-  codigo_proveedor_ambiguo: boolean
-  equivalencia_permitida: boolean
 }
 
 export type FacturaImportLineaBase = Omit<
@@ -62,8 +55,6 @@ export type FacturaImportLineaBase = Omit<
   | 'match_source'
   | 'sugerencias'
   | 'grupo_clave'
-  | 'codigo_proveedor_ambiguo'
-  | 'equivalencia_permitida'
 >
 
 export type FacturaImportCabecera = {
@@ -86,18 +77,38 @@ export type FacturaImportParseResult = {
 export type FacturaElectronicaInput = {
   rawXml: string | null
   pdfText: string | null
+  pdfPages: PdfPageLayout[] | null
   sourceType: 'xml' | 'zip' | 'pdf'
 }
 
 type PdfFacturaLinea = {
   descripcion: string
-  codigo_proveedor: string
+  codigo_pdf: string
   cantidad: number
   total: number
   precio_unitario_bruto: number
   descuento_unitario: number
   iva_unitario: number
   porcentaje_iva: number
+}
+
+type PdfTextItem = {
+  str: string
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+type PdfTextRow = {
+  y: number
+  items: PdfTextItem[]
+  text: string
+}
+
+type PdfPageLayout = {
+  pageNumber: number
+  rows: PdfTextRow[]
 }
 
 const xmlParser = new XMLParser({
@@ -145,6 +156,13 @@ function normalizeCode(value: string | null | undefined) {
   return (value ?? '').trim().toUpperCase()
 }
 
+function sanitizeSuggestedCode(value: string | null | undefined) {
+  return normalizeCode(value)
+    .replace(/[^A-Z0-9/-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
 function normalizeInvoiceNumber(value: string | null | undefined) {
   const normalized = normalizeCode(value).replace(/\s+/g, '')
   if (!normalized.includes('-')) return normalized
@@ -183,6 +201,51 @@ function normalizeText(value: string | null | undefined) {
     .trim()
 }
 
+export function buildDescripcionConCodigo(codigo: string | null | undefined, descripcion: string | null | undefined) {
+  const cleanCode = normalizeCode(codigo)
+  const cleanDescription = (descripcion ?? '').trim().replace(/\s+/g, ' ')
+  if (!cleanCode) return cleanDescription
+  if (!cleanDescription) return cleanCode
+  if (cleanDescription.startsWith(`${cleanCode} - `) || cleanDescription.startsWith(`${cleanCode} `)) {
+    return cleanDescription
+  }
+  return `${cleanCode} - ${cleanDescription}`
+}
+
+export function buildSuggestedFacturaProductCode(params: {
+  codigoPdf?: string | null
+  codigoProveedor?: string | null
+  gtin?: string | null
+  descripcion?: string | null
+  groupKey?: string | null
+}) {
+  const pdfCode = sanitizeSuggestedCode(params.codigoPdf)
+  if (pdfCode) return pdfCode
+
+  const supplierCode = sanitizeSuggestedCode(params.codigoProveedor)
+  if (supplierCode) return supplierCode
+
+  const gtin = normalizeDigits(params.gtin)
+  if (gtin) return `GTIN-${gtin.slice(-14)}`
+
+  const normalizedDescription = normalizeText(params.descripcion || params.groupKey || '')
+  const base = normalizedDescription
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 4)
+    .join('-')
+    .slice(0, 28)
+
+  const hashSource = normalizedDescription || 'PRODUCTO'
+  let hashValue = 7
+  for (const char of hashSource) {
+    hashValue = (hashValue * 31 + char.charCodeAt(0)) >>> 0
+  }
+  const hash = hashValue.toString(36).toUpperCase().slice(-4).padStart(4, '0')
+
+  return sanitizeSuggestedCode(`AUTO-${base || 'PRODUCTO'}-${hash}`)
+}
+
 function roundNumber(value: number, decimals = 6) {
   if (!Number.isFinite(value)) return 0
   const factor = 10 ** decimals
@@ -210,15 +273,112 @@ function extractFilesFromZip(buffer: Uint8Array) {
 }
 
 async function extractPdfTextFromBuffer(pdfBuffer: Uint8Array) {
-  const parser = new PDFParse({ data: Buffer.from(pdfBuffer) })
+  let loadingTask: { promise: Promise<{ numPages: number; getPage: (pageNumber: number) => Promise<{ getTextContent: () => Promise<unknown> }> }>; destroy?: () => Promise<unknown> | unknown } | null = null
   try {
-    const result = await parser.getText()
-    return result.text?.trim() || null
-  } catch {
-    return null
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs')
+    loadingTask = pdfjs.getDocument({
+      data: new Uint8Array(pdfBuffer),
+      useWorkerFetch: false,
+      isEvalSupported: false,
+      useSystemFonts: true,
+      disableFontFace: true,
+      stopAtErrors: false,
+    })
+
+    const pdf = await loadingTask.promise
+    const pages: PdfPageLayout[] = []
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber)
+      const textContent = await page.getTextContent() as {
+        items?: Array<{
+          str?: string
+          transform?: number[]
+          width?: number
+          height?: number
+        }>
+      }
+
+      const items = (textContent.items ?? [])
+        .map((item) => {
+          const value = (item.str ?? '').replace(/\s+/g, ' ').trim()
+          const transform = Array.isArray(item.transform) ? item.transform : []
+          return {
+            str: value,
+            x: Number(transform[4] ?? 0),
+            y: Number(transform[5] ?? 0),
+            width: Number(item.width ?? 0),
+            height: Number(item.height ?? 0),
+          } satisfies PdfTextItem
+        })
+        .filter((item) => item.str)
+
+      const rows = buildPdfRows(items)
+      pages.push({
+        pageNumber,
+        rows,
+      })
+    }
+
+    const text = pages.flatMap((page) => page.rows.map((row) => row.text)).join('\n').trim()
+
+    return {
+      text: text || null,
+      pages,
+    }
+  } catch (error) {
+    console.error('Error leyendo PDF de factura electronica', error)
+    return {
+      text: null,
+      pages: [],
+    }
   } finally {
-    await parser.destroy().catch(() => null)
+    if (loadingTask?.destroy) {
+      await Promise.resolve(loadingTask.destroy()).catch(() => null)
+    }
   }
+}
+
+function buildPdfRows(items: PdfTextItem[]) {
+  const tolerance = 1.6
+  const sortedItems = [...items].sort((left, right) => {
+    if (Math.abs(left.y - right.y) > tolerance) return right.y - left.y
+    return left.x - right.x
+  })
+  const rows: Array<{ y: number; items: PdfTextItem[] }> = []
+
+  for (const item of sortedItems) {
+    let targetRow: { y: number; items: PdfTextItem[] } | null = null
+    let bestDistance = Number.POSITIVE_INFINITY
+
+    for (const row of rows) {
+      const distance = Math.abs(row.y - item.y)
+      if (distance <= tolerance && distance < bestDistance) {
+        targetRow = row
+        bestDistance = distance
+      }
+    }
+
+    if (!targetRow) {
+      rows.push({ y: item.y, items: [item] })
+      continue
+    }
+
+    targetRow.items.push(item)
+  }
+
+  return rows
+    .sort((left, right) => right.y - left.y)
+    .map((row) => ({
+      y: row.y,
+      items: row.items.sort((left, right) => left.x - right.x),
+      text: row.items
+        .map((item) => item.str.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+        .join(' ')
+        .trim(),
+    }))
+    .filter((row) => row.text)
 }
 
 function extractInvoiceXml(rawXml: string) {
@@ -246,53 +406,28 @@ function getRootInvoice(xml: string) {
   return invoice
 }
 
-function scoreDescription(a: string, b: string) {
-  const left = new Set(normalizeText(a).split(/\s+/).filter(Boolean))
-  const right = new Set(normalizeText(b).split(/\s+/).filter(Boolean))
-  if (left.size === 0 || right.size === 0) return 0
-
-  let shared = 0
-  for (const token of left) {
-    if (right.has(token)) shared++
-  }
-  return (2 * shared) / (left.size + right.size)
-}
-
-function scorePrice(invoicePrice: number, productPrice: number) {
-  if (!invoicePrice || !productPrice) return 0
-  const delta = Math.abs(invoicePrice - productPrice)
-  const base = Math.max(invoicePrice, productPrice)
-  if (!base) return 0
-  return Math.max(0, 1 - delta / base)
-}
-
 function buildSuggestions(
-  linea: Pick<FacturaImportLinea, 'descripcion' | 'precio_unitario'>,
+  linea: Pick<FacturaImportLinea, 'codigo_pdf'>,
   productos: ProductoImportMatch[]
 ) {
+  const normalizedCode = normalizeCodeKey(linea.codigo_pdf)
+
+  if (!normalizedCode) return []
+
   return productos
-    .map((producto) => {
-      const descScore = scoreDescription(linea.descripcion, producto.descripcion)
-      const priceBase = producto.precio_compra > 0 ? producto.precio_compra : producto.precio_venta
-      const priceScore = scorePrice(linea.precio_unitario, priceBase)
-      const finalScore = roundNumber(descScore * 0.85 + priceScore * 0.15, 3)
+    .flatMap((producto) => {
+      const exactCode = normalizeCodeKey(producto.codigo) === normalizedCode
+      if (!exactCode) return []
 
-      let reason = 'descripcion'
-      if (descScore >= 0.9) reason = 'descripcion casi exacta'
-      else if (priceScore >= 0.85 && descScore >= 0.55) reason = 'descripcion + precio'
-      else if (priceScore >= 0.85) reason = 'precio similar'
-
-      return {
+      return [{
         producto_id: producto.id,
         codigo: producto.codigo,
         descripcion: producto.descripcion,
-        score: finalScore,
-        reason,
-      }
+        score: 1,
+        reason: 'codigo PDF exacto',
+      }]
     })
-    .filter((suggestion) => suggestion.score >= 0.35)
-    .sort((a, b) => b.score - a.score || a.codigo.localeCompare(b.codigo))
-    .slice(0, 5)
+    .sort((a, b) => a.codigo.localeCompare(b.codigo))
 }
 
 export async function readFacturaElectronicaInput(file: File) {
@@ -306,22 +441,33 @@ export async function readFacturaElectronicaInput(file: File) {
     fileType === 'application/x-zip-compressed'
   ) {
     const { rawXml, pdfBuffer } = extractFilesFromZip(buffer)
+    if (!pdfBuffer) {
+      throw new Error('El ZIP debe incluir el PDF original para usar el codigo de cada articulo')
+    }
+
+    const pdfData = await extractPdfTextFromBuffer(pdfBuffer)
+    if (!pdfData.text || !pdfData.pages.length) {
+      throw new Error('No se pudo leer la columna Codigo del PDF adjunto en el ZIP')
+    }
+
     return {
       rawXml,
-      pdfText: pdfBuffer ? await extractPdfTextFromBuffer(pdfBuffer) : null,
+      pdfText: pdfData.text,
+      pdfPages: pdfData.pages,
       sourceType: 'zip',
     } satisfies FacturaElectronicaInput
   }
 
   if (filename.endsWith('.pdf') || fileType === 'application/pdf') {
-    const pdfText = await extractPdfTextFromBuffer(buffer)
-    if (!pdfText) {
+    const pdfData = await extractPdfTextFromBuffer(buffer)
+    if (!pdfData.text || !pdfData.pages.length) {
       throw new Error('No se pudo leer el contenido del PDF')
     }
 
     return {
       rawXml: null,
-      pdfText,
+      pdfText: pdfData.text,
+      pdfPages: pdfData.pages,
       sourceType: 'pdf',
     } satisfies FacturaElectronicaInput
   }
@@ -329,6 +475,7 @@ export async function readFacturaElectronicaInput(file: File) {
   return {
     rawXml: new TextDecoder('utf-8').decode(buffer),
     pdfText: null,
+    pdfPages: null,
     sourceType: 'xml',
   } satisfies FacturaElectronicaInput
 }
@@ -338,7 +485,136 @@ function parsePdfMoney(value: string) {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-function parseFacturaPdfLineas(pdfText: string) {
+function isPdfMoney(value: string) {
+  return /^\d[\d,.]*\.\d{2}$/.test(value.trim())
+}
+
+function isPdfPercent(value: string) {
+  return /^\d+(?:[.,]\d+)?\s*%$/.test(value.trim())
+}
+
+function isPdfQuantity(value: string) {
+  return /^\d+(?:[.,]\d+)?$/.test(value.trim())
+}
+
+function isPdfCode(value: string) {
+  return /^[A-Z0-9][A-Z0-9*/.-]*(?:\/[A-Z0-9*/.-]+)*$/i.test(normalizeCode(value))
+}
+
+function findClosestRowItem(params: {
+  row: PdfTextRow
+  targetX: number
+  maxDistance: number
+  predicate: (item: PdfTextItem) => boolean
+}) {
+  return params.row.items
+    .filter((item) => params.predicate(item))
+    .map((item) => ({
+      item,
+      distance: Math.abs(item.x - params.targetX),
+    }))
+    .filter((candidate) => candidate.distance <= params.maxDistance)
+    .sort((left, right) => left.distance - right.distance)[0]?.item ?? null
+}
+
+function parseFacturaPdfLineasFromLayout(pages: PdfPageLayout[]) {
+  const parsedLineas: PdfFacturaLinea[] = []
+
+  for (const page of pages) {
+    const headerRow = page.rows.find((row) => {
+      const labels = row.items.map((item) => normalizeText(item.str))
+      return labels.includes('CODIGO') && labels.includes('DESCRIPCION') && labels.includes('CANTIDAD')
+    })
+
+    if (!headerRow) continue
+
+    const codeHeader = headerRow.items.find((item) => normalizeText(item.str) === 'CODIGO')
+    const descriptionHeader = headerRow.items.find((item) => normalizeText(item.str) === 'DESCRIPCION')
+    const quantityHeader = headerRow.items.find((item) => normalizeText(item.str) === 'CANTIDAD')
+    const priceHeader = headerRow.items.find((item) => normalizeText(item.str) === 'PRECIO UNITARIO')
+    const discountHeader = headerRow.items.find((item) => normalizeText(item.str) === 'DESCUENTO')
+    const ivaHeader = headerRow.items.find((item) => normalizeText(item.str) === 'IVA')
+    const totalHeader = headerRow.items.find((item) => normalizeText(item.str) === 'VALOR TOTAL')
+
+    if (!codeHeader || !descriptionHeader || !quantityHeader || !priceHeader || !discountHeader || !ivaHeader || !totalHeader) {
+      continue
+    }
+
+    for (const row of page.rows) {
+      if (row.y >= headerRow.y - 2) continue
+
+      const codeItem = findClosestRowItem({
+        row,
+        targetX: codeHeader.x,
+        maxDistance: 60,
+        predicate: (item) => isPdfCode(item.str),
+      })
+      const quantityItem = findClosestRowItem({
+        row,
+        targetX: quantityHeader.x,
+        maxDistance: 55,
+        predicate: (item) => isPdfQuantity(item.str),
+      })
+      const priceItem = findClosestRowItem({
+        row,
+        targetX: priceHeader.x,
+        maxDistance: 85,
+        predicate: (item) => isPdfMoney(item.str),
+      })
+      const discountItem = findClosestRowItem({
+        row,
+        targetX: discountHeader.x,
+        maxDistance: 85,
+        predicate: (item) => isPdfMoney(item.str),
+      })
+      const ivaAmountItem = findClosestRowItem({
+        row,
+        targetX: ivaHeader.x,
+        maxDistance: 85,
+        predicate: (item) => isPdfMoney(item.str),
+      })
+      const totalItem = findClosestRowItem({
+        row,
+        targetX: totalHeader.x,
+        maxDistance: 85,
+        predicate: (item) => isPdfMoney(item.str),
+      })
+      const ivaPercentItem = row.items.find((item) => isPdfPercent(item.str)) ?? null
+
+      if (!codeItem || !quantityItem || !priceItem || !discountItem || !ivaAmountItem || !totalItem || !ivaPercentItem) {
+        continue
+      }
+
+      const description = row.items
+        .filter((item) => item.x >= descriptionHeader.x - 8 && item.x < quantityHeader.x - 8)
+        .map((item) => item.str)
+        .filter(Boolean)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+      if (!description) continue
+
+      parsedLineas.push({
+        descripcion: description,
+        codigo_pdf: normalizeCode(codeItem.str),
+        cantidad: parsePdfMoney(quantityItem.str),
+        total: roundNumber(parsePdfMoney(totalItem.str), 2),
+        precio_unitario_bruto: roundNumber(parsePdfMoney(priceItem.str), 2),
+        descuento_unitario: roundNumber(parsePdfMoney(discountItem.str), 2),
+        iva_unitario: roundNumber(parsePdfMoney(ivaAmountItem.str), 2),
+        porcentaje_iva: parsePdfMoney(ivaPercentItem.str.replace('%', '').trim()),
+      })
+    }
+  }
+
+  return parsedLineas
+}
+
+function parseFacturaPdfLineas(pdfText: string, pdfPages?: PdfPageLayout[] | null) {
+  const layoutLineas = pdfPages ? parseFacturaPdfLineasFromLayout(pdfPages) : []
+  if (layoutLineas.length > 0) return layoutLineas
+
   const lineRegex = /^(.+?)\s+(\d+(?:[.,]\d+)?)\s+(\d[\d,.]*\.\d{2})\s+([A-Z0-9-]+)\s+(\d[\d,.]*\.\d{2})\s+(\d[\d,.]*\.\d{2})\s+(\d[\d,.]*\.\d{2})\s+(\d+(?:\.\d+)?)\s*%$/
 
   return pdfText
@@ -351,7 +627,7 @@ function parseFacturaPdfLineas(pdfText: string) {
 
       return [{
         descripcion: match[1].trim(),
-        codigo_proveedor: normalizeCode(match[4]),
+        codigo_pdf: normalizeCode(match[4]),
         cantidad: parsePdfMoney(match[2]),
         total: roundNumber(parsePdfMoney(match[3]), 2),
         precio_unitario_bruto: roundNumber(parsePdfMoney(match[5]), 2),
@@ -429,7 +705,7 @@ function parseFacturaPdfCabecera(pdfText: string, lineas: FacturaImportLineaBase
     }
   }
 
-  const subtotal = roundNumber(lineas.reduce((sum, linea) => sum + linea.subtotal, 0), 2)
+  const subtotal = roundNumber(lineas.reduce((sum, linea) => sum + linea.subtotal_neto, 0), 2)
   const iva = roundNumber(lineas.reduce((sum, linea) => sum + linea.iva, 0), 2)
   const total = roundNumber(lineas.reduce((sum, linea) => sum + linea.total, 0), 2)
 
@@ -451,12 +727,20 @@ function parseFacturaPdfCabecera(pdfText: string, lineas: FacturaImportLineaBase
 
 function enrichLineasWithPdf(
   lineas: Array<FacturaImportLineaBase & { line_index: number }>,
-  pdfText: string | null | undefined
+  pdfText: string | null | undefined,
+  pdfPages?: PdfPageLayout[] | null
 ) {
-  if (!pdfText) return lineas
+  if (!pdfText) {
+    throw new Error('Se requiere el PDF original para importar usando el codigo de cada articulo')
+  }
 
-  const pdfLineas = parseFacturaPdfLineas(pdfText)
-  if (pdfLineas.length !== lineas.length) return lineas
+  const pdfLineas = parseFacturaPdfLineas(pdfText, pdfPages)
+  if (pdfLineas.length === 0) {
+    throw new Error('El PDF no contiene una columna Codigo legible para las lineas de la factura')
+  }
+  if (pdfLineas.length !== lineas.length) {
+    throw new Error('El PDF y el XML no coinciden en el numero de lineas de la factura')
+  }
 
   const canMergeByIndex = pdfLineas.every((pdfLinea, index) => {
     const xmlLinea = lineas[index]
@@ -466,17 +750,17 @@ function enrichLineasWithPdf(
     )
   })
 
-  if (!canMergeByIndex) return lineas
+  if (!canMergeByIndex) {
+    throw new Error('El PDF y el XML no se pudieron reconciliar linea por linea')
+  }
 
   return lineas.map((linea, index) => {
     const pdfLinea = pdfLineas[index]
-    const codigoProveedor = pdfLinea.codigo_proveedor || linea.codigo_proveedor
 
     return {
       ...linea,
       descripcion: linea.descripcion || pdfLinea.descripcion,
-      codigo: codigoProveedor || linea.codigo || linea.gtin || '',
-      codigo_proveedor: codigoProveedor,
+      codigo_pdf: pdfLinea.codigo_pdf,
       porcentaje_iva: linea.porcentaje_iva || pdfLinea.porcentaje_iva,
     }
   })
@@ -484,7 +768,7 @@ function enrichLineasWithPdf(
 
 export function parseFacturaElectronica(
   rawInputXml: string,
-  options?: { pdfText?: string | null }
+  options?: { pdfText?: string | null; pdfPages?: PdfPageLayout[] | null }
 ): FacturaImportParseResult {
   const invoiceXml = extractInvoiceXml(rawInputXml)
   const invoice = getRootInvoice(invoiceXml) as Record<string, unknown>
@@ -507,12 +791,27 @@ export function parseFacturaElectronica(
   const rawLineas = asArray<Record<string, unknown>>(invoice.InvoiceLine as Record<string, unknown> | undefined).map((linea, index) => {
     const line = linea as Record<string, unknown>
     const item = line.Item as Record<string, unknown> | undefined
-    const sellerNode = item?.SellersItemIdentification as Record<string, unknown> | undefined
     const standardNode = item?.StandardItemIdentification as Record<string, unknown> | undefined
     const standardIdNode = standardNode?.ID as Record<string, unknown> | string | undefined
     const quantity = toNumber(line.InvoicedQuantity as ParsedNode)
-    const lineSubtotal = toNumber(line.LineExtensionAmount as ParsedNode)
+    const lineSubtotalNeto = toNumber(line.LineExtensionAmount as ParsedNode)
     const referencePrice = toNumber(((line.Price as Record<string, unknown> | undefined)?.PriceAmount) as ParsedNode)
+    const allowanceCharges = asArray<Record<string, unknown>>(line.AllowanceCharge as Record<string, unknown> | undefined)
+      .filter((charge) => nodeText((charge as Record<string, unknown>).ChargeIndicator as ParsedNode).toLowerCase() === 'false')
+    const totalDescuento = roundNumber(
+      allowanceCharges.reduce<number>((sum, charge) => sum + toNumber((charge as Record<string, unknown>).Amount as ParsedNode), 0),
+      2
+    )
+    const lineSubtotal = roundNumber(
+      toNumber((allowanceCharges[0] as Record<string, unknown> | undefined)?.BaseAmount as ParsedNode) ||
+      (quantity > 0 && referencePrice > 0 ? quantity * referencePrice : lineSubtotalNeto + totalDescuento),
+      2
+    )
+    const descuentoPorcentajeRaw = toNumber((allowanceCharges[0] as Record<string, unknown> | undefined)?.MultiplierFactorNumeric as ParsedNode)
+    const descuentoPorcentaje = roundNumber(
+      descuentoPorcentajeRaw || (lineSubtotal > 0 ? (totalDescuento * 100) / lineSubtotal : 0),
+      2
+    )
     const unitPrice = quantity > 0 && lineSubtotal > 0
       ? roundNumber(lineSubtotal / quantity)
       : roundNumber(referencePrice)
@@ -533,13 +832,11 @@ export function parseFacturaElectronica(
       ? nodeText((standardIdNode as Record<string, unknown>)['@_schemeName'] as ParsedNode) || null
       : null
     const gtin = standardSchemeId === '010' ? normalizeDigits(standardText) || null : null
-    const codigoProveedor = normalizeCode(nodeText(sellerNode?.ID as ParsedNode))
     const descripcion = pickText(item?.Description as ParsedNode, item?.Name as ParsedNode) || `Linea ${index + 1}`
 
     return {
       descripcion,
-      codigo: codigoProveedor || gtin || '',
-      codigo_proveedor: codigoProveedor,
+      codigo_pdf: '',
       gtin,
       standard_scheme_id: standardSchemeId,
       standard_scheme_name: standardSchemeName,
@@ -547,13 +844,16 @@ export function parseFacturaElectronica(
       precio_unitario: unitPrice || referencePrice || 0,
       precio_referencia: referencePrice || null,
       subtotal: roundNumber(lineSubtotal, 2),
+      subtotal_neto: roundNumber(lineSubtotalNeto, 2),
+      total_descuento: totalDescuento,
+      descuento_porcentaje: descuentoPorcentaje,
       iva: lineIva,
-      total: roundNumber(lineSubtotal + lineIva, 2),
+      total: roundNumber(lineSubtotalNeto + lineIva, 2),
       porcentaje_iva: porcentajeIva,
       line_index: index,
     }
   })
-  const enrichedLineas = enrichLineasWithPdf(rawLineas, options?.pdfText)
+  const enrichedLineas = enrichLineasWithPdf(rawLineas, options?.pdfText, options?.pdfPages)
 
   return {
     cabecera: {
@@ -575,30 +875,34 @@ export function parseFacturaElectronica(
   }
 }
 
-export function parseFacturaElectronicaPdf(pdfText: string): FacturaImportParseResult {
-  const pdfLineas = parseFacturaPdfLineas(pdfText)
+export function parseFacturaElectronicaPdf(pdfText: string, pdfPages?: PdfPageLayout[] | null): FacturaImportParseResult {
+  const pdfLineas = parseFacturaPdfLineas(pdfText, pdfPages)
   if (pdfLineas.length === 0) {
     throw new Error('El PDF no contiene lineas de factura reconocibles')
   }
 
   const lineas = pdfLineas.map((linea) => {
     const cantidad = linea.cantidad || 1
-    const subtotal = roundNumber((linea.precio_unitario_bruto - linea.descuento_unitario) * cantidad, 2)
+    const subtotal = roundNumber(linea.precio_unitario_bruto * cantidad, 2)
+    const totalDescuento = roundNumber(linea.descuento_unitario * cantidad, 2)
+    const subtotalNeto = roundNumber(subtotal - totalDescuento, 2)
     const iva = roundNumber(linea.iva_unitario * cantidad, 2)
     const total = roundNumber(linea.total, 2)
-    const precioUnitario = cantidad > 0 ? roundNumber(subtotal / cantidad) : 0
+    const descuentoPorcentaje = subtotal > 0 ? roundNumber((totalDescuento * 100) / subtotal, 2) : 0
 
     return {
       descripcion: linea.descripcion,
-      codigo: linea.codigo_proveedor,
-      codigo_proveedor: linea.codigo_proveedor,
+      codigo_pdf: linea.codigo_pdf,
       gtin: null,
       standard_scheme_id: null,
       standard_scheme_name: null,
       cantidad,
-      precio_unitario: precioUnitario,
+      precio_unitario: linea.precio_unitario_bruto,
       precio_referencia: linea.precio_unitario_bruto || null,
       subtotal,
+      subtotal_neto: subtotalNeto,
+      total_descuento: totalDescuento,
+      descuento_porcentaje: descuentoPorcentaje,
       iva,
       total,
       porcentaje_iva: linea.porcentaje_iva,
@@ -615,70 +919,27 @@ export function parseFacturaElectronicaPdf(pdfText: string): FacturaImportParseR
 export function buildFacturaImportMatches(params: {
   lineas: FacturaImportLineaBase[]
   productos: ProductoImportMatch[]
-  proveedorId: string | null
-  equivalencias: CodigoProveedorMatch[]
 }) {
-  const productosById = new Map(params.productos.map((producto) => [producto.id, producto]))
   const productosByCode = new Map(
     params.productos
       .filter((producto) => producto.codigo)
       .map((producto) => [normalizeCodeKey(producto.codigo), producto])
   )
-  const productosByBarcode = new Map(
-    params.productos
-      .filter((producto) => producto.codigo_barras)
-      .map((producto) => [normalizeDigits(producto.codigo_barras), producto])
-  )
-
-  const equivalenciaByGtin = new Map<string, CodigoProveedorMatch>()
-  const equivalenciaByCodigo = new Map<string, CodigoProveedorMatch>()
-  if (params.proveedorId) {
-    for (const equivalencia of params.equivalencias) {
-      if (equivalencia.gtin) {
-        equivalenciaByGtin.set(normalizeDigits(equivalencia.gtin), equivalencia)
-      } else if (equivalencia.codigo_proveedor) {
-        equivalenciaByCodigo.set(normalizeCodeKey(equivalencia.codigo_proveedor), equivalencia)
-      }
-    }
-  }
-
-  const duplicateCounts = new Map<string, number>()
-  for (const linea of params.lineas) {
-    if (linea.gtin) continue
-    if (!linea.codigo_proveedor) continue
-    const key = normalizeCodeKey(linea.codigo_proveedor)
-    duplicateCounts.set(key, (duplicateCounts.get(key) ?? 0) + 1)
-  }
 
   return params.lineas.map((linea) => {
-    let producto = linea.gtin ? productosByBarcode.get(normalizeDigits(linea.gtin)) ?? null : null
+    const normalizedPdfCode = normalizeCodeKey(linea.codigo_pdf)
+    const producto = normalizedPdfCode
+      ? productosByCode.get(normalizedPdfCode) ?? null
+      : null
     let matchSource: FacturaImportLinea['match_source'] = 'sin_match'
 
     if (producto) {
-      matchSource = 'gtin_codigo_barras'
-    } else if (linea.gtin) {
-      const equivalencia = equivalenciaByGtin.get(normalizeDigits(linea.gtin))
-      producto = equivalencia ? productosById.get(equivalencia.producto_id) ?? null : null
-      if (producto) matchSource = 'equivalencia_gtin'
+      matchSource = 'codigo_interno'
     }
 
-    if (!producto && linea.codigo_proveedor) {
-      const equivalencia = equivalenciaByCodigo.get(normalizeCodeKey(linea.codigo_proveedor))
-      producto = equivalencia ? productosById.get(equivalencia.producto_id) ?? null : null
-      if (producto) matchSource = 'equivalencia_codigo_proveedor'
-    }
-
-    if (!producto && linea.codigo_proveedor) {
-      producto = productosByCode.get(normalizeCodeKey(linea.codigo_proveedor)) ?? null
-      if (producto) matchSource = 'codigo_interno'
-    }
-
-    const codigoProveedorAmbiguo = !linea.gtin && !!linea.codigo_proveedor && (duplicateCounts.get(normalizeCodeKey(linea.codigo_proveedor)) ?? 0) > 1
-    const groupKey = linea.gtin
-      ? `gtin:${normalizeDigits(linea.gtin)}`
-      : linea.codigo_proveedor
-        ? `codigo:${normalizeCodeKey(linea.codigo_proveedor)}`
-        : `linea:${normalizeText(linea.descripcion) || 'SIN-REFERENCIA'}`
+    const groupKey = linea.codigo_pdf
+      ? `codigo:${normalizedPdfCode}`
+      : `linea:${normalizeText(linea.descripcion) || 'SIN-REFERENCIA'}`
     const sugerencias = buildSuggestions(linea, params.productos)
 
     return {
@@ -686,12 +947,10 @@ export function buildFacturaImportMatches(params: {
       producto_id: producto?.id ?? null,
       producto_codigo: producto?.codigo ?? null,
       producto_descripcion: producto?.descripcion ?? null,
-      estado: producto ? 'encontrado' : (linea.codigo || linea.gtin ? 'no_encontrado' : 'sin_codigo'),
+      estado: producto ? 'encontrado' : (linea.codigo_pdf ? 'no_encontrado' : 'sin_codigo'),
       match_source: matchSource,
       sugerencias,
       grupo_clave: groupKey,
-      codigo_proveedor_ambiguo: codigoProveedorAmbiguo,
-      equivalencia_permitida: !!linea.gtin || (!!linea.codigo_proveedor && !codigoProveedorAmbiguo),
     }
   })
 }

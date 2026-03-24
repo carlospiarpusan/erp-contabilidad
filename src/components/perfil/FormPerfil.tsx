@@ -29,6 +29,10 @@ export function FormPerfil({ usuario }: Props) {
   const [verifiedFactorId, setVerifiedFactorId] = useState<string | null>(null)
   const [aal, setAal] = useState<string>('aal1')
   const [codigoMfa, setCodigoMfa] = useState('')
+  const [privacyLoading, setPrivacyLoading] = useState(false)
+  const [privacyMsg, setPrivacyMsg] = useState('')
+  const [privacyVersion, setPrivacyVersion] = useState('')
+  const [ultimoConsentimiento, setUltimoConsentimiento] = useState<string | null>(null)
 
   async function guardarPerfil(e: React.FormEvent) {
     e.preventDefault()
@@ -86,6 +90,27 @@ export function FormPerfil({ usuario }: Props) {
     void cargarMFA()
   }, [cargarMFA])
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function cargarConsentimientos() {
+      try {
+        const res = await fetch('/api/perfil/consentimientos')
+        const data = await res.json().catch(() => null)
+        if (!res.ok || cancelled) return
+        setPrivacyVersion(typeof data?.politica_actual === 'string' ? data.politica_actual : '')
+        setUltimoConsentimiento(data?.consentimientos?.[0]?.aceptado_en ?? null)
+      } catch {
+        if (!cancelled) setPrivacyMsg('No se pudo cargar el estado de privacidad.')
+      }
+    }
+
+    void cargarConsentimientos()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   async function activarMFA() {
     setMfaLoading(true)
     setMfaMsg('')
@@ -141,6 +166,32 @@ export function FormPerfil({ usuario }: Props) {
       setMfaMsg(`❌ ${e instanceof Error ? e.message : 'No se pudo desactivar MFA'}`)
     } finally {
       setMfaLoading(false)
+    }
+  }
+
+  async function exportarDatos() {
+    window.open('/api/perfil/datos/export', '_blank')
+  }
+
+  async function registrarConsentimiento() {
+    setPrivacyLoading(true)
+    setPrivacyMsg('')
+    try {
+      const res = await fetch('/api/perfil/consentimientos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ version: privacyVersion || undefined }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error ?? 'No se pudo registrar la aceptación')
+      setUltimoConsentimiento(data?.aceptado_en ?? new Date().toISOString())
+      setPrivacyVersion(typeof data?.version === 'string' ? data.version : privacyVersion)
+      setPrivacyMsg('✅ Aceptación de privacidad registrada')
+      setTimeout(() => setPrivacyMsg(''), 3000)
+    } catch (e: unknown) {
+      setPrivacyMsg(`❌ ${e instanceof Error ? e.message : 'No se pudo registrar la aceptación'}`)
+    } finally {
+      setPrivacyLoading(false)
     }
   }
 
@@ -296,6 +347,42 @@ export function FormPerfil({ usuario }: Props) {
             {mfaMsg}
           </p>
         )}
+      </div>
+
+      <div className={cn(cardCls, 'p-5')}>
+        <div className="mb-4 flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-gray-400" />
+          <h2 className="font-semibold text-gray-800">Privacidad y datos personales</h2>
+        </div>
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-600">Versión política de datos</label>
+            <input
+              value={privacyVersion}
+              onChange={(e) => setPrivacyVersion(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="v1.0"
+            />
+            {ultimoConsentimiento && (
+              <p className="mt-1 text-xs text-gray-400">
+                Última aceptación registrada: {new Date(ultimoConsentimiento).toLocaleString('es-CO')}
+              </p>
+            )}
+          </div>
+          {privacyMsg && (
+            <p className={`text-sm ${privacyMsg.startsWith('✅') ? 'text-green-600' : 'text-red-500'}`}>
+              {privacyMsg}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={exportarDatos}>
+              Exportar mis datos
+            </Button>
+            <Button type="button" onClick={registrarConsentimiento} disabled={privacyLoading}>
+              {privacyLoading ? 'Registrando...' : 'Registrar aceptación de privacidad'}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )

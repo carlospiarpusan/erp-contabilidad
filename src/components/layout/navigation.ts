@@ -23,39 +23,46 @@ export interface NavigationChild {
   module?: AppModule
 }
 
+export type NavigationSection = 'principal' | 'operacion' | 'control' | 'administracion' | 'superadmin'
+
 export interface NavigationItem {
   label: string
   icon: ElementType
   href?: string
   module: AppModule
+  section: NavigationSection
   children?: readonly NavigationChild[]
   accent?: 'superadmin'
 }
 
+export const NAVIGATION_SECTION_META: Record<NavigationSection, { label: string; order: number }> = {
+  principal: { label: 'Principal', order: 1 },
+  operacion: { label: 'Operación', order: 2 },
+  control: { label: 'Control', order: 3 },
+  administracion: { label: 'Administración', order: 4 },
+  superadmin: { label: 'Superadmin', order: 5 },
+}
+
 const NAVIGATION_ITEMS: readonly NavigationItem[] = [
-  {
-    label: 'Panel Admin',
-    icon: LayoutDashboard,
-    href: '/superadmin',
-    module: 'superadmin',
-    accent: 'superadmin',
-  },
   {
     label: 'Dashboard',
     icon: LayoutDashboard,
     href: '/',
     module: 'dashboard',
+    section: 'principal',
   },
   {
     label: 'Notificaciones',
     icon: Bell,
     href: '/notificaciones',
     module: 'notificaciones',
+    section: 'principal',
   },
   {
     label: 'Ventas',
     icon: TrendingUp,
     module: 'ventas',
+    section: 'operacion',
     children: [
       { label: 'Punto de Venta (POS)', href: '/pos' },
       { label: 'Facturas de Venta', href: '/ventas/facturas' },
@@ -74,6 +81,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Clientes',
     icon: Users,
     module: 'clientes',
+    section: 'operacion',
     children: [
       { label: 'Todos los clientes', href: '/clientes' },
       { label: 'Grupos', href: '/clientes/grupos' },
@@ -83,10 +91,12 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Compras',
     icon: ShoppingCart,
     module: 'compras',
+    section: 'operacion',
     children: [
       { label: 'Facturas de Compra', href: '/compras/facturas' },
       { label: 'Órdenes de Compra', href: '/compras/ordenes' },
       { label: 'Sugeridos', href: '/compras/sugeridos' },
+      { label: 'Importar factura DIAN', href: '/compras/facturas/importar' },
       { label: 'Recibos de Compra', href: '/compras/recibos' },
       { label: 'Proveedores', href: '/compras/proveedores' },
     ],
@@ -95,9 +105,11 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Productos',
     icon: Package,
     module: 'productos',
+    section: 'operacion',
     children: [
       { label: 'Artículos', href: '/productos' },
       { label: 'Stock bajo', href: '/productos/stock-bajo' },
+      { label: 'Sin rotación', href: '/productos/sin-rotacion' },
       { label: 'Catálogo', href: '/productos/catalogo' },
       { label: 'Fabricantes', href: '/productos/fabricantes' },
       { label: 'Familias', href: '/productos/familias' },
@@ -107,6 +119,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Inventario',
     icon: Warehouse,
     module: 'inventario',
+    section: 'operacion',
     children: [
       { label: 'Kardex', href: '/inventario/kardex' },
       { label: 'Traslados', href: '/inventario/traslados' },
@@ -117,6 +130,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Gastos',
     icon: Receipt,
     module: 'gastos',
+    section: 'operacion',
     children: [
       { label: 'Registro de Gastos', href: '/gastos' },
       { label: 'Acreedores', href: '/gastos/acreedores' },
@@ -127,6 +141,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Tesorería',
     icon: Landmark,
     module: 'tesoreria',
+    section: 'operacion',
     children: [
       { label: 'Caja Diaria', href: '/tesoreria/caja' },
       { label: 'Cuentas Bancarias', href: '/tesoreria/cuentas-bancarias' },
@@ -138,6 +153,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Contabilidad',
     icon: BookOpen,
     module: 'contabilidad',
+    section: 'control',
     children: [
       { label: 'Asientos', href: '/contabilidad/asientos' },
       { label: 'PUC Cuentas', href: '/contabilidad/cuentas' },
@@ -145,6 +161,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
       { label: 'Centros de Costo', href: '/contabilidad/centros-costo' },
       { label: 'Retenciones', href: '/contabilidad/retenciones' },
       { label: 'Ejercicios', href: '/contabilidad/ejercicios' },
+      { label: 'Periodos Contables', href: '/contabilidad/periodos' },
       { label: 'Impuestos', href: '/contabilidad/impuestos' },
       { label: 'Formas de Pago', href: '/contabilidad/formas-pago' },
       { label: 'Consecutivos', href: '/contabilidad/consecutivos' },
@@ -155,6 +172,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Informes',
     icon: BarChart3,
     module: 'informes',
+    section: 'control',
     children: [
       { label: 'Balances', href: '/informes/balances' },
       { label: 'Cartera', href: '/informes/cartera' },
@@ -179,14 +197,15 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Configuración',
     icon: Settings,
     module: 'configuracion',
+    section: 'administracion',
     children: [
       { label: 'Datos de Empresa', href: '/configuracion/empresa' },
       { label: 'Colaboradores', href: '/configuracion/colaboradores' },
       { label: 'Bodegas', href: '/configuracion/bodegas' },
       { label: 'Transportadoras', href: '/configuracion/transportadoras' },
       { label: 'Usuarios', href: '/configuracion/usuarios' },
-      { label: 'Facturación Electrónica', href: '/configuracion/facturacion-electronica' },
-      { label: 'Migración e Importación', href: '/configuracion/importar' },
+      { label: 'Regulación y Cumplimiento', href: '/configuracion/regulacion' },
+      { label: 'Migración, Importación y Exportación', href: '/configuracion/importar' },
       { label: 'Auditoría', href: '/configuracion/auditoria' },
     ],
   },
@@ -194,8 +213,10 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
     label: 'Superadmin',
     icon: Shield,
     module: 'superadmin',
+    section: 'superadmin',
     accent: 'superadmin',
     children: [
+      { label: 'Resumen', href: '/superadmin' },
       { label: 'Empresas', href: '/superadmin/empresas' },
       { label: 'Todos los usuarios', href: '/superadmin/usuarios' },
     ],

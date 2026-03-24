@@ -97,7 +97,12 @@ export default async function SuperadminEmpresasPage() {
       <div className="rounded-xl border border-violet-200 bg-violet-50 dark:border-violet-800 dark:bg-violet-900/10 p-5">
         <div className="flex items-center gap-2 mb-4">
           <Plus className="h-4 w-4 text-violet-600" />
-          <h2 className="font-semibold text-violet-800 dark:text-violet-300">Crear nueva empresa</h2>
+          <div>
+            <h2 className="font-semibold text-violet-800 dark:text-violet-300">Registro de escuela / empresa</h2>
+            <p className="text-sm text-violet-700/80 dark:text-violet-300/80">
+              Crea el tenant completo con datos institucionales y administrador inicial.
+            </p>
+          </div>
         </div>
         <NuevaEmpresaForm />
       </div>

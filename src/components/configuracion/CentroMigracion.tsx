@@ -17,11 +17,14 @@ import {
 import { ImportarCSV } from '@/components/configuracion/ImportarCSV'
 import type { HistorialImportacionItem } from '@/lib/db/importaciones'
 import { type ImportEntity, IMPORT_ENTITY_META } from '@/lib/import/migration'
+import { getVisibleExports } from '@/lib/export/registry'
+import type { AppRole } from '@/lib/auth/permissions'
 import { cardCls, cn } from '@/utils/cn'
 
 interface CentroMigracionProps {
   initialEntidad: ImportEntity
   historial: HistorialImportacionItem[]
+  role: AppRole | null
 }
 
 type MigrationAction = {
@@ -43,6 +46,7 @@ const IMPORT_CARDS: readonly { entidad: ImportEntity; accent: string }[] = [
   { entidad: 'clientes', accent: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
   { entidad: 'proveedores', accent: 'bg-orange-50 text-orange-700 border-orange-200' },
   { entidad: 'productos', accent: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { entidad: 'inventario-inicial', accent: 'bg-lime-50 text-lime-700 border-lime-200' },
   { entidad: 'asientos-contables', accent: 'bg-violet-50 text-violet-700 border-violet-200' },
   { entidad: 'facturas-compra', accent: 'bg-amber-50 text-amber-700 border-amber-200' },
 ] as const
@@ -88,10 +92,11 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
   {
     numero: '4',
     titulo: 'Inventario inicial',
-    descripcion: 'Usa la importacion de productos con stock_actual y stock_minimo para cargar existencia inicial en la bodega principal.',
+    descripcion: 'Carga existencias iniciales aparte del catálogo. Así puedes migrar stock y costo sin mezclarlo con datos maestros del producto.',
     icon: Boxes,
     acciones: [
-      { label: 'Abrir importador de inventario', href: '/configuracion/importar?entidad=productos', accent: 'teal' },
+      { label: 'Importar inventario inicial', href: '/configuracion/importar?entidad=inventario-inicial', accent: 'teal' },
+      { label: 'Exportar inventario', href: '/informes/exportaciones', accent: 'gray' },
       { label: 'Ajuste inventario', href: '/inventario/ajuste', accent: 'gray' },
       { label: 'Kardex', href: '/inventario/kardex', accent: 'gray' },
     ],
@@ -141,6 +146,7 @@ function getHistorialLabel(tabla: string) {
     import_clientes: 'Clientes',
     import_proveedores: 'Proveedores',
     import_productos: 'Productos',
+    import_inventario_inicial: 'Inventario inicial',
     import_facturas_compra: 'Facturas compra',
     import_cuentas_puc: 'PUC',
     import_asientos_contables: 'Asientos',
@@ -148,7 +154,13 @@ function getHistorialLabel(tabla: string) {
   return map[tabla] ?? tabla
 }
 
-export function CentroMigracion({ initialEntidad, historial }: CentroMigracionProps) {
+export function CentroMigracion({ initialEntidad, historial, role }: CentroMigracionProps) {
+  const exportCards = role
+    ? getVisibleExports(role).filter((item) =>
+        ['inventario', 'clientes', 'proveedores', 'compras', 'ventas'].includes(item.id)
+      )
+    : []
+
   return (
     <div className="flex flex-col gap-6">
       <section className={cn(cardCls, 'overflow-hidden')}>
@@ -179,6 +191,17 @@ export function CentroMigracion({ initialEntidad, historial }: CentroMigracionPr
                 </p>
               </div>
             </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/configuracion/importar?entidad=productos#importador" className="inline-flex items-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-sm font-medium text-teal-700 hover:bg-teal-100">
+                Catalogo de productos
+              </Link>
+              <Link href="/configuracion/importar?entidad=inventario-inicial#importador" className="inline-flex items-center gap-2 rounded-xl border border-lime-200 bg-lime-50 px-3 py-2 text-sm font-medium text-lime-700 hover:bg-lime-100">
+                Inventario inicial
+              </Link>
+              <Link href="/informes/exportaciones" className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100">
+                Centro de exportaciones
+              </Link>
+            </div>
           </div>
 
           <div className="rounded-2xl border border-teal-100 bg-gradient-to-br from-teal-50 via-white to-emerald-50 p-5 dark:border-teal-900/40 dark:from-teal-950/30 dark:via-gray-900 dark:to-emerald-950/20">
@@ -205,6 +228,56 @@ export function CentroMigracion({ initialEntidad, historial }: CentroMigracionPr
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <article className={cn(cardCls, 'p-5 lg:col-span-2')}>
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+            <FolderSync className="h-4 w-4 text-teal-600" />
+            Cómo usar este centro
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">1. Migración</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Ordena la carga de parámetros, terceros, catálogo e inventario para no dejar dependencias rotas.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">2. Importación</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Descarga plantilla, valida encabezados y sube el archivo correcto según entidad o etapa.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/50">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">3. Exportación</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Respalda inventario, clientes, proveedores y documentos antes o después de migrar.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <article className={cn(cardCls, 'p-5')}>
+          <div className="flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-100">
+            <Receipt className="h-4 w-4 text-blue-600" />
+            Exportación rápida
+          </div>
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+            Usa estas salidas para respaldo o migración entre plataformas sin salir de este flujo.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {exportCards.slice(0, 4).map((item) => (
+              <Link
+                key={item.id}
+                href="/informes/exportaciones"
+                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
+        </article>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">

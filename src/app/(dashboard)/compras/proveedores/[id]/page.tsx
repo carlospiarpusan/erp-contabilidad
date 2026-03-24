@@ -60,6 +60,11 @@ export default async function DetalleProveedorPage({ params }: Props) {
               <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${proveedor.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 dark:text-gray-400 dark:text-gray-500'}`}>
                 {proveedor.activo ? <><CheckCircle2 className="h-3 w-3" /> Activo</> : <><Clock className="h-3 w-3" /> Inactivo</>}
               </span>
+              <span className={`ml-2 mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                proveedor.obligado_a_facturar !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+              }`}>
+                {proveedor.obligado_a_facturar !== false ? 'Obligado a facturar' : 'Documento soporte requerido'}
+              </span>
             </div>
           </div>
           <Link href={`/compras/facturas?proveedor_id=${proveedor.id}`}

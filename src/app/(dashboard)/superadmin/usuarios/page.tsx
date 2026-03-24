@@ -88,12 +88,12 @@ export default async function SuperadminUsuariosPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {rolNombre !== 'superadmin' && (
-                      <GestionarUsuario
-                        usuario={{ id: u.id, nombre: u.nombre, activo: u.activo, rol_id: u.rol_id, empresa_id: u.empresa_id }}
-                        roles={roles ?? []}
-                      />
-                    )}
+                    <GestionarUsuario
+                      usuario={{ id: u.id, nombre: u.nombre, email: u.email, activo: u.activo, rol_id: u.rol_id, empresa_id: u.empresa_id }}
+                      roles={roles ?? []}
+                      empresas={empresas ?? []}
+                      currentUserId={session.id}
+                    />
                   </td>
                 </tr>
               )

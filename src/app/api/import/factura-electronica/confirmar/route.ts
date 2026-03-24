@@ -4,16 +4,20 @@ import { getEjercicioActivo } from '@/lib/db/maestros'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { createServiceClient } from '@/lib/supabase/service'
 import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
+import { buildDescripcionConCodigo } from '@/lib/import/factura-electronica-shared'
 
 type LineaConfirmada = {
   descripcion: string
-  codigo_proveedor: string
+  codigo_pdf: string
   gtin?: string | null
   standard_scheme_id?: string | null
   standard_scheme_name?: string | null
   cantidad: number
   precio_unitario: number
   subtotal: number
+  subtotal_neto?: number
+  total_descuento?: number
+  descuento_porcentaje?: number
   iva: number
   total: number
   porcentaje_iva?: number
@@ -23,7 +27,6 @@ type LineaConfirmada = {
   nueva_descripcion?: string
   nuevo_precio_venta?: number
   persistir_gtin?: boolean
-  crear_equivalencia?: boolean
 }
 
 type ProductoBase = {
@@ -39,6 +42,75 @@ type ProductoBase = {
 type ImpuestoDisponible = {
   id: string
   porcentaje: number | null
+}
+
+type LineaPreparada = {
+  descripcion_original: string
+  descripcion_importacion: string
+  codigo_pdf: string | null
+  gtin: string | null
+  cantidad: number
+  precio_unitario: number
+  subtotal: number
+  subtotal_neto: number
+  total_descuento: number
+  descuento_porcentaje: number
+  iva: number
+  total: number
+  porcentaje_iva: number
+  impuesto_id: string | null
+  accion: 'usar_existente' | 'crear_nuevo'
+  producto_id: string | null
+  nuevo_codigo: string | null
+  nueva_descripcion: string | null
+  nuevo_precio_venta: number | null
+  persistir_gtin: boolean
+}
+
+type DocumentoLineaPersistida = {
+  id: string
+  descripcion: string | null
+  cantidad: number | null
+  precio_unitario: number | null
+  descuento_porcentaje: number | null
+  producto: {
+    id: string
+    codigo: string
+    descripcion: string | null
+    descripcion_larga: string | null
+  } | Array<{
+    id: string
+    codigo: string
+    descripcion: string | null
+    descripcion_larga: string | null
+  }> | null
+}
+
+type ProductoDetallePersistido = {
+  id: string
+  codigo: string
+  codigo_barras: string | null
+  descripcion: string | null
+  precio_compra: number | null
+  precio_venta: number | null
+  impuesto: {
+    porcentaje: number | null
+  } | Array<{
+    porcentaje: number | null
+  }> | null
+}
+
+type ProductoCreadoResumen = {
+  id: string
+  codigo: string
+  descripcion: string
+  codigo_barras: string | null
+  cantidad_importada: number
+  lineas_importadas: number
+  precio_compra: number
+  precio_venta: number
+  porcentaje_iva: number
+  total_descuento: number
 }
 
 function normalizeCode(value: string | null | undefined) {
@@ -59,15 +131,48 @@ function roundMoney(value: number) {
   return Math.round(value * 100) / 100
 }
 
-function isValidDateRange(fecha: string, inicio: string, fin: string) {
-  return fecha >= inicio && fecha <= fin
+function normalizePercentage(value: number | null | undefined) {
+  const percentage = roundMoney(Number(value ?? 0))
+  if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
+    throw new Error(`Descuento invalido: ${value}`)
+  }
+  return percentage
 }
 
-function isMissingImportRpc(error: unknown) {
-  if (typeof error !== 'object' || error === null) return false
-  const code = String((error as { code?: string }).code ?? '')
-  const message = String((error as { message?: string }).message ?? '')
-  return code === 'PGRST202' || code === '42883' || message.includes('secure_importar_factura_electronica_compra')
+function buildProductDisplayDescription(code: string | null | undefined, description: string | null | undefined) {
+  const current = normalizeText(description)
+  if (!current) return normalizeCode(code) || ''
+  return buildDescripcionConCodigo(code, current)
+}
+
+function buildLineMatchKey(params: {
+  descripcion: string | null | undefined
+  cantidad: number | null | undefined
+  precio_unitario: number | null | undefined
+  descuento_porcentaje: number | null | undefined
+}) {
+  return [
+    normalizeText(params.descripcion) ?? '',
+    roundMoney(Number(params.cantidad ?? 0)),
+    roundMoney(Number(params.precio_unitario ?? 0)),
+    normalizePercentage(params.descuento_porcentaje),
+  ].join('|')
+}
+
+function buildLineBaseMatchKey(params: {
+  descripcion: string | null | undefined
+  cantidad: number | null | undefined
+  precio_unitario: number | null | undefined
+}) {
+  return [
+    normalizeText(params.descripcion) ?? '',
+    roundMoney(Number(params.cantidad ?? 0)),
+    roundMoney(Number(params.precio_unitario ?? 0)),
+  ].join('|')
+}
+
+function isValidDateRange(fecha: string, inicio: string, fin: string) {
+  return fecha >= inicio && fecha <= fin
 }
 
 function getErrorStatus(error: unknown) {
@@ -90,6 +195,20 @@ function buildObservaciones(base: string | undefined, fechaOriginal: string | un
   return lines.filter(Boolean).join('\n')
 }
 
+function normalizeDocumentoLineaProducto(linea: DocumentoLineaPersistida) {
+  if (Array.isArray(linea.producto)) {
+    return linea.producto[0] ?? null
+  }
+  return linea.producto ?? null
+}
+
+function normalizeProductoImpuesto(producto: ProductoDetallePersistido) {
+  if (Array.isArray(producto.impuesto)) {
+    return producto.impuesto[0] ?? null
+  }
+  return producto.impuesto ?? null
+}
+
 function resolveImpuestoId(impuestos: ImpuestoDisponible[], porcentajeIva?: number) {
   const porcentaje = Number(porcentajeIva ?? 0)
   const exact = impuestos.find((item) => Number(item.porcentaje ?? 0) === porcentaje)
@@ -98,47 +217,355 @@ function resolveImpuestoId(impuestos: ImpuestoDisponible[], porcentajeIva?: numb
   throw new Error(`No existe un impuesto configurado para IVA ${porcentaje}% en la empresa`)
 }
 
-async function persistProviderMappingsIfAvailable(params: {
+async function prepareLineasImportacion(params: {
   admin: ReturnType<typeof createServiceClient>
   empresaId: string
-  proveedorId: string
-  lineas: Array<{
-    producto_id: string
-    codigo_proveedor: string | null
-    gtin: string | null
-    descripcion: string
-    crear_equivalencia: boolean
-  }>
-}) {
-  const rows = params.lineas
-    .filter((linea) => linea.crear_equivalencia && (linea.codigo_proveedor || linea.gtin))
-    .map((linea) => ({
-      empresa_id: params.empresaId,
-      proveedor_id: params.proveedorId,
-      producto_id: linea.producto_id,
-      codigo_proveedor: linea.codigo_proveedor,
-      gtin: linea.gtin,
-      descripcion_proveedor: linea.descripcion,
-    }))
+  impuestos: ImpuestoDisponible[]
+  lineas: LineaConfirmada[]
+}): Promise<LineaPreparada[]> {
+  const existingProductIds = [...new Set(
+    params.lineas
+      .filter((linea) => linea.accion === 'usar_existente' && linea.producto_id)
+      .map((linea) => linea.producto_id!)
+  )]
 
-  if (!rows.length) return
+  const existingProducts = existingProductIds.length
+    ? await params.admin
+      .from('productos')
+      .select('id, codigo')
+      .eq('empresa_id', params.empresaId)
+      .in('id', existingProductIds)
+    : { data: [] as Array<Pick<ProductoBase, 'id' | 'codigo'>>, error: null }
 
-  try {
-    const { error } = await params.admin
-      .from('productos_codigos_proveedor')
-      .insert(rows)
+  if (existingProducts.error) throw existingProducts.error
 
-    if (!error) return
-    if (error.code === 'PGRST205') return
-    if (error.code?.startsWith('23')) return
-    throw error
-  } catch (error) {
-    if (typeof error === 'object' && error !== null && 'code' in error) {
-      const code = String((error as { code?: string }).code ?? '')
-      if (code === 'PGRST205' || code.startsWith('23')) return
+  const productCodeById = new Map(
+    ((existingProducts.data ?? []) as Array<Pick<ProductoBase, 'id' | 'codigo'>>)
+      .map((producto) => [producto.id, producto.codigo])
+  )
+
+  return params.lineas.map((linea) => {
+    const cantidad = roundMoney(Number(linea.cantidad))
+    const precioUnitario = roundMoney(Number(linea.precio_unitario))
+    if (!Number.isFinite(cantidad) || cantidad <= 0) {
+      throw new Error(`Cantidad invalida en la linea "${linea.descripcion}"`)
     }
-    throw error
+    if (!Number.isFinite(precioUnitario) || precioUnitario < 0) {
+      throw new Error(`Precio invalido en la linea "${linea.descripcion}"`)
+    }
+
+    const subtotalBruto = roundMoney(Number(linea.subtotal ?? cantidad * precioUnitario))
+    const descuentoPorcentaje = normalizePercentage(linea.descuento_porcentaje)
+    const totalDescuento = roundMoney(
+      Number(linea.total_descuento ?? (subtotalBruto * descuentoPorcentaje) / 100)
+    )
+    const subtotalNeto = roundMoney(
+      Number(linea.subtotal_neto ?? subtotalBruto - totalDescuento)
+    )
+    const totalIva = roundMoney(Number(linea.iva ?? 0))
+    const total = roundMoney(Number(linea.total ?? subtotalNeto + totalIva))
+    const impuestoId = resolveImpuestoId(params.impuestos, linea.porcentaje_iva)
+    const codigoInterno = linea.accion === 'usar_existente'
+      ? productCodeById.get(linea.producto_id ?? '')
+      : normalizeCode(linea.nuevo_codigo)
+
+    if (!codigoInterno) {
+      throw new Error(`No se pudo resolver el codigo interno para la linea "${linea.descripcion}"`)
+    }
+
+    return {
+      descripcion_original: normalizeText(linea.descripcion) ?? codigoInterno,
+      descripcion_importacion: buildDescripcionConCodigo(codigoInterno, normalizeText(linea.descripcion) ?? codigoInterno),
+      codigo_pdf: normalizeCode(linea.codigo_pdf) || null,
+      gtin: normalizeDigits(linea.gtin) || null,
+      cantidad,
+      precio_unitario: precioUnitario,
+      subtotal: subtotalBruto,
+      subtotal_neto: subtotalNeto,
+      total_descuento: totalDescuento,
+      descuento_porcentaje: descuentoPorcentaje,
+      iva: totalIva,
+      total,
+      porcentaje_iva: roundMoney(Number(linea.porcentaje_iva ?? 0)),
+      impuesto_id: impuestoId,
+      accion: linea.accion,
+      producto_id: linea.producto_id ?? null,
+      nuevo_codigo: normalizeCode(linea.nuevo_codigo) || null,
+      nueva_descripcion: normalizeText(linea.nueva_descripcion) ?? null,
+      nuevo_precio_venta: linea.nuevo_precio_venta != null ? roundMoney(Number(linea.nuevo_precio_venta)) : null,
+      persistir_gtin: Boolean(linea.persistir_gtin),
+    } satisfies LineaPreparada
+  })
+}
+
+async function postProcessImportedCompra(params: {
+  admin: ReturnType<typeof createServiceClient>
+  documentoId: string
+  lineas: LineaPreparada[]
+}) {
+  const [
+    docLineRes,
+    stockMovRes,
+    asientoRes,
+  ] = await Promise.all([
+    params.admin
+      .from('documentos_lineas')
+      .select('id, descripcion, cantidad, precio_unitario, descuento_porcentaje, producto:producto_id(id, codigo, descripcion, descripcion_larga)')
+      .eq('documento_id', params.documentoId),
+    params.admin
+      .from('stock_movimientos')
+      .select('id, producto_id, cantidad')
+      .eq('documento_id', params.documentoId)
+      .order('created_at')
+      .order('id'),
+    params.admin
+      .from('asientos')
+      .select('id')
+      .eq('documento_id', params.documentoId),
+  ])
+
+  if (docLineRes.error) throw docLineRes.error
+  if (stockMovRes.error) throw stockMovRes.error
+  if (asientoRes.error) throw asientoRes.error
+
+  const unmatchedDocLines = [...((docLineRes.data ?? []) as unknown as DocumentoLineaPersistida[])]
+
+  const stockQueues = new Map<string, Array<{ id: string; producto_id: string; cantidad: number | null }>>()
+  for (const row of stockMovRes.data ?? []) {
+    const key = `${row.producto_id}|${roundMoney(Number(row.cantidad ?? 0))}`
+    const bucket = stockQueues.get(key) ?? []
+    bucket.push(row)
+    stockQueues.set(key, bucket)
   }
+
+  let subtotal = 0
+  let totalDescuento = 0
+  let totalIva = 0
+  let total = 0
+  const productPatches = new Map<string, Record<string, unknown>>()
+
+  for (const linea of params.lineas) {
+    const lineKey = buildLineMatchKey({
+      descripcion: linea.descripcion_importacion,
+      cantidad: linea.cantidad,
+      precio_unitario: linea.precio_unitario,
+      descuento_porcentaje: linea.descuento_porcentaje,
+    })
+    const baseLineKey = buildLineBaseMatchKey({
+      descripcion: linea.descripcion_importacion,
+      cantidad: linea.cantidad,
+      precio_unitario: linea.precio_unitario,
+    })
+
+    let docLineIndex = unmatchedDocLines.findIndex((row) => (
+      buildLineMatchKey({
+        descripcion: row.descripcion,
+        cantidad: row.cantidad,
+        precio_unitario: row.precio_unitario,
+        descuento_porcentaje: row.descuento_porcentaje,
+      }) === lineKey
+    ))
+
+    if (docLineIndex === -1) {
+      docLineIndex = unmatchedDocLines.findIndex((row) => (
+        buildLineBaseMatchKey({
+          descripcion: row.descripcion,
+          cantidad: row.cantidad,
+          precio_unitario: row.precio_unitario,
+        }) === baseLineKey
+      ))
+    }
+
+    const [docLine] = docLineIndex >= 0
+      ? unmatchedDocLines.splice(docLineIndex, 1)
+      : []
+
+    const productoLinea = docLine ? normalizeDocumentoLineaProducto(docLine) : null
+
+    if (!productoLinea?.id || !productoLinea.codigo) {
+      throw new Error(`No se pudo localizar la linea importada "${linea.descripcion_importacion}" para sincronizar costo`)
+    }
+
+    const netCost = linea.cantidad > 0
+      ? roundMoney(linea.subtotal_neto / linea.cantidad)
+      : roundMoney(linea.precio_unitario)
+
+    const { error: updateLineError } = await params.admin
+      .from('documentos_lineas')
+      .update({
+        descripcion: linea.descripcion_importacion,
+        precio_unitario: linea.precio_unitario,
+        precio_costo: netCost,
+        descuento_porcentaje: linea.descuento_porcentaje,
+        impuesto_id: linea.impuesto_id,
+        subtotal: linea.subtotal,
+        total_descuento: linea.total_descuento,
+        total_iva: linea.iva,
+        total: linea.total,
+      })
+      .eq('id', docLine.id)
+
+    if (updateLineError) throw updateLineError
+
+    const stockKey = `${productoLinea.id}|${roundMoney(linea.cantidad)}`
+    const stockQueue = stockQueues.get(stockKey) ?? []
+    const stockMove = stockQueue.shift()
+    stockQueues.set(stockKey, stockQueue)
+    if (stockMove) {
+      const { error: updateStockError } = await params.admin
+        .from('stock_movimientos')
+        .update({ precio_costo: netCost })
+        .eq('id', stockMove.id)
+      if (updateStockError) throw updateStockError
+    }
+
+    const canonicalDescription = normalizeText(linea.descripcion_original)
+      ?? normalizeText(productoLinea.descripcion_larga)
+      ?? normalizeText(productoLinea.descripcion)
+      ?? productoLinea.codigo
+    const productDescription = buildProductDisplayDescription(
+      productoLinea.codigo,
+      canonicalDescription
+    )
+
+    productPatches.set(productoLinea.id, {
+      precio_compra: netCost,
+      impuesto_id: linea.impuesto_id,
+      descripcion: productDescription,
+      descripcion_larga: canonicalDescription,
+      updated_at: new Date().toISOString(),
+    })
+
+    subtotal += linea.subtotal
+    totalDescuento += linea.total_descuento
+    totalIva += linea.iva
+    total += linea.total
+  }
+
+  for (const [productoId, patch] of productPatches.entries()) {
+    const { error: updateProductError } = await params.admin
+      .from('productos')
+      .update(patch)
+      .eq('id', productoId)
+    if (updateProductError) throw updateProductError
+  }
+
+  subtotal = roundMoney(subtotal)
+  totalDescuento = roundMoney(totalDescuento)
+  totalIva = roundMoney(totalIva)
+  total = roundMoney(total)
+
+  const { error: updateDocError } = await params.admin
+    .from('documentos')
+    .update({
+      subtotal,
+      total_descuento: totalDescuento,
+      total_iva: totalIva,
+      total,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', params.documentoId)
+
+  if (updateDocError) throw updateDocError
+
+  for (const asiento of asientoRes.data ?? []) {
+    const { error: updateAsientoError } = await params.admin
+      .from('asientos')
+      .update({ importe: total })
+      .eq('id', asiento.id)
+    if (updateAsientoError) throw updateAsientoError
+
+    const { data: asientoLineas, error: asientoLineasError } = await params.admin
+      .from('asientos_lineas')
+      .select('id, descripcion')
+      .eq('asiento_id', asiento.id)
+    if (asientoLineasError) throw asientoLineasError
+
+    for (const asientoLinea of asientoLineas ?? []) {
+      let patch: { debe?: number; haber?: number } | null = null
+      if (asientoLinea.descripcion === 'Entrada de mercancía') {
+        patch = { debe: subtotal, haber: 0 }
+      } else if (asientoLinea.descripcion === 'IVA Descontable') {
+        patch = { debe: totalIva, haber: 0 }
+      } else if (asientoLinea.descripcion === 'Deuda con proveedor') {
+        patch = { debe: 0, haber: total }
+      }
+      if (!patch) continue
+
+      const { error: updateAsientoLineaError } = await params.admin
+        .from('asientos_lineas')
+        .update(patch)
+        .eq('id', asientoLinea.id)
+      if (updateAsientoLineaError) throw updateAsientoLineaError
+    }
+  }
+}
+
+async function collectCreatedProductsSummary(params: {
+  admin: ReturnType<typeof createServiceClient>
+  empresaId: string
+  lineas: LineaPreparada[]
+}): Promise<ProductoCreadoResumen[]> {
+  const statsByCode = new Map<string, {
+    cantidad_importada: number
+    lineas_importadas: number
+    total_descuento: number
+  }>()
+
+  for (const linea of params.lineas) {
+    if (linea.accion !== 'crear_nuevo') continue
+    const code = normalizeCode(linea.nuevo_codigo)
+    if (!code) continue
+
+    const current = statsByCode.get(code) ?? {
+      cantidad_importada: 0,
+      lineas_importadas: 0,
+      total_descuento: 0,
+    }
+
+    current.cantidad_importada = roundMoney(current.cantidad_importada + linea.cantidad)
+    current.lineas_importadas += 1
+    current.total_descuento = roundMoney(current.total_descuento + linea.total_descuento)
+    statsByCode.set(code, current)
+  }
+
+  const codes = [...statsByCode.keys()]
+  if (!codes.length) return []
+
+  const { data, error } = await params.admin
+    .from('productos')
+    .select('id, codigo, codigo_barras, descripcion, precio_compra, precio_venta, impuesto:impuesto_id(porcentaje)')
+    .eq('empresa_id', params.empresaId)
+    .in('codigo', codes)
+
+  if (error) throw error
+
+  const productosByCode = new Map(
+    ((data ?? []) as ProductoDetallePersistido[]).map((producto) => [normalizeCode(producto.codigo), producto])
+  )
+
+  return codes.flatMap((code) => {
+    const producto = productosByCode.get(code)
+    if (!producto) return []
+
+    const stats = statsByCode.get(code)
+    if (!stats) return []
+
+    const impuesto = normalizeProductoImpuesto(producto)
+
+    return [{
+      id: producto.id,
+      codigo: producto.codigo,
+      descripcion: producto.descripcion ?? producto.codigo,
+      codigo_barras: producto.codigo_barras,
+      cantidad_importada: stats.cantidad_importada,
+      lineas_importadas: stats.lineas_importadas,
+      precio_compra: roundMoney(Number(producto.precio_compra ?? 0)),
+      precio_venta: roundMoney(Number(producto.precio_venta ?? 0)),
+      porcentaje_iva: roundMoney(Number(impuesto?.porcentaje ?? 0)),
+      total_descuento: stats.total_descuento,
+    }]
+  })
 }
 
 async function confirmWithFallback(params: {
@@ -149,9 +576,9 @@ async function confirmWithFallback(params: {
   fecha_original?: string
   numero_externo: string
   observaciones?: string
-  lineas: LineaConfirmada[]
+  lineas: LineaPreparada[]
   ejercicio: { id: string; fecha_inicio: string | Date; fecha_fin: string | Date }
-}) {
+}): Promise<{ id: string; createdProducts: ProductoCreadoResumen[] }> {
   const admin = createServiceClient()
   const supabase = await createClient()
   const empresaId = params.session.empresa_id
@@ -267,37 +694,23 @@ async function confirmWithFallback(params: {
     descuento_porcentaje: number
     impuesto_id: string | null
   }> = []
-  const mappingsToPersist: Array<{
-    producto_id: string
-    codigo_proveedor: string | null
-    gtin: string | null
-    descripcion: string
-    crear_equivalencia: boolean
-  }> = []
 
   try {
     for (const linea of params.lineas) {
-      const cantidad = Number(linea.cantidad)
-      const precioUnitario = roundMoney(Number(linea.precio_unitario))
-      if (!Number.isFinite(cantidad) || cantidad <= 0) {
-        throw new Error(`Cantidad invalida en la linea "${linea.descripcion}"`)
-      }
-      if (!Number.isFinite(precioUnitario) || precioUnitario < 0) {
-        throw new Error(`Precio invalido en la linea "${linea.descripcion}"`)
-      }
-
-      const impuestoId = resolveImpuestoId(impuestos, linea.porcentaje_iva)
-      const codigoProveedor = normalizeCode(linea.codigo_proveedor)
+      const cantidad = linea.cantidad
+      const precioUnitario = linea.precio_unitario
+      const netCost = cantidad > 0 ? roundMoney(linea.subtotal_neto / cantidad) : precioUnitario
+      const impuestoId = linea.impuesto_id
       const gtin = normalizeDigits(linea.gtin) || null
 
       if (linea.accion === 'usar_existente') {
         const producto = existingProducts.get(linea.producto_id!)
         if (!producto) {
-          throw new Error(`Producto no encontrado para la linea "${linea.descripcion}"`)
+          throw new Error(`Producto no encontrado para la linea "${linea.descripcion_original}"`)
         }
 
         const patch: Partial<ProductoBase> = {
-          precio_compra: precioUnitario,
+          precio_compra: netCost,
           impuesto_id: impuestoId,
         }
 
@@ -316,25 +729,18 @@ async function confirmWithFallback(params: {
         pendingProductUpdates.push({ id: producto.id, patch })
         lineasCompra.push({
           producto_id: producto.id,
-          descripcion: normalizeText(linea.descripcion) ?? producto.descripcion,
+          descripcion: linea.descripcion_importacion,
           cantidad,
           precio_unitario: precioUnitario,
-          descuento_porcentaje: 0,
+          descuento_porcentaje: linea.descuento_porcentaje,
           impuesto_id: impuestoId,
-        })
-        mappingsToPersist.push({
-          producto_id: producto.id,
-          codigo_proveedor: codigoProveedor || null,
-          gtin,
-          descripcion: linea.descripcion,
-          crear_equivalencia: Boolean(linea.crear_equivalencia),
         })
         continue
       }
 
       const nuevoCodigo = normalizeCode(linea.nuevo_codigo)
       if (!nuevoCodigo) {
-        throw new Error(`La linea "${linea.descripcion}" requiere nuevo_codigo`)
+        throw new Error(`La linea "${linea.descripcion_original}" requiere nuevo_codigo`)
       }
       const createdInRequest = createdProductsByCode.get(nuevoCodigo)
       if (!createdInRequest && codeOwners.has(nuevoCodigo)) {
@@ -367,18 +773,11 @@ async function confirmWithFallback(params: {
 
         lineasCompra.push({
           producto_id: createdInRequest.id,
-          descripcion: normalizeText(linea.descripcion) ?? createdInRequest.descripcion,
+          descripcion: linea.descripcion_importacion,
           cantidad,
           precio_unitario: precioUnitario,
-          descuento_porcentaje: 0,
+          descuento_porcentaje: linea.descuento_porcentaje,
           impuesto_id: impuestoId,
-        })
-        mappingsToPersist.push({
-          producto_id: createdInRequest.id,
-          codigo_proveedor: codigoProveedor || null,
-          gtin,
-          descripcion: linea.descripcion,
-          crear_equivalencia: Boolean(linea.crear_equivalencia),
         })
         continue
       }
@@ -389,10 +788,10 @@ async function confirmWithFallback(params: {
           empresa_id: empresaId,
           codigo: nuevoCodigo,
           codigo_barras: linea.persistir_gtin && gtin ? gtin : null,
-          descripcion: normalizeText(linea.nueva_descripcion) ?? normalizeText(linea.descripcion) ?? nuevoCodigo,
-          descripcion_larga: normalizeText(linea.descripcion),
+          descripcion: buildProductDisplayDescription(nuevoCodigo, linea.nueva_descripcion ?? linea.descripcion_original),
+          descripcion_larga: normalizeText(linea.descripcion_original),
           precio_venta: roundMoney(Number(linea.nuevo_precio_venta ?? 0)),
-          precio_compra: precioUnitario,
+          precio_compra: netCost,
           precio_venta2: null,
           tiene_variantes: false,
           familia_id: null,
@@ -425,18 +824,11 @@ async function confirmWithFallback(params: {
 
       lineasCompra.push({
         producto_id: createdProduct.id,
-        descripcion: normalizeText(linea.descripcion) ?? createdProduct.descripcion,
+        descripcion: linea.descripcion_importacion,
         cantidad,
         precio_unitario: precioUnitario,
-        descuento_porcentaje: 0,
+        descuento_porcentaje: linea.descuento_porcentaje,
         impuesto_id: impuestoId,
-      })
-      mappingsToPersist.push({
-        producto_id: createdProduct.id,
-        codigo_proveedor: codigoProveedor || null,
-        gtin,
-        descripcion: linea.descripcion,
-        crear_equivalencia: Boolean(linea.crear_equivalencia),
       })
     }
 
@@ -469,14 +861,22 @@ async function confirmWithFallback(params: {
       if (updateError) throw updateError
     }
 
-    await persistProviderMappingsIfAvailable({
+    await postProcessImportedCompra({
       admin,
-      empresaId,
-      proveedorId: params.proveedor_id,
-      lineas: mappingsToPersist,
+      documentoId: documentoId as string,
+      lineas: params.lineas,
     })
 
-    return documentoId as string
+    const createdProducts = await collectCreatedProductsSummary({
+      admin,
+      empresaId,
+      lineas: params.lineas,
+    })
+
+    return {
+      id: documentoId as string,
+      createdProducts,
+    }
   } catch (error) {
     if (createdProductIds.length) {
       await admin
@@ -546,6 +946,9 @@ export async function POST(req: NextRequest) {
     }
 
     for (const linea of lineas) {
+      if (!(linea.codigo_pdf ?? '').trim()) {
+        return NextResponse.json({ error: `La linea "${linea.descripcion}" no trae codigo PDF legible` }, { status: 400 })
+      }
       if (linea.accion !== 'usar_existente' && linea.accion !== 'crear_nuevo') {
         return NextResponse.json({ error: 'Todas las lineas deben quedar resueltas antes de importar' }, { status: 400 })
       }
@@ -557,60 +960,40 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const supabase = await createClient()
-    try {
-      const { data, error } = await supabase.rpc('secure_importar_factura_electronica_compra', {
-        p_ejercicio_id: ejercicio.id,
-        p_proveedor_id: proveedor_id,
-        p_bodega_id: bodega_id,
-        p_fecha: fecha_contabilizacion,
-        p_fecha_original: fecha_original || null,
-        p_numero_externo: numero_externo,
-        p_observaciones: observaciones || null,
-        p_lineas: lineas.map((linea) => ({
-          descripcion: linea.descripcion,
-          codigo_proveedor: linea.codigo_proveedor || null,
-          gtin: linea.gtin || null,
-          standard_scheme_id: linea.standard_scheme_id || null,
-          standard_scheme_name: linea.standard_scheme_name || null,
-          cantidad: linea.cantidad,
-          precio_unitario: linea.precio_unitario,
-          subtotal: linea.subtotal,
-          iva: linea.iva,
-          total: linea.total,
-          porcentaje_iva: linea.porcentaje_iva ?? 0,
-          accion: linea.accion,
-          producto_id: linea.producto_id || null,
-          nuevo_codigo: linea.nuevo_codigo || null,
-          nueva_descripcion: linea.nueva_descripcion || null,
-          nuevo_precio_venta: linea.nuevo_precio_venta ?? null,
-          persistir_gtin: linea.persistir_gtin ?? false,
-          crear_equivalencia: linea.crear_equivalencia ?? false,
-        })),
-      })
+    const admin = createServiceClient()
+    const { data: impuestos, error: impuestosError } = await admin
+      .from('impuestos')
+      .select('id, porcentaje')
+      .eq('empresa_id', session.empresa_id)
 
-      if (error) throw error
+    if (impuestosError) throw impuestosError
 
-      revalidateInventoryDependentViews(session.empresa_id)
-      return NextResponse.json({ ok: true, id: data })
-    } catch (error) {
-      if (!isMissingImportRpc(error)) throw error
+    const preparedLineas = await prepareLineasImportacion({
+      admin,
+      empresaId: session.empresa_id,
+      impuestos: (impuestos ?? []) as ImpuestoDisponible[],
+      lineas,
+    })
 
-      const id = await confirmWithFallback({
-        session,
-        proveedor_id,
-        bodega_id,
-        fecha_contabilizacion,
-        fecha_original,
-        numero_externo,
-        observaciones,
-        lineas,
-        ejercicio,
-      })
+    const fallbackResult = await confirmWithFallback({
+      session,
+      proveedor_id,
+      bodega_id,
+      fecha_contabilizacion,
+      fecha_original,
+      numero_externo,
+      observaciones,
+      lineas: preparedLineas,
+      ejercicio,
+    })
 
-      revalidateInventoryDependentViews(session.empresa_id)
-      return NextResponse.json({ ok: true, id, mode: 'fallback' })
-    }
+    revalidateInventoryDependentViews(session.empresa_id)
+    return NextResponse.json({
+      ok: true,
+      id: fallbackResult.id,
+      mode: 'server',
+      created_products: fallbackResult.createdProducts,
+    })
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Error al confirmar importacion' },

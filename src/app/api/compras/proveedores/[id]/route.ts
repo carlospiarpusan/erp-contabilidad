@@ -8,7 +8,7 @@ interface Ctx { params: Promise<{ id: string }> }
 const CAMPOS_EDITABLES = [
   'razon_social', 'contacto', 'tipo_documento', 'numero_documento', 'dv',
   'email', 'telefono', 'whatsapp', 'ciudad', 'departamento', 'direccion',
-  'observaciones', 'activo',
+  'observaciones', 'activo', 'obligado_a_facturar',
 ]
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn, cardCls } from '@/utils/cn'
+import { buildSuggestedFacturaProductCode } from '@/lib/import/factura-electronica-shared'
 
 interface Cabecera {
   numero_externo: string
@@ -62,8 +63,7 @@ interface Sugerencia {
 
 interface LineaImportada {
   descripcion: string
-  codigo: string
-  codigo_proveedor: string
+  codigo_pdf: string
   gtin: string | null
   standard_scheme_id: string | null
   standard_scheme_name: string | null
@@ -71,6 +71,9 @@ interface LineaImportada {
   precio_unitario: number
   precio_referencia: number | null
   subtotal: number
+  subtotal_neto: number
+  total_descuento: number
+  descuento_porcentaje: number
   iva: number
   total: number
   porcentaje_iva: number
@@ -81,8 +84,6 @@ interface LineaImportada {
   match_source: string
   sugerencias: Sugerencia[]
   grupo_clave: string
-  codigo_proveedor_ambiguo: boolean
-  equivalencia_permitida: boolean
 }
 
 type AccionLinea = 'usar_existente' | 'crear_nuevo'
@@ -94,10 +95,39 @@ interface MapeoLinea {
   nueva_descripcion: string
   nuevo_precio_venta: string
   persistir_gtin: boolean
-  crear_equivalencia: boolean
 }
 
 type Paso = 'subir' | 'revisar' | 'confirmando' | 'resultado'
+
+interface ParseFacturaResponse {
+  cabecera: Cabecera
+  fecha_original: string
+  fecha_contabilizacion_sugerida: string
+  ejercicio_activo: EjercicioActivo | null
+  proveedor: Proveedor | null
+  proveedores_disponibles: Proveedor[]
+  lineas: LineaImportada[]
+  productos_disponibles: ProductoDisponible[]
+  bodegas: Bodega[]
+}
+
+interface ConfirmarFacturaResponse {
+  id: string
+  created_products?: ProductoCreadoResumen[]
+}
+
+interface ProductoCreadoResumen {
+  id: string
+  codigo: string
+  descripcion: string
+  codigo_barras: string | null
+  cantidad_importada: number
+  lineas_importadas: number
+  precio_compra: number
+  precio_venta: number
+  porcentaje_iva: number
+  total_descuento: number
+}
 
 function formatCOP(value: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -112,18 +142,58 @@ function formatScore(score: number) {
   return `${Math.round(score * 100)}%`
 }
 
+function formatCantidad(value: number) {
+  return new Intl.NumberFormat('es-CO', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 3,
+  }).format(value)
+}
+
 function sourceLabel(matchSource: string) {
   switch (matchSource) {
-    case 'gtin_codigo_barras':
-      return 'GTIN / codigo de barras'
-    case 'equivalencia_gtin':
-      return 'equivalencia por GTIN'
-    case 'equivalencia_codigo_proveedor':
-      return 'equivalencia por codigo proveedor'
     case 'codigo_interno':
-      return 'codigo interno'
+      return 'match exacto por codigo'
     default:
-      return 'sin match exacto'
+      return 'sin match exacto por codigo'
+  }
+}
+
+async function readApiResponse<T>(res: Response) {
+  const raw = await res.text()
+  const contentType = res.headers.get('content-type') ?? ''
+
+  if (!raw.trim()) {
+    return {
+      data: null as T | null,
+      message: `Error ${res.status}`,
+    }
+  }
+
+  if (contentType.includes('application/json')) {
+    try {
+      const data = JSON.parse(raw) as T & { error?: string }
+      return {
+        data,
+        message: typeof data.error === 'string' ? data.error : `Error ${res.status}`,
+      }
+    } catch {
+      return {
+        data: null as T | null,
+        message: `La respuesta del servidor no es JSON valido (HTTP ${res.status})`,
+      }
+    }
+  }
+
+  const normalized = raw
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  return {
+    data: null as T | null,
+    message: normalized || `Error ${res.status}`,
   }
 }
 
@@ -145,8 +215,67 @@ export function ImportarFacturaElectronica() {
   const [proveedorId, setProveedorId] = useState('')
   const [fechaContabilizacion, setFechaContabilizacion] = useState('')
   const [resultadoId, setResultadoId] = useState<string | null>(null)
+  const [productosCreados, setProductosCreados] = useState<ProductoCreadoResumen[]>([])
 
   const fileRef = useRef<HTMLInputElement>(null)
+
+  function buildInitialMapeos(lineasImportadas: LineaImportada[], productosDisponibles: ProductoDisponible[]) {
+    const usedCodes = new Set(
+      productosDisponibles
+        .map((producto) => producto.codigo.trim().toUpperCase())
+        .filter(Boolean)
+    )
+    const codeByGroup = new Map<string, string>()
+
+    const getUniqueCode = (baseCode: string) => {
+      const base = baseCode.trim().toUpperCase() || 'AUTO-PRODUCTO'
+      if (!usedCodes.has(base)) {
+        usedCodes.add(base)
+        return base
+      }
+
+      let suffix = 2
+      while (true) {
+        const candidate = `${base.slice(0, Math.max(1, 44 - String(suffix).length))}-${suffix}`
+        if (!usedCodes.has(candidate)) {
+          usedCodes.add(candidate)
+          return candidate
+        }
+        suffix += 1
+      }
+    }
+
+    return lineasImportadas.map((linea) => {
+      if (linea.producto_id) {
+        return {
+          accion: 'usar_existente' as const,
+          producto_id: linea.producto_id,
+          nuevo_codigo: linea.codigo_pdf || '',
+          nueva_descripcion: linea.descripcion,
+          nuevo_precio_venta: String(Math.round(linea.precio_unitario || 0)),
+          persistir_gtin: Boolean(linea.gtin),
+        }
+      }
+
+      const existingCode = codeByGroup.get(linea.grupo_clave)
+      const suggestedCode = existingCode ?? getUniqueCode(buildSuggestedFacturaProductCode({
+        codigoPdf: linea.codigo_pdf,
+        gtin: linea.gtin,
+        descripcion: linea.descripcion,
+        groupKey: linea.grupo_clave,
+      }))
+      codeByGroup.set(linea.grupo_clave, suggestedCode)
+
+      return {
+        accion: 'crear_nuevo' as const,
+        producto_id: '',
+        nuevo_codigo: suggestedCode,
+        nueva_descripcion: linea.descripcion,
+        nuevo_precio_venta: String(Math.round(linea.precio_unitario || 0)),
+        persistir_gtin: Boolean(linea.gtin),
+      }
+    })
+  }
 
   async function procesarArchivo(file: File) {
     setCargando(true)
@@ -154,17 +283,19 @@ export function ImportarFacturaElectronica() {
 
     try {
       const fileName = file.name.toLowerCase()
-      const isSupported = fileName.endsWith('.xml') || fileName.endsWith('.zip') || fileName.endsWith('.pdf')
+      const isSupported = fileName.endsWith('.zip') || fileName.endsWith('.pdf')
       if (!isSupported) {
-        throw new Error('Formato no soportado. Sube un archivo XML, ZIP o PDF.')
+        throw new Error('Formato no soportado. Sube un archivo ZIP o PDF.')
       }
 
       const fd = new FormData()
       fd.append('archivo', file)
 
       const res = await fetch('/api/import/factura-electronica/parse', { method: 'POST', body: fd })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      const { data, message } = await readApiResponse<ParseFacturaResponse>(res)
+      if (!res.ok || !data) {
+        throw new Error(message)
+      }
 
       setCabecera(data.cabecera)
       setProveedor(data.proveedor)
@@ -176,17 +307,7 @@ export function ImportarFacturaElectronica() {
       setBodegaId(data.bodegas?.[0]?.id ?? '')
       setProveedorId(data.proveedor?.id ?? '')
       setFechaContabilizacion(data.fecha_contabilizacion_sugerida ?? data.cabecera?.fecha_original ?? '')
-      setMapeos(
-        (data.lineas ?? []).map((linea: LineaImportada) => ({
-          accion: linea.producto_id ? 'usar_existente' : 'usar_existente',
-          producto_id: linea.producto_id ?? '',
-          nuevo_codigo: linea.codigo_proveedor || linea.gtin || '',
-          nueva_descripcion: linea.descripcion,
-          nuevo_precio_venta: String(Math.round(linea.precio_unitario || 0)),
-          persistir_gtin: Boolean(linea.gtin),
-          crear_equivalencia: Boolean(linea.equivalencia_permitida),
-        }))
-      )
+      setMapeos(buildInitialMapeos(data.lineas ?? [], data.productos_disponibles ?? []))
       setPaso('revisar')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error')
@@ -266,13 +387,16 @@ export function ImportarFacturaElectronica() {
         const mapeo = mapeos[index]
         return {
           descripcion: linea.descripcion,
-          codigo_proveedor: linea.codigo_proveedor,
+          codigo_pdf: linea.codigo_pdf,
           gtin: linea.gtin,
           standard_scheme_id: linea.standard_scheme_id,
           standard_scheme_name: linea.standard_scheme_name,
           cantidad: linea.cantidad,
           precio_unitario: linea.precio_unitario,
           subtotal: linea.subtotal,
+          subtotal_neto: linea.subtotal_neto,
+          total_descuento: linea.total_descuento,
+          descuento_porcentaje: linea.descuento_porcentaje,
           iva: linea.iva,
           total: linea.total,
           porcentaje_iva: linea.porcentaje_iva,
@@ -282,7 +406,6 @@ export function ImportarFacturaElectronica() {
           nueva_descripcion: mapeo.accion === 'crear_nuevo' ? mapeo.nueva_descripcion.trim() : undefined,
           nuevo_precio_venta: mapeo.accion === 'crear_nuevo' ? Number(mapeo.nuevo_precio_venta) || undefined : undefined,
           persistir_gtin: Boolean(mapeo.persistir_gtin && linea.gtin),
-          crear_equivalencia: Boolean(mapeo.crear_equivalencia && linea.equivalencia_permitida),
         }
       })
 
@@ -298,10 +421,13 @@ export function ImportarFacturaElectronica() {
           lineas: lineasPayload,
         }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      const { data, message } = await readApiResponse<ConfirmarFacturaResponse>(res)
+      if (!res.ok || !data) {
+        throw new Error(message)
+      }
 
       setResultadoId(data.id)
+      setProductosCreados(data.created_products ?? [])
       setPaso('resultado')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error')
@@ -328,12 +454,11 @@ export function ImportarFacturaElectronica() {
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700 dark:border-blue-900/30 dark:bg-blue-900/10 dark:text-blue-300">
           <p className="mb-1 font-medium">Que hace esta importacion</p>
           <ul className="list-inside list-disc space-y-1 text-xs">
-            <li>Acepta XML DIAN, ZIP con AttachedDocument y PDF legible del proveedor</li>
-            <li>Si subes el ZIP original, aprovecha XML + PDF para detectar referencias detalladas del proveedor</li>
-            <li>Si subes solo PDF, importa con las referencias y valores visibles en el documento</li>
-            <li>Extrae proveedor, referencias externas, GTIN, cantidades, impuestos y totales</li>
-            <li>Busca coincidencias en inventario por GTIN, equivalencias proveedor-producto y codigo interno</li>
-            <li>Al confirmar, crea la factura de compra, registra el asiento, actualiza stock, costo de compra, IVA del producto y deja homologadas las referencias compatibles</li>
+            <li>Acepta el PDF de la factura o el ZIP original cuando incluya PDF legible</li>
+            <li>El match automatico usa solo la columna Codigo del PDF contra el codigo interno del articulo</li>
+            <li>Si el PDF no trae codigo legible o no cuadra con el XML, la importacion se bloquea</li>
+            <li>Extrae cantidades, descuentos, IVA, totales y te deja resolver manualmente las lineas sin match</li>
+            <li>Al confirmar, crea la factura de compra, registra el asiento, actualiza stock, costo de compra e IVA del producto</li>
           </ul>
         </div>
 
@@ -369,22 +494,22 @@ export function ImportarFacturaElectronica() {
             <Loader2 className="mx-auto mb-3 h-10 w-10 animate-spin text-blue-500" />
           ) : (
             <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-500">
-              <FileArchive className="h-5 w-5" />
-            </div>
+            <FileArchive className="h-5 w-5" />
+          </div>
           )}
           <p className="mb-1 text-base font-medium text-gray-700 dark:text-gray-300">
-            {cargando ? 'Procesando archivo...' : 'Arrastra un XML, ZIP o PDF aqui'}
+            {cargando ? 'Procesando archivo...' : 'Arrastra un ZIP o PDF aqui'}
           </p>
           <p className="mb-4 text-sm text-gray-500">o haz clic para seleccionar</p>
-          <p className="mb-4 text-xs text-gray-400">Recomendado: subir el ZIP original del proveedor cuando incluya XML y PDF</p>
+          <p className="mb-4 text-xs text-gray-400">Recomendado: subir el ZIP original con XML + PDF para validar el codigo de cada articulo</p>
           <span className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
             <Upload className="h-4 w-4" />
-            Seleccionar XML, ZIP o PDF
+            Seleccionar ZIP o PDF
           </span>
           <input
             ref={fileRef}
             type="file"
-            accept=".xml,.zip,.pdf,text/xml,application/xml,application/zip,application/x-zip-compressed,application/pdf"
+            accept=".zip,.pdf,application/zip,application/x-zip-compressed,application/pdf"
             className="hidden"
             onChange={onArchivo}
             disabled={cargando}
@@ -417,6 +542,33 @@ export function ImportarFacturaElectronica() {
             El inventario, el precio de compra y la configuracion de IVA de los productos quedaron sincronizados con esta compra.
           </p>
         </div>
+        {productosCreados.length > 0 && (
+          <div className="w-full max-w-4xl rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-left">
+            <p className="mb-3 text-sm font-semibold text-emerald-800">
+              Se crearon {productosCreados.length} producto{productosCreados.length === 1 ? '' : 's'} nuevo{productosCreados.length === 1 ? '' : 's'}
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              {productosCreados.map((producto) => (
+                <div key={producto.id} className="rounded-lg border border-emerald-200 bg-white p-3 text-sm text-gray-700">
+                  <p className="font-semibold text-gray-900">{producto.codigo}</p>
+                  <p className="text-xs text-gray-600">{producto.descripcion}</p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Stock agregado: <strong>{formatCantidad(producto.cantidad_importada)}</strong>
+                    {` • `}
+                    Precio compra: <strong>{formatCOP(producto.precio_compra)}</strong>
+                    {` • `}
+                    IVA: <strong>{producto.porcentaje_iva}%</strong>
+                  </p>
+                  {producto.total_descuento > 0 && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Descuento importado: <strong>{formatCOP(producto.total_descuento)}</strong>
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="flex gap-3">
           {resultadoId && (
             <Link
@@ -433,6 +585,7 @@ export function ImportarFacturaElectronica() {
               setCabecera(null)
               setLineas([])
               setMapeos([])
+              setProductosCreados([])
               if (fileRef.current) fileRef.current.value = ''
             }}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
@@ -564,9 +717,9 @@ export function ImportarFacturaElectronica() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      {linea.codigo_proveedor && (
+                      {linea.codigo_pdf && (
                         <span className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                          Cod. proveedor: {linea.codigo_proveedor}
+                          Codigo PDF: {linea.codigo_pdf}
                         </span>
                       )}
                       {linea.gtin && (
@@ -577,8 +730,14 @@ export function ImportarFacturaElectronica() {
                       <span className="text-sm font-medium text-gray-900 dark:text-white">{linea.descripcion}</span>
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
-                      {linea.cantidad} x {formatCOP(linea.precio_unitario)} = {formatCOP(linea.total)}
-                      {linea.porcentaje_iva > 0 ? ` • IVA ${linea.porcentaje_iva}%` : ''}
+                      {linea.cantidad} x {formatCOP(linea.precio_unitario)} = {formatCOP(linea.subtotal)}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {linea.total_descuento > 0
+                        ? `Descuento ${linea.descuento_porcentaje}% (${formatCOP(linea.total_descuento)}) • Neto ${formatCOP(linea.subtotal_neto)}`
+                        : `Neto ${formatCOP(linea.subtotal_neto)}`}
+                      {linea.porcentaje_iva > 0 ? ` • IVA ${linea.porcentaje_iva}% (${formatCOP(linea.iva)})` : ''}
+                      {` • Total ${formatCOP(linea.total)}`}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs">
                       <span className={cn(
@@ -589,9 +748,9 @@ export function ImportarFacturaElectronica() {
                       )}>
                         {sourceLabel(linea.match_source)}
                       </span>
-                      {linea.codigo_proveedor_ambiguo && (
-                        <span className="rounded-full bg-orange-100 px-2 py-0.5 font-medium text-orange-700">
-                          Codigo proveedor ambiguo
+                      {!linea.producto_id && mapeo?.accion === 'crear_nuevo' && (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700">
+                          Se creara automaticamente
                         </span>
                       )}
                       {groupSize > 1 && (
@@ -620,7 +779,7 @@ export function ImportarFacturaElectronica() {
                   </div>
                 )}
 
-                {linea.sugerencias.length > 0 && (
+                {!linea.producto_id && linea.sugerencias.length > 0 && (
                   <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
                     <div className="flex items-center gap-2 text-xs font-medium text-slate-600">
                       <Package className="h-3.5 w-3.5" />
@@ -703,7 +862,7 @@ export function ImportarFacturaElectronica() {
                       </select>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3">
                       <label className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
                         <input
                           type="checkbox"
@@ -715,22 +874,6 @@ export function ImportarFacturaElectronica() {
                         <span>
                           Guardar GTIN en codigo de barras
                           {!linea.gtin && <span className="block text-xs text-slate-500">Esta linea no trae GTIN real</span>}
-                        </span>
-                      </label>
-
-                      <label className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                        <input
-                          type="checkbox"
-                          checked={mapeo.crear_equivalencia}
-                          disabled={!linea.equivalencia_permitida}
-                          onChange={(e) => setMapeo(index, 'crear_equivalencia', e.target.checked)}
-                          className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-blue-600"
-                        />
-                        <span>
-                          Guardar equivalencia con este proveedor
-                          {!linea.equivalencia_permitida && (
-                            <span className="block text-xs text-slate-500">Bloqueada porque la referencia externa no es univoca</span>
-                          )}
                         </span>
                       </label>
                     </div>
@@ -780,21 +923,6 @@ export function ImportarFacturaElectronica() {
                       </span>
                     </label>
 
-                    <label className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 md:col-span-2">
-                      <input
-                        type="checkbox"
-                        checked={mapeo.crear_equivalencia}
-                        disabled={!linea.equivalencia_permitida}
-                        onChange={(e) => setMapeo(index, 'crear_equivalencia', e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-emerald-600"
-                      />
-                      <span>
-                        Crear equivalencia proveedor-producto
-                        {!linea.equivalencia_permitida && (
-                          <span className="block text-xs text-slate-500">No se persiste porque la referencia externa es ambigua</span>
-                        )}
-                      </span>
-                    </label>
                   </div>
                 )}
               </div>

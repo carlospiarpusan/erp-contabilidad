@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
+import { ensurePeriodoAbierto } from '@/lib/db/compliance'
 
 const ROLES = ['admin', 'contador']
 
@@ -34,10 +35,19 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const { proveedor_id, cuenta_bancaria_id, forma_pago_id, monto_total, referencia, observaciones } = body
+    const fecha = typeof body?.fecha === 'string' && body.fecha ? body.fecha : new Date().toISOString().split('T')[0]
     if (!proveedor_id || !monto_total)
       return NextResponse.json({ error: 'Proveedor y monto son requeridos' }, { status: 400 })
 
     const supabase = await createClient()
+    await ensurePeriodoAbierto({
+      session,
+      fecha,
+      source: 'api:pagos-proveedores',
+      method: req.method,
+      route: '/api/tesoreria/pagos-proveedores',
+      context: { proveedor_id, cuenta_bancaria_id },
+    })
 
     // Get next numero
     const { data: maxRow } = await supabase
@@ -61,6 +71,7 @@ export async function POST(req: NextRequest) {
         monto_total: Number(monto_total),
         referencia: referencia || null,
         observaciones: observaciones || null,
+        fecha,
         estado: 'pagado',
         created_by: session.id,
       })

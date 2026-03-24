@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
+import { ensurePeriodoAbierto } from '@/lib/db/compliance'
 
 const ROLES = ['admin', 'contador']
 
@@ -44,6 +45,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cuenta, fechas y saldo de extracto son requeridos' }, { status: 400 })
 
     const supabase = await createClient()
+    await ensurePeriodoAbierto({
+      session,
+      fecha: fecha_fin,
+      source: 'api:conciliaciones-bancarias',
+      method: req.method,
+      route: '/api/tesoreria/conciliaciones',
+      context: { cuenta_bancaria_id, fecha_inicio, fecha_fin },
+    })
 
     // Calculate book balance from movimientos_bancarios in the date range
     const { data: cuenta } = await supabase

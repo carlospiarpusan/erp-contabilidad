@@ -333,105 +333,141 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
             </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  <th className="w-72 pb-2 text-left text-xs font-medium text-gray-500">Producto</th>
-                  <th className="w-20 pb-2 text-right text-xs font-medium text-gray-500">Cant.</th>
-                  <th className="w-28 pb-2 text-right text-xs font-medium text-gray-500">Precio unit.</th>
-                  <th className="w-20 pb-2 text-right text-xs font-medium text-gray-500">Dcto %</th>
-                  <th className="w-28 pb-2 text-left text-xs font-medium text-gray-500">IVA</th>
-                  <th className="w-28 pb-2 text-right text-xs font-medium text-gray-500">Total</th>
-                  <th className="w-8 pb-2"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {lineas.map((linea, idx) => {
-                  const calc = calcLinea(linea)
-                  return (
-                    <tr key={idx}>
-                      <td className="py-2 pr-2 align-top">
-                        <RemoteLookup<ProductoOption>
-                          endpoint="/api/productos"
-                          responseKey="productos"
-                          value={linea.producto_id}
-                          initialLabel={linea.producto_id ? formatProductoLabel({
-                            codigo: linea.producto_codigo,
-                            descripcion: linea.descripcion,
-                          }) : ''}
-                          placeholder="Buscar por codigo o nombre"
-                          emptyMessage="Sin productos para mostrar"
-                          queryParams={{ activo: true }}
-                          minChars={1}
-                          onSelect={(producto) => handleProductoSelect(idx, producto)}
-                          onClear={() => clearProducto(idx)}
-                          getOptionLabel={(producto) => formatProductoLabel(producto)}
-                          getOptionDescription={(producto) => formatCOP(Number(producto.precio_venta ?? 0))}
-                        />
-                      </td>
-                      <td className="px-1 py-2">
-                        <input
-                          type="number"
-                          min="0.001"
-                          step="0.001"
-                          value={linea.cantidad}
-                          onChange={(event) => updateLinea(idx, 'cantidad', parseFloat(event.target.value) || 0)}
-                          className="h-8 w-full rounded border border-gray-200 px-2 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-1 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={linea.precio_unitario}
-                          onChange={(event) => updateLinea(idx, 'precio_unitario', parseFloat(event.target.value) || 0)}
-                          className="h-8 w-full rounded border border-gray-200 px-2 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-1 py-2">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.5"
-                          value={linea.descuento_porcentaje}
-                          onChange={(event) => updateLinea(idx, 'descuento_porcentaje', parseFloat(event.target.value) || 0)}
-                          className="h-8 w-full rounded border border-gray-200 px-2 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-1 py-2">
-                        <select
-                          value={linea.impuesto_id}
-                          onChange={(event) => updateLinea(idx, 'impuesto_id', event.target.value)}
-                          className="h-8 w-full rounded border border-gray-200 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          <option value="">Sin IVA</option>
-                          {impuestos.map((impuesto) => (
-                            <option key={impuesto.id} value={impuesto.id}>
-                              {impuesto.porcentaje}% {impuesto.codigo}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-1 py-2 text-right font-mono font-medium text-gray-900">
+          <div className="space-y-4">
+            {lineas.map((linea, idx) => {
+              const calc = calcLinea(linea)
+              return (
+                <div key={idx} className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 shadow-sm">
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                        Articulo {idx + 1}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        Busca por codigo o nombre y completa cantidad, precio e impuesto.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => quitarLinea(idx)}
+                      className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                      aria-label={`Eliminar articulo ${idx + 1}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-[minmax(0,2.25fr)_minmax(6rem,0.75fr)_minmax(8rem,0.9fr)_minmax(6rem,0.7fr)_minmax(8rem,0.9fr)_minmax(9rem,0.9fr)]">
+                    <div className="lg:min-w-0">
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                        Producto
+                      </label>
+                      <RemoteLookup<ProductoOption>
+                        endpoint="/api/productos"
+                        responseKey="productos"
+                        value={linea.producto_id}
+                        initialLabel={linea.producto_id ? formatProductoLabel({
+                          codigo: linea.producto_codigo,
+                          descripcion: linea.descripcion,
+                        }) : ''}
+                        placeholder="Buscar por codigo o nombre"
+                        emptyMessage="Sin productos para mostrar"
+                        queryParams={{ activo: true }}
+                        minChars={1}
+                        panelClassName="max-w-[92vw] sm:max-w-[42rem] sm:min-w-[34rem]"
+                        resultsClassName="max-h-80"
+                        optionClassName="py-3"
+                        onSelect={(producto) => handleProductoSelect(idx, producto)}
+                        onClear={() => clearProducto(idx)}
+                        getOptionLabel={(producto) => formatProductoLabel(producto)}
+                        getOptionDescription={(producto) => formatCOP(Number(producto.precio_venta ?? 0))}
+                      />
+                      {linea.producto_codigo && (
+                        <p className="mt-2 text-xs font-mono text-gray-500">
+                          Codigo seleccionado: {linea.producto_codigo}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                        Cantidad
+                      </label>
+                      <input
+                        type="number"
+                        min="0.001"
+                        step="0.001"
+                        value={linea.cantidad}
+                        onChange={(event) => updateLinea(idx, 'cantidad', parseFloat(event.target.value) || 0)}
+                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                        Precio unit.
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={linea.precio_unitario}
+                        onChange={(event) => updateLinea(idx, 'precio_unitario', parseFloat(event.target.value) || 0)}
+                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                        Dcto %
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={linea.descuento_porcentaje}
+                        onChange={(event) => updateLinea(idx, 'descuento_porcentaje', parseFloat(event.target.value) || 0)}
+                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+                        IVA
+                      </label>
+                      <select
+                        value={linea.impuesto_id}
+                        onChange={(event) => updateLinea(idx, 'impuesto_id', event.target.value)}
+                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Sin IVA</option>
+                        {impuestos.map((impuesto) => (
+                          <option key={impuesto.id} value={impuesto.id}>
+                            {impuesto.porcentaje}% {impuesto.codigo}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="rounded-xl border border-blue-100 bg-white px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
+                        Total linea
+                      </p>
+                      <p className="mt-2 text-right font-mono text-base font-semibold text-gray-900">
                         {formatCOP(calc.total)}
-                      </td>
-                      <td className="py-2 pl-2">
-                        <button
-                          type="button"
-                          onClick={() => quitarLinea(idx)}
-                          className="rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            <div className="flex justify-start">
+              <Button type="button" variant="outline" onClick={agregarLinea}>
+                <Plus className="mr-1 h-4 w-4" /> Agregar otro articulo
+              </Button>
+            </div>
           </div>
         )}
       </div>

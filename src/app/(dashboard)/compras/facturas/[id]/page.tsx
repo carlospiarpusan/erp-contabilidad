@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getCompraById } from '@/lib/db/compras'
 import { getFormasPago } from '@/lib/db/maestros'
 import { DetalleCompra } from '@/components/compras/DetalleCompra'
+import { getDocumentoSoporte, listAdjuntosPrivados } from '@/lib/db/compliance'
 import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -11,10 +12,17 @@ interface PageProps { params: Promise<{ id: string }> }
 
 export default async function DetalleCompraPage({ params }: PageProps) {
   const { id } = await params
-  const [compra, formasPago] = await Promise.all([
-    getCompraById(id).catch(() => null),
+  const [compraResult, formasPagoResult, documentoSoporteResult, adjuntosResult] = await Promise.allSettled([
+    getCompraById(id),
     getFormasPago(),
+    getDocumentoSoporte(id),
+    listAdjuntosPrivados({ relationType: 'documento', relationId: id }),
   ])
+
+  const compra = compraResult.status === 'fulfilled' ? compraResult.value : null
+  const formasPago = formasPagoResult.status === 'fulfilled' ? formasPagoResult.value : []
+  const documentoSoporte = documentoSoporteResult.status === 'fulfilled' ? documentoSoporteResult.value : null
+  const adjuntos = adjuntosResult.status === 'fulfilled' ? adjuntosResult.value : []
 
   if (!compra) notFound()
 
@@ -23,7 +31,12 @@ export default async function DetalleCompraPage({ params }: PageProps) {
       <Link href="/compras/facturas" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 w-fit">
         <ChevronLeft className="h-4 w-4" /> Volver a compras
       </Link>
-      <DetalleCompra compra={compra as unknown as Parameters<typeof DetalleCompra>[0]['compra']} formasPago={formasPago} />
+      <DetalleCompra
+        compra={compra as unknown as Parameters<typeof DetalleCompra>[0]['compra']}
+        formasPago={formasPago}
+        documentoSoporte={documentoSoporte as Parameters<typeof DetalleCompra>[0]['documentoSoporte']}
+        adjuntos={adjuntos as Parameters<typeof DetalleCompra>[0]['adjuntos']}
+      />
     </div>
   )
 }

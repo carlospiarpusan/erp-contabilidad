@@ -4,7 +4,7 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 
 ## Total
 
-- Paginas: 100
+- Paginas: 112
 
 ## Lista completa
 
@@ -27,9 +27,13 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 - `/configuracion/bodegas/page.tsx`
 - `/configuracion/colaboradores/page.tsx`
 - `/configuracion/empresa/page.tsx`
+- `/configuracion/facturacion-electronica/page.tsx`
+  - Superficie informativa desactivada; aclara que ClovEnt no ofrece FE nativa y redirige a integracion externa / cumplimiento.
 - `/configuracion/importar/page.tsx`
-  - Centro de `Migración e Importación` para cargas masivas y onboarding de datos.
+  - Centro de `Migración e Importación` para migración guiada, importación masiva y exportación de respaldo.
 - `/configuracion/perfil/page.tsx`
+- `/configuracion/regulacion/page.tsx`
+  - Configuración regulatoria por empresa: documento soporte, UVT, exógena, privacidad y jobs de validación.
 - `/configuracion/transportadoras/page.tsx`
 - `/configuracion/usuarios/page.tsx`
 - `/contabilidad/asientos-masivo/page.tsx`
@@ -44,6 +48,8 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 - `/contabilidad/ejercicios/page.tsx`
 - `/contabilidad/formas-pago/page.tsx`
 - `/contabilidad/impuestos/page.tsx`
+- `/contabilidad/periodos/page.tsx`
+  - Cierre mensual, reapertura controlada y bloqueo transversal por periodo contable.
 - `/documentacion/page.tsx`
 - `/gastos/[id]/page.tsx`
 - `/gastos/acreedores/page.tsx`
@@ -68,6 +74,9 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 - `/informes/sumas-saldos/page.tsx`
 - `/informes/ventas-por-medio-pago/page.tsx`
 - `/inventario/ajuste/page.tsx`
+- `/inventario/kardex/page.tsx`
+- `/inventario/traslados/nuevo/page.tsx`
+- `/inventario/traslados/page.tsx`
 - `/notificaciones/page.tsx`
 - `/page.tsx`
 - `/pos/page.tsx`
@@ -76,11 +85,17 @@ Inventario de paginas detectadas en `src/app/(dashboard)`.
 - `/productos/fabricantes/page.tsx`
 - `/productos/familias/page.tsx`
 - `/productos/page.tsx`
+- `/productos/sin-rotacion/page.tsx`
+  - Alerta operativa de productos con stock disponible y sin ventas recientes.
 - `/productos/stock-bajo/page.tsx`
 - `/superadmin/empresas/[id]/page.tsx`
 - `/superadmin/empresas/page.tsx`
 - `/superadmin/page.tsx`
 - `/superadmin/usuarios/page.tsx`
+- `/tesoreria/caja/page.tsx`
+- `/tesoreria/conciliacion/page.tsx`
+- `/tesoreria/cuentas-bancarias/page.tsx`
+- `/tesoreria/pagos-proveedores/page.tsx`
 - `/ventas/cotizaciones/[id]/page.tsx`
 - `/ventas/cotizaciones/nueva/page.tsx`
 - `/ventas/cotizaciones/page.tsx`

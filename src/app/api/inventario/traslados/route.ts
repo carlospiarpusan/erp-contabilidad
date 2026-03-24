@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
+import { ensurePeriodoAbierto } from '@/lib/db/compliance'
 import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
+import { getTodayInAppTimeZone } from '@/lib/utils/dates'
 
 const ROLES_TRASLADO = new Set(['admin', 'contador'])
 
@@ -44,6 +46,15 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = await createClient()
+    const fecha = getTodayInAppTimeZone()
+    await ensurePeriodoAbierto({
+      session,
+      fecha,
+      source: 'api:inventario-traslados',
+      method: req.method,
+      route: '/api/inventario/traslados',
+      context: { bodega_origen_id, bodega_destino_id, lineas: lineas.length },
+    })
 
     // Get next numero
     const { data: maxRow } = await supabase
@@ -66,7 +77,7 @@ export async function POST(req: NextRequest) {
         bodega_destino_id,
         observaciones: observaciones?.trim() || null,
         estado: 'pendiente',
-        fecha: new Date().toISOString().split('T')[0],
+        fecha,
         created_by: session.id,
       })
       .select()

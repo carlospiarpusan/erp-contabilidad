@@ -7,7 +7,6 @@ import {
   type ImportEntity,
   IMPORT_COLUMNS,
   IMPORT_ENTITY_META,
-  IMPORT_ENTITY_ORDER,
   IMPORT_EXAMPLE_ROWS,
 } from '@/lib/import/migration'
 import { cn, cardCls } from '@/utils/cn'
@@ -18,6 +17,16 @@ interface ResultadoFila {
   mensaje?: string
   datos?: Record<string, string>
 }
+
+const IMPORT_ENTITY_GROUPS: readonly {
+  label: string
+  entidades: readonly ImportEntity[]
+}[] = [
+  { label: 'Maestros', entidades: ['clientes', 'proveedores', 'productos'] },
+  { label: 'Inventario', entidades: ['inventario-inicial'] },
+  { label: 'Contabilidad', entidades: ['cuentas-puc', 'asientos-contables'] },
+  { label: 'Documentos históricos', entidades: ['facturas-compra'] },
+] as const
 
 function generarCSVEjemplo(entidad: ImportEntity): string {
   const header = IMPORT_COLUMNS[entidad].map((column) => column.campo).join(',')
@@ -39,12 +48,42 @@ function getEntidadNote(entidad: ImportEntity) {
       return 'Las facturas historicas no mueven stock. El proveedor debe existir previamente.'
     case 'productos':
       return 'Si incluyes stock_actual o stock_minimo, se aplican sobre la bodega principal de la empresa.'
+    case 'inventario-inicial':
+      return 'Usa esta opción cuando el catálogo ya existe y solo necesitas cargar existencias, stock mínimo o costo sobre la bodega principal.'
     case 'cuentas-puc':
       return 'Importa primero clases y grupos si vas a usar codigo_padre; asi el enlace padre se resuelve sin errores.'
     case 'asientos-contables':
       return 'Cada referencia se agrupa como un asiento. Debe y haber deben cuadrar exactamente.'
     default:
       return IMPORT_ENTITY_META[entidad].validationHint
+  }
+}
+
+function getExportActions(entidad: ImportEntity) {
+  switch (entidad) {
+    case 'clientes':
+      return [
+        { label: 'Exportar CSV', href: '/api/export/clientes?format=csv' },
+        { label: 'Exportar XLSX', href: '/api/export/clientes?format=xlsx' },
+      ]
+    case 'proveedores':
+      return [
+        { label: 'Exportar CSV', href: '/api/export/proveedores?format=csv' },
+        { label: 'Exportar XLSX', href: '/api/export/proveedores?format=xlsx' },
+      ]
+    case 'productos':
+    case 'inventario-inicial':
+      return [
+        { label: 'Exportar CSV', href: '/api/export/inventario?format=csv' },
+        { label: 'Exportar XLSX', href: '/api/export/inventario?format=xlsx' },
+      ]
+    case 'facturas-compra':
+      return [
+        { label: 'Exportar CSV', href: '/api/export/compras?format=csv' },
+        { label: 'Exportar XLSX', href: '/api/export/compras?format=xlsx' },
+      ]
+    default:
+      return []
   }
 }
 
@@ -161,6 +200,7 @@ export function ImportarCSV({ initialEntidad = 'clientes' }: { initialEntidad?: 
   const fallidos = resultados.filter((row) => row.estado === 'error').length
   const columnas = IMPORT_COLUMNS[entidad]
   const meta = IMPORT_ENTITY_META[entidad]
+  const exportActions = getExportActions(entidad)
 
   return (
     <div className="flex flex-col gap-6">
@@ -170,21 +210,30 @@ export function ImportarCSV({ initialEntidad = 'clientes' }: { initialEntidad?: 
             <FileSpreadsheet className="h-4 w-4 text-teal-600" />
             Importacion rapida por entidad
           </div>
-          <div className="flex flex-wrap gap-2">
-            {IMPORT_ENTITY_ORDER.map((item) => (
-              <button
-                key={item}
-                onClick={() => cambiarEntidad(item)}
-                className={cn(
-                  'rounded-xl border px-3 py-2 text-left text-sm transition-colors',
-                  entidad === item
-                    ? 'border-teal-200 bg-teal-50 text-teal-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/50'
-                )}
-              >
-                <span className="block font-medium">{IMPORT_ENTITY_META[item].shortLabel}</span>
-                <span className="block text-xs text-gray-500 dark:text-gray-400">{IMPORT_ENTITY_META[item].description}</span>
-              </button>
+          <div className="flex flex-col gap-4">
+            {IMPORT_ENTITY_GROUPS.map((group) => (
+              <div key={group.label} className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                  {group.label}
+                </p>
+                <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                  {group.entidades.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => cambiarEntidad(item)}
+                      className={cn(
+                        'rounded-xl border px-3 py-3 text-left text-sm transition-colors',
+                        entidad === item
+                          ? 'border-teal-200 bg-teal-50 text-teal-700'
+                          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800/50'
+                      )}
+                    >
+                      <span className="block font-medium">{IMPORT_ENTITY_META[item].shortLabel}</span>
+                      <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">{IMPORT_ENTITY_META[item].description}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -231,6 +280,28 @@ export function ImportarCSV({ initialEntidad = 'clientes' }: { initialEntidad?: 
         <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
           {getEntidadNote(entidad)}
         </p>
+
+        {exportActions.length > 0 && (
+          <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">Exportación / Respaldo</p>
+            <p className="mt-1 text-sm text-blue-800">
+              Antes de importar, puedes sacar una copia del estado actual de esta entidad.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {exportActions.map((action) => (
+                <a
+                  key={action.href}
+                  href={action.href}
+                  download
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  {action.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border-2 border-dashed border-gray-300 p-8 text-center dark:border-gray-700">

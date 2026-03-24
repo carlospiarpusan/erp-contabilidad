@@ -7,7 +7,12 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import type { UserSession } from '@/lib/auth/session'
 import { getRoleLabel } from '@/lib/auth/permissions'
-import { getVisibleNavigation, type NavigationItem } from '@/components/layout/navigation'
+import {
+  getVisibleNavigation,
+  NAVIGATION_SECTION_META,
+  type NavigationItem,
+  type NavigationSection,
+} from '@/components/layout/navigation'
 import { BrandMark } from '@/components/brand/BrandMark'
 
 type Rol = UserSession['rol']
@@ -107,6 +112,14 @@ interface SidebarProps {
 export function Sidebar({ rol = 'solo_lectura', empresaNombre }: SidebarProps) {
   const pathname = usePathname()
   const visibles = getVisibleNavigation(rol)
+  const visibleSections = (Object.entries(NAVIGATION_SECTION_META) as [NavigationSection, { label: string; order: number }][])
+    .sort(([, a], [, b]) => a.order - b.order)
+    .map(([section, meta]) => ({
+      section,
+      label: meta.label,
+      items: visibles.filter((item) => item.section === section),
+    }))
+    .filter((section) => section.items.length > 0)
 
   return (
     <aside className="flex h-screen w-[272px] shrink-0 flex-col border-r border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,250,255,0.94))] dark:border-gray-800 dark:bg-[linear-gradient(180deg,rgba(10,17,27,0.98),rgba(16,24,36,0.98))]">
@@ -138,9 +151,25 @@ export function Sidebar({ rol = 'solo_lectura', empresaNombre }: SidebarProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-2 scrollbar-thin">
-        <div className="flex flex-col gap-1">
-          {visibles.map((item) => (
-            <MenuItemComponent key={`${item.label}:${pathname}`} item={item} pathname={pathname} />
+        <div className="flex flex-col gap-4">
+          {visibleSections.map((section) => (
+            <section key={section.section} className="space-y-1">
+              <div className="px-3 pb-1">
+                <p className={cn(
+                  'text-[10px] font-bold uppercase tracking-[0.18em]',
+                  section.section === 'superadmin'
+                    ? 'text-violet-500/80'
+                    : 'text-gray-400 dark:text-gray-500'
+                )}>
+                  {section.label}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                {section.items.map((item) => (
+                  <MenuItemComponent key={`${item.label}:${pathname}`} item={item} pathname={pathname} />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       </nav>

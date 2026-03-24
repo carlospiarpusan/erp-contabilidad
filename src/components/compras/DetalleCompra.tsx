@@ -8,6 +8,8 @@ import { Modal } from '@/components/ui/modal'
 import { formatCOP, formatFecha, cardCls , cn } from '@/utils/cn'
 import Link from 'next/link'
 import { ShoppingCart, Truck, Warehouse, CheckCircle, XCircle, CreditCard, Printer } from 'lucide-react'
+import { DocumentoSoporteCard } from './DocumentoSoporteCard'
+import type { AdjuntoItem } from '@/components/shared/AdjuntosPrivados'
 
 interface FormaPago { id: string; descripcion: string }
 
@@ -20,7 +22,7 @@ interface Recibo {
 interface Linea {
   id: string; descripcion?: string; cantidad: number
   precio_unitario: number; descuento_porcentaje: number
-  subtotal: number; total_iva: number; total: number
+  subtotal: number; total_descuento: number; total_iva: number; total: number
   producto?: { codigo: string; descripcion: string } | null
   impuesto?: { porcentaje: number } | null
 }
@@ -30,7 +32,17 @@ interface Compra {
   numero_externo: string
   subtotal: number; total_iva: number; total_descuento: number; total: number
   estado: string; observaciones?: string | null
-  proveedor?: { razon_social: string; numero_documento?: string; tipo_documento?: string; email?: string; telefono?: string } | null
+  documento_soporte_requerido?: boolean | null
+  documento_soporte_estado?: string | null
+  proveedor?: {
+    id?: string
+    razon_social: string
+    numero_documento?: string
+    tipo_documento?: string
+    email?: string
+    telefono?: string
+    obligado_a_facturar?: boolean | null
+  } | null
   bodega?: { nombre: string } | null
   lineas?: Linea[]
   recibos?: Recibo[]
@@ -40,9 +52,30 @@ const BADGE: Record<string, 'success' | 'danger' | 'warning' | 'outline'> = {
   pendiente: 'warning', pagada: 'success', cancelada: 'danger',
 }
 
-interface Props { compra: Compra; formasPago: FormaPago[] }
+interface DocumentoSoporteState {
+  id?: string
+  requerido: boolean
+  estado: 'no_requerido' | 'pendiente' | 'adjunto' | 'validado' | 'rechazado'
+  proveedor_tecnologico?: string | null
+  numero_externo?: string | null
+  fecha_emision?: string | null
+  archivo_adjunto_id?: string | null
+  observaciones?: string | null
+  proveedor?: {
+    razon_social?: string | null
+    numero_documento?: string | null
+    obligado_a_facturar?: boolean | null
+  } | null
+}
 
-export function DetalleCompra({ compra, formasPago }: Props) {
+interface Props {
+  compra: Compra
+  formasPago: FormaPago[]
+  documentoSoporte?: DocumentoSoporteState | null
+  adjuntos?: AdjuntoItem[]
+}
+
+export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adjuntos = [] }: Props) {
   const router = useRouter()
   const [modalPago, setModalPago]   = useState(false)
   const [cancelando, setCancelando] = useState(false)
@@ -142,9 +175,10 @@ export function DetalleCompra({ compra, formasPago }: Props) {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
         {[
           { label: 'Subtotal', value: formatCOP(compra.subtotal), color: 'text-gray-900 dark:text-gray-100' },
+          { label: 'Descuento', value: formatCOP(compra.total_descuento), color: 'text-amber-700 dark:text-amber-300' },
           { label: 'IVA',      value: formatCOP(compra.total_iva), color: 'text-gray-700 dark:text-gray-300' },
           { label: 'Total',    value: formatCOP(compra.total),    color: 'text-orange-700 text-xl' },
           { label: 'Saldo',    value: formatCOP(saldo),           color: saldo > 0 ? 'text-red-600' : 'text-green-700' },
@@ -178,9 +212,20 @@ export function DetalleCompra({ compra, formasPago }: Props) {
             </h3>
             <dl className="flex flex-col gap-1.5 text-sm text-gray-600">
               {compra.bodega && <div className="flex justify-between"><dt>Bodega</dt><dd>{compra.bodega.nombre}</dd></div>}
+              <div className="flex justify-between">
+                <dt>Documento soporte</dt>
+                <dd>{compra.documento_soporte_requerido ? (compra.documento_soporte_estado ?? 'pendiente') : 'No requerido'}</dd>
+              </div>
               {compra.observaciones && <div className="mt-2 text-xs text-gray-400 italic">{compra.observaciones}</div>}
             </dl>
           </div>
+          <DocumentoSoporteCard
+            documentoId={compra.id}
+            requerido={Boolean(compra.documento_soporte_requerido)}
+            estadoDocumento={compra.documento_soporte_estado}
+            initialSoporte={documentoSoporte}
+            initialAdjuntos={adjuntos}
+          />
         </div>
 
         {/* Líneas */}
@@ -192,7 +237,8 @@ export function DetalleCompra({ compra, formasPago }: Props) {
                 <tr className="border-b border-gray-100">
                   <th className="pb-2 text-left text-xs font-medium text-gray-500">Producto</th>
                   <th className="pb-2 text-right text-xs font-medium text-gray-500">Cant.</th>
-                  <th className="pb-2 text-right text-xs font-medium text-gray-500">P. Costo</th>
+                  <th className="pb-2 text-right text-xs font-medium text-gray-500">P. Unit.</th>
+                  <th className="pb-2 text-right text-xs font-medium text-gray-500">Dto.</th>
                   <th className="pb-2 text-right text-xs font-medium text-gray-500">IVA</th>
                   <th className="pb-2 text-right text-xs font-medium text-gray-500">Total</th>
                 </tr>
@@ -201,11 +247,28 @@ export function DetalleCompra({ compra, formasPago }: Props) {
                 {(compra.lineas ?? []).map(l => (
                   <tr key={l.id}>
                     <td className="py-2">
-                      <p className="font-medium text-gray-900">{l.producto?.descripcion ?? l.descripcion ?? '—'}</p>
+                      <p className="font-medium text-gray-900">{l.descripcion ?? l.producto?.descripcion ?? '—'}</p>
                       {l.producto?.codigo && <p className="text-xs text-gray-400 font-mono">{l.producto.codigo}</p>}
                     </td>
                     <td className="py-2 text-right text-gray-700">{l.cantidad}</td>
-                    <td className="py-2 text-right font-mono text-gray-700">{formatCOP(l.precio_unitario)}</td>
+                    <td className="py-2 text-right font-mono text-gray-700">
+                      <div>{formatCOP(l.precio_unitario)}</div>
+                      {l.descuento_porcentaje > 0 && l.cantidad > 0 && (
+                        <div className="text-[11px] text-gray-400">
+                          Neto {formatCOP((l.subtotal - l.total_descuento) / l.cantidad)}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-2 text-right text-gray-500">
+                      {l.total_descuento > 0 ? (
+                        <>
+                          <div className="font-mono text-gray-700">{formatCOP(l.total_descuento)}</div>
+                          <div className="text-[11px]">{l.descuento_porcentaje}%</div>
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="py-2 text-right text-gray-500">{l.impuesto?.porcentaje ?? 0}%</td>
                     <td className="py-2 text-right font-mono font-medium text-gray-900">{formatCOP(l.total)}</td>
                   </tr>
@@ -213,7 +276,7 @@ export function DetalleCompra({ compra, formasPago }: Props) {
               </tbody>
               <tfoot>
                 <tr className="border-t border-gray-200">
-                  <td colSpan={4} className="pt-2 text-right text-sm font-bold text-gray-900">TOTAL</td>
+                  <td colSpan={5} className="pt-2 text-right text-sm font-bold text-gray-900">TOTAL</td>
                   <td className="pt-2 text-right font-mono font-bold text-orange-700 text-base">{formatCOP(compra.total)}</td>
                 </tr>
               </tfoot>
