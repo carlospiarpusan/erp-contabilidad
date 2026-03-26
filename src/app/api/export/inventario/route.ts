@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
 import { createExportResponse, resolveExportFormat } from '@/lib/utils/csv'
@@ -68,6 +69,6 @@ export async function GET(req: Request) {
       sheetName: 'Inventario',
     })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

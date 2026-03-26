@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { getCotizacionById, aprobarCotizacion, cancelarCotizacion } from '@/lib/db/cotizaciones'
 import { createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
@@ -16,7 +17,7 @@ export async function GET(_: NextRequest, { params }: Ctx) {
     const data = await getCotizacionById(id)
     return NextResponse.json(data)
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -92,6 +93,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
     return NextResponse.json({ error: 'Acción no válida' }, { status: 400 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

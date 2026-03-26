@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { getKPIs, getUltimasFacturas, getAlertasSinRotacion, getAlertasStock, getFacturasVencidas, getResumenMensual } from '@/lib/db/dashboard'
 import { getSession } from '@/lib/auth/session'
 
@@ -29,6 +30,6 @@ export async function GET(req: NextRequest) {
       resumen_mensual,
     })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

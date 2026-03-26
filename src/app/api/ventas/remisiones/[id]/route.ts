@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { getRemisionById, updateEstadoRemision } from '@/lib/db/remisiones'
 import { createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
@@ -16,7 +17,7 @@ export async function GET(_: NextRequest, { params }: Params) {
     const data = await getRemisionById(id)
     return NextResponse.json(data)
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -93,6 +94,6 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     return NextResponse.json({ error: 'Acción inválida' }, { status: 400 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

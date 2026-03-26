@@ -5,6 +5,19 @@ import { toErrorMsg } from '@/lib/utils/errors'
 
 const RELATION_TYPES = new Set(['documento', 'asiento', 'recibo', 'pago_proveedor', 'documento_soporte'])
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/xml',
+  'text/xml',
+  'text/csv',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+])
+
 export async function GET(req: NextRequest) {
   try {
     const session = await getSession()
@@ -42,6 +55,12 @@ export async function POST(req: NextRequest) {
     }
     if (!(file instanceof File)) {
       return NextResponse.json({ error: 'Debes adjuntar un archivo' }, { status: 400 })
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'El archivo excede el tamaño máximo de 10 MB' }, { status: 400 })
+    }
+    if (file.type && !ALLOWED_MIME_TYPES.has(file.type)) {
+      return NextResponse.json({ error: 'Tipo de archivo no permitido. Se aceptan: PDF, imágenes (JPG, PNG, WebP), XML, CSV y Excel' }, { status: 400 })
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer())

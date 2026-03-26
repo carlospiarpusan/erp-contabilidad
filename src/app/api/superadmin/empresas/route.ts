@@ -67,6 +67,12 @@ export async function POST(req: NextRequest) {
   if (!nombre || !nit || !email_admin || !nombre_admin || !password_admin) {
     return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email_admin)) {
+    return NextResponse.json({ error: 'Email del admin no es válido' }, { status: 400 })
+  }
+  if (String(password_admin).length < 8) {
+    return NextResponse.json({ error: 'La contraseña del admin debe tener mínimo 8 caracteres' }, { status: 400 })
+  }
 
   const admin = adminClient()
   const { url, serviceRoleKey } = getSupabaseServiceEnv()

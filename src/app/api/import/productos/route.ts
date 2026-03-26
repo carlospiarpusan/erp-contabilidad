@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId } from '@/lib/db/maestros'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
@@ -294,6 +295,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ resultados })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

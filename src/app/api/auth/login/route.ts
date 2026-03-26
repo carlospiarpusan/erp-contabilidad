@@ -77,9 +77,24 @@ export async function POST(req: NextRequest) {
     }
 
     resetLoginFailures(key)
+
+    // Check multi-empresa access
+    let seleccionarEmpresa = false
+    try {
+      const { count } = await adminClient
+        .from('usuario_empresas')
+        .select('*', { count: 'exact', head: true })
+        .eq('usuario_id', userId)
+        .eq('activo', true)
+      seleccionarEmpresa = (count ?? 0) > 1
+    } catch {
+      // Table may not exist yet
+    }
+
     return NextResponse.json({
       ok: true,
       debe_cambiar_password: usuario.debe_cambiar_password ?? false,
+      seleccionar_empresa: seleccionarEmpresa,
     })
   } catch {
     return NextResponse.json({ error: 'No se pudo iniciar sesión' }, { status: 500 })

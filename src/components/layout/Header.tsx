@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { LogOut, ChevronDown, UserCircle, Settings } from 'lucide-react'
+import { LogOut, ChevronDown, UserCircle, Settings, Building2 } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { BusquedaGlobal } from '@/components/busqueda/BusquedaGlobal'
 import { Notificaciones } from '@/components/layout/Notificaciones'
@@ -16,9 +16,10 @@ interface HeaderProps {
   userName?: string
   userEmail?: string
   userRol?: AppRole
+  tieneMultiEmpresa?: boolean
 }
 
-export function Header({ titulo, userName, userEmail, userRol }: HeaderProps) {
+export function Header({ titulo, userName, userEmail, userRol, tieneMultiEmpresa }: HeaderProps) {
   const router = useRouter()
   const supabase = createClient()
   const [menu, setMenu] = useState(false)
@@ -109,6 +110,15 @@ export function Header({ titulo, userName, userEmail, userRol }: HeaderProps) {
                     className="flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900 transition-colors"
                   >
                     <Settings className="h-4 w-4 opacity-50" /> Usuarios
+                  </Link>
+                )}
+                {tieneMultiEmpresa && (
+                  <Link
+                    href="/seleccionar-empresa"
+                    onClick={() => setMenu(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-[13px] text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-900 transition-colors"
+                  >
+                    <Building2 className="h-4 w-4 opacity-50" /> Cambiar empresa
                   </Link>
                 )}
                 <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />

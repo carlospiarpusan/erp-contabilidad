@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { updateUsuario } from '@/lib/db/usuarios'
 import { getSession } from '@/lib/auth/session'
 import { ROLE_IDS } from '@/lib/auth/permissions'
@@ -40,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const updated = await updateUsuario(id, parsed.data)
     return NextResponse.json(updated)
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Error'
+    const msg = toErrorMsg(e)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

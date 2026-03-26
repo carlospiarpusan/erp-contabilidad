@@ -11,6 +11,7 @@ export interface UserSession {
   empresa_id: string
   empresa_nombre?: string
   debe_cambiar_password: boolean
+  tiene_multi_empresa: boolean
 }
 
 export const getSession = cache(async (): Promise<UserSession | null> => {
@@ -30,6 +31,7 @@ export const getSession = cache(async (): Promise<UserSession | null> => {
       empresa_id: context.empresa_id,
       empresa_nombre: context.empresa_nombre,
       debe_cambiar_password: context.debe_cambiar_password,
+      tiene_multi_empresa: context.tiene_multi_empresa,
     }
   } catch {
     return null

@@ -64,6 +64,11 @@ export async function proxy(request: NextRequest) {
       : NextResponse.redirect(loginUrl)
   }
 
+  // Ruta de selección de empresa: autenticada pero sin check de módulo
+  if (pathname === '/seleccionar-empresa') {
+    return supabaseResponse
+  }
+
   const access = isApiRoute
     ? getApiRouteAccess(pathname, request.method)
     : getPageRouteAccess(pathname)

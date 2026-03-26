@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth/session'
 import { updatePerfilPropio } from '@/lib/db/usuarios'
@@ -25,7 +26,7 @@ export async function PATCH(req: NextRequest) {
     const updated = await updatePerfilPropio(session.id, parsed.data)
     return NextResponse.json(updated)
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Error'
+    const msg = toErrorMsg(e)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

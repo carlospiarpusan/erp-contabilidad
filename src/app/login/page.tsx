@@ -57,6 +57,12 @@ export default function LoginPage() {
       return
     }
 
+    if (body?.seleccionar_empresa) {
+      router.push('/seleccionar-empresa')
+      router.refresh()
+      return
+    }
+
     router.push('/')
     router.refresh()
   }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { getInformeCartera } from '@/lib/db/informes'
 import { getSession } from '@/lib/auth/session'
 
@@ -10,6 +11,6 @@ export async function GET() {
     const { filas, total, resumen } = await getInformeCartera()
     return NextResponse.json({ filas, resumen: resumen.rangos, total })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

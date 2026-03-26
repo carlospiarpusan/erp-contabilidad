@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { getUsuarios, crearUsuario, getRoles } from '@/lib/db/usuarios'
 import { getSession } from '@/lib/auth/session'
 import { ROLE_IDS } from '@/lib/auth/permissions'
@@ -41,7 +42,7 @@ export async function GET() {
     const [usuarios, roles] = await Promise.all([getUsuarios(), getRoles()])
     return NextResponse.json({ usuarios, roles })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Error'
+    const msg = toErrorMsg(e)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
     await crearUsuario(email.toLowerCase(), nombre, rol_id, cedula, session.empresa_id)
     return NextResponse.json({ ok: true }, { status: 201 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Error'
+    const msg = toErrorMsg(e)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { updateFabricante, deleteFabricante } from '@/lib/db/productos'
 import { getSession } from '@/lib/auth/session'
 
@@ -12,7 +13,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const fabricante = await updateFabricante(id, datos)
     return NextResponse.json(fabricante)
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -25,6 +26,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await deleteFabricante(id)
     return NextResponse.json({ ok: true })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

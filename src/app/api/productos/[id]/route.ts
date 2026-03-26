@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { deleteProducto, getProductoById, updateProducto } from '@/lib/db/productos'
 import { getSession } from '@/lib/auth/session'
 import { puedeAcceder } from '@/lib/auth/session'
@@ -22,7 +23,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const producto = await getProductoById(id)
     return NextResponse.json(producto)
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -59,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     revalidateInventoryDependentViews(session.empresa_id)
     return NextResponse.json(producto)
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -76,6 +77,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     revalidateInventoryDependentViews(session.empresa_id)
     return NextResponse.json(result)
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

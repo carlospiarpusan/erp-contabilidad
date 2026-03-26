@@ -30,6 +30,15 @@ export async function POST(req: NextRequest) {
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
     const body = await req.json()
+    if (!body.razon_social?.trim()) {
+      return NextResponse.json({ error: 'razon_social es requerida' }, { status: 400 })
+    }
+    if (!body.tipo_documento?.trim()) {
+      return NextResponse.json({ error: 'tipo_documento es requerido' }, { status: 400 })
+    }
+    if (!body.numero_documento?.trim()) {
+      return NextResponse.json({ error: 'numero_documento es requerido' }, { status: 400 })
+    }
     const cliente = await createCliente(body)
     return NextResponse.json(cliente, { status: 201 })
   } catch (e: unknown) {

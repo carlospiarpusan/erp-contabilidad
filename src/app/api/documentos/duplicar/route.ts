@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
@@ -98,6 +99,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id: nuevo.id, tipo: doc.tipo }, { status: 201 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

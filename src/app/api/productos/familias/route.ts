@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { getFamilias, createFamilia } from '@/lib/db/productos'
 import { getSession } from '@/lib/auth/session'
 
@@ -10,7 +11,7 @@ export async function GET() {
     const familias = await getFamilias()
     return NextResponse.json({ familias })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }
 
@@ -24,6 +25,6 @@ export async function POST(req: NextRequest) {
     const familia = await createFamilia(datos)
     return NextResponse.json(familia, { status: 201 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

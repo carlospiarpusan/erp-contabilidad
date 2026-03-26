@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { toErrorMsg } from '@/lib/utils/errors'
 import { ajustarStock } from '@/lib/db/productos'
 import { getSession } from '@/lib/auth/session'
 import { ensurePeriodoAbierto } from '@/lib/db/compliance'
@@ -124,6 +125,6 @@ export async function POST(req: NextRequest) {
       stock_objetivo: result?.stock_objetivo ?? null,
     })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
   }
 }

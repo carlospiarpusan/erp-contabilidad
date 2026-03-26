@@ -18,6 +18,7 @@ export interface UsuarioContext {
   rol: AppRole
   empresa_nombre?: string
   debe_cambiar_password: boolean
+  tiene_multi_empresa: boolean
 }
 
 function getEmpresaNombre(empresas: UsuarioContextRow['empresas']) {
@@ -43,6 +44,19 @@ export async function getUsuarioContext(
   const rol = resolveRoleById(row.rol_id)
   if (!rol) return null
 
+  // Check multi-empresa access (graceful if table doesn't exist yet)
+  let tieneMultiEmpresa = false
+  try {
+    const { count } = await supabase
+      .from('usuario_empresas')
+      .select('*', { count: 'exact', head: true })
+      .eq('usuario_id', userId)
+      .eq('activo', true)
+    tieneMultiEmpresa = (count ?? 0) > 1
+  } catch {
+    // Table may not exist yet — default to false
+  }
+
   return {
     id: row.id,
     nombre: row.nombre,
@@ -50,5 +64,6 @@ export async function getUsuarioContext(
     rol,
     empresa_nombre: getEmpresaNombre(row.empresas),
     debe_cambiar_password: row.debe_cambiar_password ?? false,
+    tiene_multi_empresa: tieneMultiEmpresa,
   }
 }
