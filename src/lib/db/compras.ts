@@ -2,6 +2,14 @@ import { createClient } from '@/lib/supabase/server'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
 import { sanitizeSearchTerm } from '@/lib/utils/search'
+import { assertDocumentoCancelacionPermitida } from '@/lib/db/documentos-contables'
+
+function isMissingRpcSignature(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const message = String((error as { message?: string }).message ?? '')
+  return message.includes('Could not find the function public.secure_crear_pago_compra') ||
+    message.includes('function public.secure_crear_pago_compra')
+}
 
 const COMPRA_DETAIL_SELECT_FULL = `
       id, numero, prefijo, fecha, numero_externo,
@@ -266,6 +274,160 @@ export async function getCompras(params?: {
   return { compras: data ?? [], total: count ?? 0 }
 }
 
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100
+}
+
+export async function getRecibosCompraContables(params?: { limit?: number }) {
+  const supabase = await createClient()
+  const limit = Math.max(1, Math.min(params?.limit ?? 100, 200))
+
+  const { data, error } = await supabase
+    .from('recibos')
+    .select(`
+      id,
+      numero,
+      fecha,
+      valor,
+      observaciones,
+      documento:documento_id(
+        id,
+        numero,
+        prefijo,
+        numero_externo,
+        proveedor:proveedor_id(id, razon_social, numero_documento)
+      ),
+      forma_pago:forma_pago_id(id, descripcion)
+    `)
+    .eq('tipo', 'compra')
+    .order('fecha', { ascending: false })
+    .order('numero', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+
+  return (data ?? []).map((item) => {
+    const documento = (item.documento ?? null) as {
+      id?: string
+      numero?: number
+      prefijo?: string | null
+      numero_externo?: string | null
+      proveedor?: {
+        id?: string
+        razon_social?: string
+        numero_documento?: string
+      } | null
+    } | null
+
+    const formaPago = (item.forma_pago ?? null) as { id?: string; descripcion?: string } | null
+
+    return {
+      id: String(item.id),
+      numero: Number(item.numero ?? 0),
+      fecha: String(item.fecha),
+      valor: Number(item.valor ?? 0),
+      observaciones: item.observaciones ?? null,
+      documento: documento
+        ? {
+          id: documento.id ? String(documento.id) : '',
+          numero: Number(documento.numero ?? 0),
+          prefijo: documento.prefijo ?? '',
+          numero_externo: documento.numero_externo ?? null,
+          proveedor: documento.proveedor
+            ? {
+              id: documento.proveedor.id ? String(documento.proveedor.id) : '',
+              razon_social: documento.proveedor.razon_social ?? '',
+              numero_documento: documento.proveedor.numero_documento ?? '',
+            }
+            : null,
+        }
+        : null,
+      forma_pago: formaPago
+        ? {
+          id: formaPago.id ? String(formaPago.id) : '',
+          descripcion: formaPago.descripcion ?? '',
+        }
+        : null,
+    }
+  })
+}
+
+export async function getFacturasCompraPendientesPago(params?: {
+  limit?: number
+  busqueda?: string
+}) {
+  const supabase = await createClient()
+  const limit = Math.max(1, Math.min(params?.limit ?? 200, 300))
+  const term = sanitizeSearchTerm(params?.busqueda)
+
+  const { data, error } = await supabase
+    .from('documentos')
+    .select(`
+      id,
+      numero,
+      prefijo,
+      fecha,
+      numero_externo,
+      total,
+      estado,
+      proveedor:proveedor_id(id, razon_social, numero_documento),
+      recibos(valor)
+    `)
+    .eq('tipo', 'factura_compra')
+    .neq('estado', 'cancelada')
+    .order('fecha', { ascending: false })
+    .order('numero', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+
+  const mapped = (data ?? []).map((item) => {
+    const recibos = Array.isArray(item.recibos) ? item.recibos as Array<{ valor?: number | null }> : []
+    const pagado = roundMoney(recibos.reduce((sum, recibo) => sum + Number(recibo.valor ?? 0), 0))
+    const total = Number(item.total ?? 0)
+    const saldo = roundMoney(Math.max(0, total - pagado))
+    const proveedor = (item.proveedor ?? null) as {
+      id?: string
+      razon_social?: string
+      numero_documento?: string
+    } | null
+
+    return {
+      id: String(item.id),
+      numero: Number(item.numero ?? 0),
+      prefijo: item.prefijo ?? '',
+      fecha: String(item.fecha),
+      numero_externo: item.numero_externo ?? null,
+      total,
+      pagado,
+      saldo,
+      estado: String(item.estado ?? 'pendiente'),
+      proveedor: proveedor
+        ? {
+          id: proveedor.id ? String(proveedor.id) : '',
+          razon_social: proveedor.razon_social ?? '',
+          numero_documento: proveedor.numero_documento ?? '',
+        }
+        : null,
+    }
+  }).filter((item) => item.saldo > 0.009)
+
+  if (!term) return mapped
+
+  return mapped.filter((item) => {
+    const haystack = [
+      `${item.prefijo}${item.numero}`,
+      item.numero_externo ?? '',
+      item.proveedor?.razon_social ?? '',
+      item.proveedor?.numero_documento ?? '',
+    ]
+      .join(' ')
+      .toLowerCase()
+
+    return haystack.includes(term.toLowerCase())
+  })
+}
+
 export async function getCompraById(id: string): Promise<any> {
   const supabase = await createClient()
   const fetchCompra = async (selectClause: string): Promise<{ data: any; error: any }> => {
@@ -341,6 +503,7 @@ export async function createCompra(params: {
 
 export async function cancelarCompra(id: string) {
   const supabase = await createClient()
+  await assertDocumentoCancelacionPermitida(id, 'factura_compra')
   const { error } = await supabase
     .from('documentos')
     .update({ estado: 'cancelada', updated_at: new Date().toISOString() })
@@ -357,16 +520,46 @@ export async function pagarCompra(params: {
   valor: number
   fecha: string
   observaciones?: string
+  retenciones?: Array<{
+    retencion_id: string
+    base_gravable?: number | null
+    valor?: number | null
+  }>
 }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('secure_crear_pago_compra', {
+  const payload = {
     p_documento_id: params.documento_id,
     p_forma_pago_id: params.forma_pago_id,
     p_ejercicio_id: params.ejercicio_id,
     p_valor: params.valor,
     p_fecha: params.fecha,
     p_observaciones: params.observaciones || null,
-  })
-  if (error) throw error
-  return data as string
+    p_retenciones: (params.retenciones ?? []).map((item) => ({
+      retencion_id: item.retencion_id,
+      base_gravable: item.base_gravable ?? null,
+      valor: item.valor ?? null,
+    })),
+  }
+
+  const { data, error } = await supabase.rpc('secure_crear_pago_compra', payload)
+  if (!error) return data as string
+
+  if ((params.retenciones?.length ?? 0) > 0 && isMissingRpcSignature(error)) {
+    throw new Error('La base de datos aún no tiene soporte operativo de retenciones para pagos. Aplica la migración contable pendiente.')
+  }
+
+  if (isMissingRpcSignature(error)) {
+    const fallback = await supabase.rpc('secure_crear_pago_compra', {
+      p_documento_id: params.documento_id,
+      p_forma_pago_id: params.forma_pago_id,
+      p_ejercicio_id: params.ejercicio_id,
+      p_valor: params.valor,
+      p_fecha: params.fecha,
+      p_observaciones: params.observaciones || null,
+    })
+    if (fallback.error) throw fallback.error
+    return fallback.data as string
+  }
+
+  throw error
 }

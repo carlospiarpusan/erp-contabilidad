@@ -2,35 +2,25 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth/session'
-import { createClient } from '@/lib/supabase/server'
+import { getFormasPago } from '@/lib/db/maestros'
+import { getUvtVigencias } from '@/lib/db/compliance'
+import { getRetencionesActivas } from '@/lib/db/retenciones'
+import { getFacturasCompraPendientesPago, getRecibosCompraContables } from '@/lib/db/compras'
 import { Banknote } from 'lucide-react'
 import { PagosProveedores } from '@/components/tesoreria/PagosProveedores'
 
 export default async function PagosProveedoresPage() {
   const session = await getSession()
   if (!session) redirect('/login')
-
-  const supabase = await createClient()
-
-  const [{ data: pagos }, { data: cuentas }, { data: formasPago }] = await Promise.all([
-    supabase
-      .from('pagos_proveedores')
-      .select('*, proveedor:proveedores(id,razon_social,numero_documento), cuenta:cuentas_bancarias(id,nombre,banco), forma_pago:formas_pago(id,nombre)')
-      .eq('empresa_id', session.empresa_id)
-      .order('fecha', { ascending: false })
-      .limit(100),
-    supabase
-      .from('cuentas_bancarias')
-      .select('id, nombre, banco')
-      .eq('empresa_id', session.empresa_id)
-      .eq('activa', true)
-      .order('nombre'),
-    supabase
-      .from('formas_pago')
-      .select('id, nombre')
-      .eq('empresa_id', session.empresa_id)
-      .order('nombre'),
+  const currentYear = new Date().getFullYear()
+  const [pagos, formasPago, facturasPendientes, retenciones, uvtVigencias] = await Promise.all([
+    getRecibosCompraContables({ limit: 100 }),
+    getFormasPago(),
+    getFacturasCompraPendientesPago({ limit: 200 }),
+    getRetencionesActivas('compras'),
+    getUvtVigencias(),
   ])
+  const uvtValue = uvtVigencias.find((item) => item.año === currentYear)?.valor ?? null
 
   return (
     <div className="flex flex-col gap-6">
@@ -40,10 +30,16 @@ export default async function PagosProveedoresPage() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Pagos a Proveedores</h1>
-          <p className="text-sm text-gray-500">Registro y seguimiento de pagos realizados</p>
+          <p className="text-sm text-gray-500">Aplicación contable de pagos sobre facturas de compra pendientes</p>
         </div>
       </div>
-      <PagosProveedores pagos={pagos ?? []} cuentas={cuentas ?? []} formasPago={formasPago ?? []} />
+      <PagosProveedores
+        pagos={pagos}
+        formasPago={formasPago}
+        facturasPendientes={facturasPendientes}
+        retenciones={retenciones}
+        uvtValue={uvtValue}
+      />
     </div>
   )
 }

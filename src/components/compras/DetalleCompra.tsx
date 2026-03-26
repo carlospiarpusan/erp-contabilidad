@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { formatCOP, formatFecha, cardCls , cn } from '@/utils/cn'
 import Link from 'next/link'
-import { ShoppingCart, Truck, Warehouse, CheckCircle, XCircle, CreditCard, Printer } from 'lucide-react'
+import { ShoppingCart, Truck, Warehouse, CheckCircle, CreditCard, Printer } from 'lucide-react'
 import { DocumentoSoporteCard } from './DocumentoSoporteCard'
 import type { AdjuntoItem } from '@/components/shared/AdjuntosPrivados'
+import { RetencionesSelector } from '@/components/contabilidad/RetencionesSelector'
+import type { RetencionActiva } from '@/lib/db/retenciones'
+import type { RetencionSelection } from '@/lib/accounting/retenciones'
 
 interface FormaPago { id: string; descripcion: string }
 
@@ -73,12 +76,20 @@ interface Props {
   formasPago: FormaPago[]
   documentoSoporte?: DocumentoSoporteState | null
   adjuntos?: AdjuntoItem[]
+  retenciones?: RetencionActiva[]
+  uvtValue?: number | null
 }
 
-export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adjuntos = [] }: Props) {
+export function DetalleCompra({
+  compra,
+  formasPago,
+  documentoSoporte = null,
+  adjuntos = [],
+  retenciones = [],
+  uvtValue = null,
+}: Props) {
   const router = useRouter()
   const [modalPago, setModalPago]   = useState(false)
-  const [cancelando, setCancelando] = useState(false)
 
   // Estado del form de pago
   const [fpId,   setFpId]   = useState(formasPago[0]?.id ?? '')
@@ -87,6 +98,7 @@ export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adj
   const [obs,    setObs]    = useState('')
   const [pagando, setPagando] = useState(false)
   const [errPago, setErrPago] = useState('')
+  const [retencionesSeleccionadas, setRetencionesSeleccionadas] = useState<RetencionSelection[]>([])
 
   const totalPagado = (compra.recibos ?? []).reduce((s, r) => s + r.valor, 0)
   const saldo       = compra.total - totalPagado
@@ -95,6 +107,7 @@ export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adj
   function abrirPago() {
     setValor(Math.round(saldo * 100) / 100)
     setErrPago('')
+    setRetencionesSeleccionadas([])
     setModalPago(true)
   }
 
@@ -107,29 +120,24 @@ export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adj
       const res = await fetch(`/api/compras/facturas/${compra.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'pagar', forma_pago_id: fpId, valor, fecha, observaciones: obs }),
+        body: JSON.stringify({
+          accion: 'pagar',
+          forma_pago_id: fpId,
+          valor,
+          fecha,
+          observaciones: obs,
+          retenciones: retencionesSeleccionadas,
+        }),
       })
       const data = await res.json()
       if (!res.ok) return setErrPago(data.error ?? 'Error al registrar pago')
       setModalPago(false)
+      setRetencionesSeleccionadas([])
       router.refresh()
+    } catch (error) {
+      setErrPago(error instanceof Error ? error.message : 'Error al registrar pago')
     } finally {
       setPagando(false)
-    }
-  }
-
-  async function handleCancelar() {
-    if (!confirm(`¿Cancelar la factura de compra ${compra.prefijo}${compra.numero}? Esta acción no se puede revertir.`)) return
-    setCancelando(true)
-    try {
-      await fetch(`/api/compras/facturas/${compra.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'cancelar' }),
-      })
-      router.refresh()
-    } finally {
-      setCancelando(false)
     }
   }
 
@@ -159,11 +167,6 @@ export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adj
           {puedePagar && (
             <Button size="sm" onClick={abrirPago}>
               <CreditCard className="h-4 w-4 mr-1" /> Registrar pago
-            </Button>
-          )}
-          {compra.estado === 'pendiente' && (
-            <Button size="sm" variant="outline" onClick={handleCancelar} disabled={cancelando}>
-              <XCircle className="h-4 w-4 mr-1" /> Cancelar
             </Button>
           )}
           <Link href={`/print/compra/${compra.id}`} target="_blank">
@@ -215,6 +218,9 @@ export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adj
               <div className="flex justify-between">
                 <dt>Documento soporte</dt>
                 <dd>{compra.documento_soporte_requerido ? (compra.documento_soporte_estado ?? 'pendiente') : 'No requerido'}</dd>
+              </div>
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                Las compras contabilizadas no se cancelan en línea. Si hubo un error, corrígelo con reversión contable y el ajuste de inventario que corresponda.
               </div>
               {compra.observaciones && <div className="mt-2 text-xs text-gray-400 italic">{compra.observaciones}</div>}
             </dl>
@@ -343,6 +349,13 @@ export function DetalleCompra({ compra, formasPago, documentoSoporte = null, adj
             <input value={obs} onChange={e => setObs(e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
           </div>
+          <RetencionesSelector
+            retenciones={retenciones}
+            value={retencionesSeleccionadas}
+            base={valor}
+            uvtValue={uvtValue}
+            onChange={setRetencionesSeleccionadas}
+          />
           {errPago && <p className="text-sm text-red-600">{errPago}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setModalPago(false)}>Cancelar</Button>

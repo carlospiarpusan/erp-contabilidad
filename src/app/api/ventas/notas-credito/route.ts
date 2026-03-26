@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getEjercicioActivo } from '@/lib/db/maestros'
+import { ACCOUNTING_ROLES } from '@/lib/auth/permissions'
 import { getSession } from '@/lib/auth/session'
-import { toErrorMsg } from '@/lib/utils/errors'
+import { getErrorStatus, toErrorMsg } from '@/lib/utils/errors'
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,6 +39,9 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (!(ACCOUNTING_ROLES as readonly string[]).includes(session.rol)) {
+      return NextResponse.json({ error: 'Solo admin o contador pueden emitir notas crédito' }, { status: 403 })
+    }
     const body = await req.json()
     const { factura_id, motivo, lineas } = body
 
@@ -49,6 +53,9 @@ export async function POST(req: NextRequest) {
     }
 
     const ejercicio = await getEjercicioActivo()
+    if (!ejercicio?.id) {
+      return NextResponse.json({ error: 'Sin ejercicio activo' }, { status: 400 })
+    }
     const supabase = await createClient()
 
     const { data, error } = await supabase.rpc('secure_crear_nota_credito', {
@@ -61,6 +68,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error
     return NextResponse.json({ id: data }, { status: 201 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }

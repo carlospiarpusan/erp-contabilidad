@@ -3,15 +3,21 @@ export const dynamic = 'force-dynamic'
 import { getAcreedores, getTiposGasto } from '@/lib/db/gastos'
 import { getFormasPago } from '@/lib/db/maestros'
 import { FormGasto } from '@/components/gastos/FormGasto'
+import { getUvtVigencias } from '@/lib/db/compliance'
+import { getRetencionesActivas } from '@/lib/db/retenciones'
 import { Receipt, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function NuevoGastoPage() {
-  const [{ acreedores }, tiposGasto, formasPago] = await Promise.all([
+  const [{ acreedores }, tiposGasto, formasPago, retenciones, uvts] = await Promise.all([
     getAcreedores({ activo: true }),
     getTiposGasto(),
     getFormasPago(),
+    getRetencionesActivas('compras'),
+    getUvtVigencias(),
   ])
+  const currentYear = new Date().getFullYear()
+  const uvtValue = uvts.find((item) => item.año === currentYear)?.valor ?? null
 
   return (
     <div className="flex flex-col gap-4">
@@ -27,7 +33,7 @@ export default async function NuevoGastoPage() {
           <p className="text-sm text-gray-500">Registro de gastos operativos</p>
         </div>
       </div>
-      <FormGasto acreedores={acreedores} tiposGasto={tiposGasto} formasPago={formasPago} />
+      <FormGasto acreedores={acreedores} tiposGasto={tiposGasto} formasPago={formasPago} retenciones={retenciones} uvtValue={uvtValue} />
     </div>
   )
 }

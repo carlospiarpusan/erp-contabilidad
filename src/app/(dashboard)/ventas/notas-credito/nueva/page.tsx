@@ -1,5 +1,8 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth/session'
+import { ACCOUNTING_ROLES } from '@/lib/auth/permissions'
 import { createClient } from '@/lib/supabase/server'
 import { FormNotaCredito } from '@/components/ventas/FormNotaCredito'
 import { RotateCcw } from 'lucide-react'
@@ -10,6 +13,11 @@ interface PageProps {
 
 export default async function NuevaNotaCreditoPage({ searchParams }: PageProps) {
   const sp = await searchParams
+  const session = await getSession()
+  if (!session) redirect('/login')
+  if (!(ACCOUNTING_ROLES as readonly string[]).includes(session.rol)) {
+    redirect('/ventas/notas-credito')
+  }
   const supabase = await createClient()
 
   // Si viene con factura_id precargado, obtener la factura

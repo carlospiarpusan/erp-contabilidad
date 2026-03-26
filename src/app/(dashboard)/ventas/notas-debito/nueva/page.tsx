@@ -1,11 +1,19 @@
 export const dynamic = 'force-dynamic'
 
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth/session'
+import { ACCOUNTING_ROLES } from '@/lib/auth/permissions'
 import { createClient } from '@/lib/supabase/server'
 import { FormNotaDebito } from '@/components/ventas/FormNotaDebito'
 import { TrendingUp, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function NuevaNotaDebitoPage() {
+  const session = await getSession()
+  if (!session) redirect('/login')
+  if (!(ACCOUNTING_ROLES as readonly string[]).includes(session.rol)) {
+    redirect('/ventas/notas-debito')
+  }
   const supabase = await createClient()
   const { data: impuestos } = await supabase
     .from('impuestos')

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { toErrorMsg } from '@/lib/utils/errors'
+import { getErrorStatus, toErrorMsg } from '@/lib/utils/errors'
 import { getRecibos, createRecibo } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(result)
   } catch (e: unknown) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }
 
@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
       getEjercicioActivo(),
     ])
 
+    if (!ejercicio?.id) {
+      return NextResponse.json({ error: 'Sin ejercicio activo' }, { status: 400 })
+    }
+
     const recibo_id = await createRecibo({
       empresa_id,
       ejercicio_id:  ejercicio.id,
@@ -50,6 +54,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id: recibo_id }, { status: 201 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error al crear recibo' }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }

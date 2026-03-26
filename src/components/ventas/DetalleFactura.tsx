@@ -8,11 +8,10 @@ import { Modal } from '@/components/ui/modal'
 import { FormRecibo } from './FormRecibo'
 import { formatCOP, formatFecha, cardCls } from '@/utils/cn'
 import Link from 'next/link'
-import { FileText, User, CreditCard, Warehouse, CheckCircle, XCircle, Printer, MessageCircle } from 'lucide-react'
+import { FileText, User, CreditCard, Warehouse, CheckCircle, Printer, MessageCircle } from 'lucide-react'
 import { EnviarEmailButton } from '@/components/shared/EnviarEmailButton'
 import { DuplicarButton } from '@/components/shared/DuplicarButton'
 import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
-import { ConfirmActionModal } from '@/components/shared/ConfirmActionModal'
 
 interface FormaPago { id: string; descripcion: string }
 
@@ -57,34 +56,13 @@ interface Props {
 
 export function DetalleFactura({ factura, formasPago }: Props) {
   const router = useRouter()
-  const [modalRecibo, setModalRecibo]     = useState(false)
-  const [cancelando, setCancelando]       = useState(false)
-  const [modalCancelar, setModalCancelar] = useState(false)
+  const [modalRecibo, setModalRecibo] = useState(false)
 
   const totalPagado = (factura.recibos ?? []).reduce((s, r) => s + r.valor, 0)
   const saldo       = factura.total - totalPagado
   const puedePagar  = factura.estado === 'pendiente' && saldo > 0.01
   const esSistecredito = isSistecreditoFormaPago(factura.forma_pago)
   const fechaCobroEsperada = esSistecredito ? calcularFechaPagoSistecredito(factura.fecha) : null
-
-  async function handleCancelar() {
-    setCancelando(true)
-    try {
-      const res = await fetch(`/api/ventas/facturas/${factura.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'cancelar' }),
-      })
-      const body = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(body?.error ?? 'No se pudo cancelar la factura')
-      setModalCancelar(false)
-      router.refresh()
-    } catch (error) {
-      window.alert(error instanceof Error ? error.message : 'No se pudo cancelar la factura')
-    } finally {
-      setCancelando(false)
-    }
-  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,11 +91,6 @@ export function DetalleFactura({ factura, formasPago }: Props) {
           {puedePagar && (
             <Button size="sm" onClick={() => setModalRecibo(true)}>
               <CreditCard className="h-4 w-4 mr-1" /> Registrar pago
-            </Button>
-          )}
-          {factura.estado === 'pendiente' && (
-            <Button size="sm" variant="outline" onClick={() => setModalCancelar(true)} disabled={cancelando}>
-              <XCircle className="h-4 w-4 mr-1" /> Cancelar
             </Button>
           )}
           <EnviarEmailButton
@@ -185,6 +158,9 @@ export function DetalleFactura({ factura, formasPago }: Props) {
               {fechaCobroEsperada && <div className="flex justify-between"><dt>Cobro esperado</dt><dd>{formatFecha(fechaCobroEsperada)}</dd></div>}
               {factura.bodega     && <div className="flex justify-between"><dt>Bodega</dt><dd>{factura.bodega.nombre}</dd></div>}
               {factura.colaborador && <div className="flex justify-between"><dt>Vendedor</dt><dd>{factura.colaborador.nombre}</dd></div>}
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                Las facturas contabilizadas no se cancelan en línea. Si hubo un error, corrígelo con nota crédito y la regularización de recaudos que aplique.
+              </div>
               {factura.observaciones && <div className="mt-2 text-xs text-gray-400 italic">{factura.observaciones}</div>}
             </dl>
           </div>
@@ -269,17 +245,6 @@ export function DetalleFactura({ factura, formasPago }: Props) {
           onCancel={() => setModalRecibo(false)}
         />
       </Modal>
-
-      <ConfirmActionModal
-        open={modalCancelar}
-        onClose={() => !cancelando && setModalCancelar(false)}
-        onConfirm={handleCancelar}
-        titulo={`Cancelar factura ${factura.prefijo}${factura.numero}`}
-        descripcion="La factura quedará cancelada y esta acción no se puede revertir desde la interfaz."
-        confirmLabel="Cancelar factura"
-        confirmVariant="destructive"
-        loading={cancelando}
-      />
     </div>
   )
 }

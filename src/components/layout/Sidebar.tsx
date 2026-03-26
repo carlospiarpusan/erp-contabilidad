@@ -25,9 +25,11 @@ function isCurrentPath(pathname: string, href: string) {
 function MenuItemComponent({
   item,
   pathname,
+  onNavigate,
 }: {
   item: NavigationItem & { children?: readonly { label: string; href: string }[] }
   pathname: string
+  onNavigate?: () => void
 }) {
   const isSuperadmin = item.accent === 'superadmin'
   const hasActiveChild = item.children?.some((child) => isCurrentPath(pathname, child.href)) ?? false
@@ -67,6 +69,7 @@ function MenuItemComponent({
                   key={child.href}
                   href={child.href}
                   prefetch={false}
+                  onClick={onNavigate}
                   className={cn(
                     'rounded-xl px-2.5 py-1.5 text-[13px] transition-all duration-150',
                     childActive
@@ -91,6 +94,7 @@ function MenuItemComponent({
     <Link
       href={item.href!}
       prefetch={false}
+      onClick={onNavigate}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150',
         isActive
@@ -119,9 +123,16 @@ interface SidebarProps {
   empresaNombre?: string
   tieneMultiEmpresa?: boolean
   empresas?: EmpresaAcceso[]
+  onNavigate?: () => void
 }
 
-export function Sidebar({ rol = 'solo_lectura', empresaNombre, tieneMultiEmpresa, empresas }: SidebarProps) {
+export function Sidebar({
+  rol = 'solo_lectura',
+  empresaNombre,
+  tieneMultiEmpresa,
+  empresas,
+  onNavigate,
+}: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [showEmpresas, setShowEmpresas] = useState(false)
@@ -137,6 +148,7 @@ export function Sidebar({ rol = 'solo_lectura', empresaNombre, tieneMultiEmpresa
       })
       if (res.ok) {
         setShowEmpresas(false)
+        onNavigate?.()
         router.refresh()
       }
     } finally {
@@ -239,7 +251,12 @@ export function Sidebar({ rol = 'solo_lectura', empresaNombre, tieneMultiEmpresa
               </div>
               <div className="flex flex-col gap-1">
                 {section.items.map((item) => (
-                  <MenuItemComponent key={`${item.label}:${pathname}`} item={item} pathname={pathname} />
+                  <MenuItemComponent
+                    key={`${item.label}:${pathname}`}
+                    item={item}
+                    pathname={pathname}
+                    onNavigate={onNavigate}
+                  />
                 ))}
               </div>
             </section>

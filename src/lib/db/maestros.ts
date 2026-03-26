@@ -31,9 +31,9 @@ export async function getEjercicioActivo() {
     .eq('estado', 'activo')
     .order('año', { ascending: false })
     .limit(1)
-    .single()
-  if (error) throw error
-  return data
+    .maybeSingle()
+  if (error && error.code !== 'PGRST116') throw error
+  return data ?? null
 }
 
 export async function getColaboradores() {

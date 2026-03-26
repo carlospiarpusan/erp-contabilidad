@@ -1,6 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
+import { assertDocumentoCancelacionPermitida } from '@/lib/db/documentos-contables'
+
+function isMissingRpcSignature(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const message = String((error as { message?: string }).message ?? '')
+  return message.includes('Could not find the function public.secure_crear_gasto') ||
+    message.includes('function public.secure_crear_gasto')
+}
 
 // ── Acreedores ───────────────────────────────────────────────────────────────
 
@@ -143,9 +151,14 @@ export async function createGasto(params: {
   descripcion: string
   valor: number
   observaciones?: string
+  retenciones?: Array<{
+    retencion_id: string
+    base_gravable?: number | null
+    valor?: number | null
+  }>
 }) {
   const supabase = await createClient()
-  const { data, error } = await supabase.rpc('secure_crear_gasto', {
+  const payload = {
     p_ejercicio_id: params.ejercicio_id,
     p_acreedor_id: params.acreedor_id || null,
     p_tipo_gasto_id: params.tipo_gasto_id,
@@ -154,13 +167,41 @@ export async function createGasto(params: {
     p_descripcion: params.descripcion,
     p_valor: params.valor,
     p_observaciones: params.observaciones || null,
-  })
-  if (error) throw error
-  return data as string
+    p_retenciones: (params.retenciones ?? []).map((item) => ({
+      retencion_id: item.retencion_id,
+      base_gravable: item.base_gravable ?? null,
+      valor: item.valor ?? null,
+    })),
+  }
+
+  const { data, error } = await supabase.rpc('secure_crear_gasto', payload)
+  if (!error) return data as string
+
+  if ((params.retenciones?.length ?? 0) > 0 && isMissingRpcSignature(error)) {
+    throw new Error('La base de datos aún no tiene soporte operativo de retenciones para gastos. Aplica la migración contable pendiente.')
+  }
+
+  if (isMissingRpcSignature(error)) {
+    const fallback = await supabase.rpc('secure_crear_gasto', {
+      p_ejercicio_id: params.ejercicio_id,
+      p_acreedor_id: params.acreedor_id || null,
+      p_tipo_gasto_id: params.tipo_gasto_id,
+      p_forma_pago_id: params.forma_pago_id,
+      p_fecha: params.fecha,
+      p_descripcion: params.descripcion,
+      p_valor: params.valor,
+      p_observaciones: params.observaciones || null,
+    })
+    if (fallback.error) throw fallback.error
+    return fallback.data as string
+  }
+
+  throw error
 }
 
 export async function cancelarGasto(id: string) {
   const supabase = await createClient()
+  await assertDocumentoCancelacionPermitida(id, 'gasto')
   const { error } = await supabase
     .from('documentos')
     .update({ estado: 'cancelada', updated_at: new Date().toISOString() })

@@ -1,5 +1,7 @@
 export const dynamic = 'force-dynamic'
 
+import { getSession } from '@/lib/auth/session'
+import { ACCOUNTING_ROLES } from '@/lib/auth/permissions'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha , cardCls } from '@/utils/cn'
 import { TrendingUp, Plus } from 'lucide-react'
@@ -14,6 +16,8 @@ export default async function NotasDebitoPage({ searchParams }: PageProps) {
   const hoy   = new Date().toISOString().split('T')[0]
   const desde = sp.desde || `${new Date().getFullYear()}-01-01`
   const hasta = sp.hasta || hoy
+  const session = await getSession()
+  const canManageNotes = !!session && (ACCOUNTING_ROLES as readonly string[]).includes(session.rol)
 
   const supabase = await createClient()
   const { data: notas, count } = await supabase
@@ -41,10 +45,12 @@ export default async function NotasDebitoPage({ searchParams }: PageProps) {
             <p className="text-sm text-gray-500">{count ?? 0} nota{(count ?? 0) !== 1 ? 's' : ''} en el período</p>
           </div>
         </div>
-        <Link href="/ventas/notas-debito/nueva"
-          className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 transition-colors">
-          <Plus className="h-4 w-4" /> Nueva nota débito
-        </Link>
+        {canManageNotes ? (
+          <Link href="/ventas/notas-debito/nueva"
+            className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 transition-colors">
+            <Plus className="h-4 w-4" /> Nueva nota débito
+          </Link>
+        ) : null}
       </div>
 
       {/* KPI */}
@@ -85,8 +91,14 @@ export default async function NotasDebitoPage({ searchParams }: PageProps) {
             {(notas ?? []).length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                  No hay notas débito en este período.{' '}
-                  <Link href="/ventas/notas-debito/nueva" className="text-amber-600 hover:underline">Crear primera nota</Link>
+                  {canManageNotes ? (
+                    <>
+                      No hay notas débito en este período.{' '}
+                      <Link href="/ventas/notas-debito/nueva" className="text-amber-600 hover:underline">Crear primera nota</Link>
+                    </>
+                  ) : (
+                    'No hay notas débito en este período.'
+                  )}
                 </td>
               </tr>
             ) : (notas ?? []).map(n => {

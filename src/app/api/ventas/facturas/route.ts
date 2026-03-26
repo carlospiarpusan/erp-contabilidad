@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getFacturas, createFactura } from '@/lib/db/ventas'
 import { getEjercicioActivo, getEmpresaId } from '@/lib/db/maestros'
 import { getSession } from '@/lib/auth/session'
-import { toErrorMsg } from '@/lib/utils/errors'
+import { getErrorStatus, toErrorMsg } from '@/lib/utils/errors'
 import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 
 export async function GET(req: NextRequest) {
@@ -43,6 +43,10 @@ export async function POST(req: NextRequest) {
       getEjercicioActivo(),
     ])
 
+    if (!ejercicio?.id) {
+      return NextResponse.json({ error: 'Sin ejercicio activo' }, { status: 400 })
+    }
+
     const doc_id = await createFactura({
       empresa_id,
       ejercicio_id:     ejercicio.id,
@@ -60,6 +64,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ id: doc_id }, { status: 201 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }

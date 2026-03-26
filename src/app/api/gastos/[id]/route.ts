@@ -1,4 +1,4 @@
-import { toErrorMsg } from '@/lib/utils/errors'
+import { getErrorStatus, toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { getGastoById, cancelarGasto } from '@/lib/db/gastos'
 import { getSession } from '@/lib/auth/session'
@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     const data = await getGastoById(id)
     return NextResponse.json(data)
   } catch (e) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }
 
@@ -31,6 +31,6 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
     return NextResponse.json({ error: 'accion desconocida' }, { status: 400 })
   } catch (e) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }

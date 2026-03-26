@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { toErrorMsg } from '@/lib/utils/errors'
+import { getErrorStatus, toErrorMsg } from '@/lib/utils/errors'
 import { createClient } from '@/lib/supabase/server'
 import { getSession } from '@/lib/auth/session'
-import { revertirAsiento } from '@/lib/db/contabilidad'
+import { ACCOUNTING_ROLES } from '@/lib/auth/permissions'
 import { registrarAuditoria } from '@/lib/auditoria'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    if (!['admin', 'contador'].includes(session.rol)) {
+    if (!(ACCOUNTING_ROLES as readonly string[]).includes(session.rol)) {
       return NextResponse.json({ error: 'Sin permisos para anular notas' }, { status: 403 })
     }
 
@@ -49,45 +49,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
 
     const supabase = await createClient()
-    const { data: nota, error: notaErr } = await supabase
-      .from('documentos')
-      .select('id, numero, prefijo, estado')
-      .eq('id', id)
-      .eq('tipo', 'nota_debito')
-      .single()
-
-    if (notaErr || !nota) return NextResponse.json({ error: 'Nota débito no encontrada' }, { status: 404 })
-    if (nota.estado === 'cancelada') {
-      return NextResponse.json({ ok: true, message: 'La nota ya estaba cancelada' })
-    }
-
-    const { error: updErr } = await supabase
-      .from('documentos')
-      .update({ estado: 'cancelada', updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .eq('tipo', 'nota_debito')
-    if (updErr) throw updErr
-
-    let warning: string | null = null
-    const { data: asiento } = await supabase
-      .from('asientos')
-      .select('id')
-      .eq('documento_id', id)
-      .eq('tipo_doc', 'nota_debito')
-      .maybeSingle()
-
-    if (asiento?.id) {
-      try {
-        await revertirAsiento(asiento.id as string, {
-          allow_automatic: true,
-          tipo_doc: 'reversion_nota_debito',
-          concepto: `Reversión asiento nota débito ${id}`,
-        })
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'No se pudo crear reversión contable'
-        if (!msg.toLowerCase().includes('ya existe')) warning = msg
-      }
-    }
+    const { data: result, error } = await supabase.rpc('secure_anular_nota_debito', {
+      p_documento_id: id,
+    })
+    if (error) throw error
 
     await registrarAuditoria({
       empresa_id: session.empresa_id,
@@ -99,8 +64,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ip: req.headers.get('x-forwarded-for'),
     })
 
-    return NextResponse.json({ ok: true, warning })
+    return NextResponse.json(result ?? { ok: true })
   } catch (e: unknown) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }

@@ -36,7 +36,7 @@ type RouteRule = {
 
 const TENANT_ROLES = ['admin', 'contador', 'vendedor', 'solo_lectura'] as const satisfies readonly AppRole[]
 const VENTAS_WRITE_ROLES = ['admin', 'contador', 'vendedor'] as const satisfies readonly AppRole[]
-const ACCOUNTING_ROLES = ['admin', 'contador'] as const satisfies readonly AppRole[]
+export const ACCOUNTING_ROLES = ['admin', 'contador'] as const satisfies readonly AppRole[]
 const INFORMES_ROLES = ['admin', 'contador'] as const satisfies readonly AppRole[]
 const ADMIN_ROLES = ['admin'] as const satisfies readonly AppRole[]
 const PROFILE_ROLES = ['superadmin', ...TENANT_ROLES] as const satisfies readonly AppRole[]

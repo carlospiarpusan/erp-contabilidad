@@ -1,9 +1,6 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
-import { Geist } from 'next/font/google'
 import './globals.css'
-
-const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://clovent.co'),
@@ -43,7 +40,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className={`${geist.className} antialiased`}>
+      <body className="antialiased">
         {children}
         <Analytics />
       </body>

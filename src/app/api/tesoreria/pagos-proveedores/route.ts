@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { toErrorMsg } from '@/lib/utils/errors'
-import { createClient } from '@/lib/supabase/server'
+import { getErrorStatus, toErrorMsg } from '@/lib/utils/errors'
 import { getSession } from '@/lib/auth/session'
 import { ensurePeriodoAbierto } from '@/lib/db/compliance'
+import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
+import { getRecibosCompraContables, pagarCompra } from '@/lib/db/compras'
 
 const ROLES = ['admin', 'contador']
 
@@ -13,17 +14,10 @@ export async function GET() {
     if (!ROLES.includes(session.rol))
       return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('pagos_proveedores')
-      .select('*, proveedor:proveedores(id,razon_social,numero_documento), cuenta:cuentas_bancarias(id,nombre,banco), forma_pago:formas_pago(id,nombre)')
-      .eq('empresa_id', session.empresa_id)
-      .order('fecha', { ascending: false })
-      .limit(100)
-    if (error) throw error
-    return NextResponse.json(data ?? [])
+    const recibos = await getRecibosCompraContables({ limit: 100 })
+    return NextResponse.json(recibos)
   } catch (e: unknown) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }
 
@@ -35,66 +29,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
     const body = await req.json()
-    const { proveedor_id, cuenta_bancaria_id, forma_pago_id, monto_total, referencia, observaciones } = body
+    const { documento_id, forma_pago_id, monto_total, observaciones } = body
     const fecha = typeof body?.fecha === 'string' && body.fecha ? body.fecha : new Date().toISOString().split('T')[0]
-    if (!proveedor_id || !monto_total)
-      return NextResponse.json({ error: 'Proveedor y monto son requeridos' }, { status: 400 })
+    if (!documento_id || !forma_pago_id || !monto_total) {
+      return NextResponse.json({ error: 'documento_id, forma_pago_id y monto_total son requeridos' }, { status: 400 })
+    }
 
-    const supabase = await createClient()
     await ensurePeriodoAbierto({
       session,
       fecha,
       source: 'api:pagos-proveedores',
       method: req.method,
       route: '/api/tesoreria/pagos-proveedores',
-      context: { proveedor_id, cuenta_bancaria_id },
+      context: { documento_id, forma_pago_id },
     })
 
-    // Get next numero
-    const { data: maxRow } = await supabase
-      .from('pagos_proveedores')
-      .select('numero')
-      .eq('empresa_id', session.empresa_id)
-      .order('numero', { ascending: false })
-      .limit(1)
-      .single()
-
-    const numero = (maxRow?.numero ?? 0) + 1
-
-    const { data, error } = await supabase
-      .from('pagos_proveedores')
-      .insert({
-        empresa_id: session.empresa_id,
-        numero,
-        proveedor_id,
-        cuenta_bancaria_id: cuenta_bancaria_id || null,
-        forma_pago_id: forma_pago_id || null,
-        monto_total: Number(monto_total),
-        referencia: referencia || null,
-        observaciones: observaciones || null,
-        fecha,
-        estado: 'pagado',
-        created_by: session.id,
-      })
-      .select('*, proveedor:proveedores(id,razon_social,numero_documento), cuenta:cuentas_bancarias(id,nombre,banco), forma_pago:formas_pago(id,nombre)')
-      .single()
-    if (error) throw error
-
-    // Register bank movement if account is specified
-    if (cuenta_bancaria_id) {
-      await supabase.rpc('registrar_movimiento_bancario', {
-        p_cuenta_id: cuenta_bancaria_id,
-        p_tipo: 'egreso',
-        p_concepto: 'pago_proveedor',
-        p_monto: Number(monto_total),
-        p_referencia: referencia || `Pago #${numero}`,
-        p_descripcion: `Pago a proveedor`,
-        p_documento_id: null,
-      })
+    const [empresa_id, ejercicio] = await Promise.all([getEmpresaId(), getEjercicioActivo()])
+    if (!ejercicio?.id) {
+      return NextResponse.json({ error: 'Sin ejercicio activo' }, { status: 400 })
     }
 
-    return NextResponse.json(data, { status: 201 })
+    const recibo_id = await pagarCompra({
+      empresa_id,
+      documento_id,
+      forma_pago_id,
+      ejercicio_id: ejercicio.id,
+      valor: Number(monto_total),
+      fecha,
+      observaciones: observaciones || null,
+      retenciones: Array.isArray(body.retenciones) ? body.retenciones : [],
+    })
+
+    return NextResponse.json({ recibo_id }, { status: 201 })
   } catch (e: unknown) {
-    return NextResponse.json({ error: toErrorMsg(e) }, { status: 500 })
+    return NextResponse.json({ error: toErrorMsg(e) }, { status: getErrorStatus(e) })
   }
 }

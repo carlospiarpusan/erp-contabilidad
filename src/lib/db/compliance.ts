@@ -349,97 +349,44 @@ export async function ensurePeriodoAbierto(options: {
     .limit(1)
     .maybeSingle()
 
-  // Si la tabla no existe (migración 037 no aplicada), permitir la operación
+  // Si la tabla no existe, el sistema no está listo para validar cierres contables.
   const tablaNoExiste = error && (
     error.code === '42P01' ||
     (error.message ?? '').includes('does not exist') ||
     (error.message ?? '').includes('schema cache')
   )
-  if (tablaNoExiste) return null
+  if (tablaNoExiste) {
+    await logServerEvent({
+      level: 'error',
+      source: options.source,
+      event: 'periodos_contables_no_disponibles',
+      session: options.session,
+      method: options.method,
+      route: options.route,
+      context: {
+        fecha: options.fecha,
+        ...options.context,
+      },
+    })
+    throw new Error('La configuración de periodos contables no está disponible. Aplica las migraciones de cumplimiento antes de registrar movimientos.')
+  }
 
-  if (error || !data?.id) {
-    // Auto-crear ejercicio + periodo para la fecha si no existen
-    const admin = maybeCreateServiceClient()
-    const db = admin ?? supabase
-    const empresaId = options.session.empresa_id
-    const fecha = new Date(options.fecha)
-    const año = fecha.getFullYear()
-    const mes = fecha.getMonth() + 1
+  if (error) throw error
 
-    // 1. Asegurar que exista el ejercicio para el año
-    const { data: ejercicioExistente } = await db
-      .from('ejercicios')
-      .select('id')
-      .eq('empresa_id', empresaId)
-      .eq('año', año)
-      .maybeSingle()
-
-    let ejercicioId = ejercicioExistente?.id as string | undefined
-
-    if (!ejercicioId) {
-      const { data: nuevoEj, error: insertError } = await db.from('ejercicios')
-        .insert({
-          empresa_id: empresaId,
-          año,
-          descripcion: `Ejercicio ${año}`,
-          fecha_inicio: `${año}-01-01`,
-          fecha_fin: `${año}-12-31`,
-          estado: 'activo',
-        })
-        .select('id')
-        .single()
-
-      if (insertError || !nuevoEj) {
-        // No bloquear si no se pudo crear — permitir la operación
-        return null
-      }
-      ejercicioId = nuevoEj.id as string
-    }
-
-    // 2. Re-intentar buscar el periodo (el trigger pudo haberlo creado)
-    const { data: retry } = await supabase
-      .from('periodos_contables')
-      .select('*')
-      .eq('empresa_id', empresaId)
-      .lte('fecha_inicio', options.fecha)
-      .gte('fecha_fin', options.fecha)
-      .limit(1)
-      .maybeSingle()
-
-    if (retry?.id) return retry
-
-    // 3. Fallback: crear el periodo directamente si el trigger no lo generó
-    const mesInicio = `${año}-${String(mes).padStart(2, '0')}-01`
-    const mesFin = new Date(año, mes, 0) // último día del mes
-    const mesFinalStr = `${año}-${String(mes).padStart(2, '0')}-${String(mesFin.getDate()).padStart(2, '0')}`
-
-    const { data: nuevoPeriodo } = await db
-      .from('periodos_contables')
-      .upsert({
-        empresa_id: empresaId,
-        ejercicio_id: ejercicioId,
-        año,
-        mes,
-        fecha_inicio: mesInicio,
-        fecha_fin: mesFinalStr,
-        estado: 'abierto',
-      }, { onConflict: 'ejercicio_id,mes' })
-      .select('*')
-      .single()
-
-    if (nuevoPeriodo?.id) {
-      await logServerEvent({
-        level: 'info',
-        source: options.source,
-        event: 'periodo_auto_creado',
-        session: options.session,
-        context: { fecha: options.fecha, año, mes },
-      })
-      return nuevoPeriodo
-    }
-
-    // Si no se pudo crear el periodo, no bloquear la operación
-    return null
+  if (!data?.id) {
+    await logServerEvent({
+      level: 'warn',
+      source: options.source,
+      event: 'periodo_no_configurado',
+      session: options.session,
+      method: options.method,
+      route: options.route,
+      context: {
+        fecha: options.fecha,
+        ...options.context,
+      },
+    })
+    throw new Error(`No existe un periodo contable configurado para la fecha ${options.fecha}`)
   }
 
   if (data.estado === 'cerrado') {

@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { notFound } from 'next/navigation'
+import { getSession } from '@/lib/auth/session'
+import { ACCOUNTING_ROLES } from '@/lib/auth/permissions'
 import { createClient } from '@/lib/supabase/server'
 import { formatCOP, formatFecha , cardCls , cn } from '@/utils/cn'
 import { TrendingUp, Printer, ArrowLeft } from 'lucide-react'
@@ -10,6 +12,8 @@ import { AnularNotaButton } from '@/components/ventas/AnularNotaButton'
 
 export default async function NotaDebitoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const session = await getSession()
+  const canManageNotes = !!session && (ACCOUNTING_ROLES as readonly string[]).includes(session.rol)
   const supabase = await createClient()
 
   const { data: nd } = await supabase
@@ -53,7 +57,7 @@ export default async function NotaDebitoDetailPage({ params }: { params: Promise
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {nd.estado !== 'cancelada' && (
+          {canManageNotes && nd.estado !== 'cancelada' && (
             <AnularNotaButton apiPath={`/api/ventas/notas-debito/${nd.id}`} tipoLabel={`la nota débito ${nd.prefijo}${nd.numero}`} />
           )}
           <EnviarEmailButton apiPath="/api/email/nota-debito" docId={nd.id} emailCliente={cliente?.email ?? null} />

@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { formatCOP, cardCls } from '@/utils/cn'
+import { RetencionesSelector } from '@/components/contabilidad/RetencionesSelector'
+import type { RetencionActiva } from '@/lib/db/retenciones'
+import type { RetencionSelection } from '@/lib/accounting/retenciones'
 
 interface Acreedor  { id: string; razon_social: string }
 interface TipoGasto { id: string; descripcion: string; valor_estimado?: number }
@@ -13,9 +16,11 @@ interface Props {
   acreedores: Acreedor[]
   tiposGasto: TipoGasto[]
   formasPago: FormaPago[]
+  retenciones?: RetencionActiva[]
+  uvtValue?: number | null
 }
 
-export function FormGasto({ acreedores, tiposGasto, formasPago }: Props) {
+export function FormGasto({ acreedores, tiposGasto, formasPago, retenciones = [], uvtValue = null }: Props) {
   const router = useRouter()
 
   const [tipo_gasto_id,  setTipoGastoId]  = useState(tiposGasto[0]?.id ?? '')
@@ -27,6 +32,7 @@ export function FormGasto({ acreedores, tiposGasto, formasPago }: Props) {
   const [observaciones,  setObservaciones] = useState('')
   const [enviando,       setEnviando]     = useState(false)
   const [error,          setError]        = useState('')
+  const [retencionesSeleccionadas, setRetencionesSeleccionadas] = useState<RetencionSelection[]>([])
 
   function handleTipoGasto(id: string) {
     setTipoGastoId(id)
@@ -49,6 +55,7 @@ export function FormGasto({ acreedores, tiposGasto, formasPago }: Props) {
           tipo_gasto_id, forma_pago_id,
           acreedor_id: acreedor_id || undefined,
           descripcion, valor, fecha, observaciones,
+          retenciones: retencionesSeleccionadas,
         }),
       })
       const data = await res.json()
@@ -109,6 +116,15 @@ export function FormGasto({ acreedores, tiposGasto, formasPago }: Props) {
         <div>
           <label className={labelCls}>Observaciones</label>
           <input value={observaciones} onChange={e => setObservaciones(e.target.value)} className={inputCls} />
+        </div>
+        <div className="sm:col-span-2">
+          <RetencionesSelector
+            retenciones={retenciones}
+            value={retencionesSeleccionadas}
+            base={valor}
+            uvtValue={uvtValue}
+            onChange={setRetencionesSeleccionadas}
+          />
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getEjercicioActivo, getEmpresaId, getFormasPago } from '@/lib/db/maestros'
 import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
 import { parseDocumentSearchTerm, sanitizeSearchTerm } from '@/lib/utils/search'
+import { assertDocumentoCancelacionPermitida } from '@/lib/db/documentos-contables'
 
 export interface FormaPagoRecaudoVenta {
   id: string
@@ -316,6 +317,7 @@ export async function createFactura(params: {
 
 export async function cancelarFactura(id: string) {
   const supabase = await createClient()
+  await assertDocumentoCancelacionPermitida(id, 'factura_venta')
   const { data, error } = await supabase
     .from('documentos')
     .update({ estado: 'cancelada', updated_at: new Date().toISOString() })
@@ -529,6 +531,9 @@ export async function aplicarPagoMensualSistecredito(params: {
 }): Promise<AplicarPagoMensualSistecreditoResult> {
   const supabase = await createClient()
   const ejercicio = await getEjercicioActivo()
+  if (!ejercicio?.id) {
+    throw new Error('No hay ejercicio activo')
+  }
   const fecha_pago = params.fecha_pago || calcularFechaPagoSistecredito(`${params.mes_venta.slice(0, 7)}-01`)
 
   const { data, error } = await supabase.rpc('secure_aplicar_pago_mensual_sistecredito', {
