@@ -34,17 +34,24 @@ interface Linea {
   descripcion: string
   cantidad: number
   precio_unitario: number
-  descuento_porcentaje: number
+  descuento_valor: number
   impuesto_id: string
   iva_pct: number
 }
 
 function calcLinea(l: Linea) {
   const subtotal = l.cantidad * l.precio_unitario
-  const descuento = subtotal * (l.descuento_porcentaje / 100)
+  const descuento = Math.min(l.descuento_valor, subtotal)
   const base = subtotal - descuento
   const iva = base * (l.iva_pct / 100)
   return { subtotal, descuento, iva, total: base + iva }
+}
+
+/** Convert absolute discount to percentage for backend */
+function descuentoToPct(linea: Linea): number {
+  const subtotal = linea.cantidad * linea.precio_unitario
+  if (subtotal <= 0 || linea.descuento_valor <= 0) return 0
+  return Math.round(((linea.descuento_valor / subtotal) * 100) * 10000) / 10000
 }
 
 interface Props {
@@ -98,7 +105,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
       descripcion: '',
       cantidad: 1,
       precio_unitario: 0,
-      descuento_porcentaje: 0,
+      descuento_valor: 0,
       impuesto_id: impuestoBase?.id ?? '',
       iva_pct: impuestoBase?.porcentaje ?? 0,
     }])
@@ -177,7 +184,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
           descripcion: linea.descripcion,
           cantidad: linea.cantidad,
           precio_unitario: linea.precio_unitario,
-          descuento_porcentaje: linea.descuento_porcentaje,
+          descuento_porcentaje: descuentoToPct(linea),
           impuesto_id: linea.impuesto_id || null,
         })),
       }
@@ -195,6 +202,9 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
       setGuardando(false)
     }
   }
+
+  const inputCls = 'h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const noSpinnerCls = '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none'
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -333,35 +343,133 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {lineas.map((linea, idx) => {
-              const calc = calcLinea(linea)
-              return (
-                <div key={idx} className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 shadow-sm">
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                        Articulo {idx + 1}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-600">
-                        Busca por codigo o nombre y completa cantidad, precio e impuesto.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => quitarLinea(idx)}
-                      className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                      aria-label={`Eliminar articulo ${idx + 1}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+          <>
+            {/* Desktop table */}
+            <div className="hidden lg:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <th className="pb-2 pl-1 pr-2">Producto</th>
+                    <th className="w-24 pb-2 px-2 text-right">Cant.</th>
+                    <th className="w-32 pb-2 px-2 text-right">Precio unit.</th>
+                    <th className="w-32 pb-2 px-2 text-right">Descuento $</th>
+                    <th className="w-32 pb-2 px-2">IVA</th>
+                    <th className="w-32 pb-2 px-2 text-right">Total</th>
+                    <th className="w-10 pb-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {lineas.map((linea, idx) => {
+                    const calc = calcLinea(linea)
+                    return (
+                      <tr key={idx} className="group">
+                        <td className="py-2 pl-1 pr-2">
+                          <RemoteLookup<ProductoOption>
+                            endpoint="/api/productos"
+                            responseKey="productos"
+                            value={linea.producto_id}
+                            initialLabel={linea.producto_id ? formatProductoLabel({
+                              codigo: linea.producto_codigo,
+                              descripcion: linea.descripcion,
+                            }) : ''}
+                            placeholder="Buscar producto..."
+                            emptyMessage="Sin productos para mostrar"
+                            queryParams={{ activo: true }}
+                            minChars={1}
+                            panelClassName="min-w-[28rem]"
+                            resultsClassName="max-h-72"
+                            optionClassName="py-2.5"
+                            onSelect={(producto) => handleProductoSelect(idx, producto)}
+                            onClear={() => clearProducto(idx)}
+                            getOptionLabel={(producto) => formatProductoLabel(producto)}
+                            getOptionDescription={(producto) => formatCOP(Number(producto.precio_venta ?? 0))}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            min="0.001"
+                            step="0.001"
+                            value={linea.cantidad}
+                            onChange={(event) => updateLinea(idx, 'cantidad', parseFloat(event.target.value) || 0)}
+                            className={`${inputCls} ${noSpinnerCls} text-right`}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={linea.precio_unitario}
+                            onChange={(event) => updateLinea(idx, 'precio_unitario', parseFloat(event.target.value) || 0)}
+                            className={`${inputCls} ${noSpinnerCls} text-right`}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={linea.descuento_valor}
+                            onChange={(event) => updateLinea(idx, 'descuento_valor', parseFloat(event.target.value) || 0)}
+                            className={`${inputCls} ${noSpinnerCls} text-right`}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <select
+                            value={linea.impuesto_id}
+                            onChange={(event) => updateLinea(idx, 'impuesto_id', event.target.value)}
+                            className={inputCls}
+                          >
+                            <option value="">Sin IVA</option>
+                            {impuestos.map((impuesto) => (
+                              <option key={impuesto.id} value={impuesto.id}>
+                                {impuesto.porcentaje}% {impuesto.codigo}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="py-2 px-2 text-right font-mono font-medium text-gray-900">
+                          {formatCOP(calc.total)}
+                        </td>
+                        <td className="py-2 pl-1">
+                          <button
+                            type="button"
+                            onClick={() => quitarLinea(idx)}
+                            className="rounded-lg p-1.5 text-gray-300 transition-colors hover:bg-red-50 hover:text-red-600 group-hover:text-gray-400"
+                            aria-label={`Eliminar articulo ${idx + 1}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,2.25fr)_minmax(6rem,0.75fr)_minmax(8rem,0.9fr)_minmax(6rem,0.7fr)_minmax(8rem,0.9fr)_minmax(9rem,0.9fr)]">
-                    <div className="lg:min-w-0">
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                        Producto
-                      </label>
+            {/* Mobile cards */}
+            <div className="space-y-3 lg:hidden">
+              {lineas.map((linea, idx) => {
+                const calc = calcLinea(linea)
+                return (
+                  <div key={idx} className="rounded-xl border border-gray-200 bg-gray-50/70 p-3">
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                        #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => quitarLinea(idx)}
+                        className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        aria-label={`Eliminar articulo ${idx + 1}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="mb-3">
                       <RemoteLookup<ProductoOption>
                         endpoint="/api/productos"
                         responseKey="productos"
@@ -370,105 +478,86 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                           codigo: linea.producto_codigo,
                           descripcion: linea.descripcion,
                         }) : ''}
-                        placeholder="Buscar por codigo o nombre"
+                        placeholder="Buscar producto..."
                         emptyMessage="Sin productos para mostrar"
                         queryParams={{ activo: true }}
                         minChars={1}
-                        panelClassName="max-w-[92vw] sm:max-w-[42rem] sm:min-w-[34rem]"
-                        resultsClassName="max-h-80"
-                        optionClassName="py-3"
+                        panelClassName="max-w-[92vw]"
+                        resultsClassName="max-h-72"
+                        optionClassName="py-2.5"
                         onSelect={(producto) => handleProductoSelect(idx, producto)}
                         onClear={() => clearProducto(idx)}
                         getOptionLabel={(producto) => formatProductoLabel(producto)}
                         getOptionDescription={(producto) => formatCOP(Number(producto.precio_venta ?? 0))}
                       />
-                      {linea.producto_codigo && (
-                        <p className="mt-2 text-xs font-mono text-gray-500">
-                          Codigo seleccionado: {linea.producto_codigo}
-                        </p>
-                      )}
                     </div>
 
-                    <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                        Cantidad
-                      </label>
-                      <input
-                        type="number"
-                        min="0.001"
-                        step="0.001"
-                        value={linea.cantidad}
-                        onChange={(event) => updateLinea(idx, 'cantidad', parseFloat(event.target.value) || 0)}
-                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="mb-1 block text-xs text-gray-500">Cant.</label>
+                        <input
+                          type="number"
+                          min="0.001"
+                          step="0.001"
+                          value={linea.cantidad}
+                          onChange={(event) => updateLinea(idx, 'cantidad', parseFloat(event.target.value) || 0)}
+                          className={`${inputCls} ${noSpinnerCls} text-right`}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs text-gray-500">Precio unit.</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={linea.precio_unitario}
+                          onChange={(event) => updateLinea(idx, 'precio_unitario', parseFloat(event.target.value) || 0)}
+                          className={`${inputCls} ${noSpinnerCls} text-right`}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs text-gray-500">Descuento $</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={linea.descuento_valor}
+                          onChange={(event) => updateLinea(idx, 'descuento_valor', parseFloat(event.target.value) || 0)}
+                          className={`${inputCls} ${noSpinnerCls} text-right`}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs text-gray-500">IVA</label>
+                        <select
+                          value={linea.impuesto_id}
+                          onChange={(event) => updateLinea(idx, 'impuesto_id', event.target.value)}
+                          className={inputCls}
+                        >
+                          <option value="">Sin IVA</option>
+                          {impuestos.map((impuesto) => (
+                            <option key={impuesto.id} value={impuesto.id}>
+                              {impuesto.porcentaje}%
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                        Precio unit.
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        value={linea.precio_unitario}
-                        onChange={(event) => updateLinea(idx, 'precio_unitario', parseFloat(event.target.value) || 0)}
-                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                        Dcto %
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.5"
-                        value={linea.descuento_porcentaje}
-                        onChange={(event) => updateLinea(idx, 'descuento_porcentaje', parseFloat(event.target.value) || 0)}
-                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-right text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-                        IVA
-                      </label>
-                      <select
-                        value={linea.impuesto_id}
-                        onChange={(event) => updateLinea(idx, 'impuesto_id', event.target.value)}
-                        className="h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        <option value="">Sin IVA</option>
-                        {impuestos.map((impuesto) => (
-                          <option key={impuesto.id} value={impuesto.id}>
-                            {impuesto.porcentaje}% {impuesto.codigo}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="rounded-xl border border-blue-100 bg-white px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-600">
-                        Total linea
-                      </p>
-                      <p className="mt-2 text-right font-mono text-base font-semibold text-gray-900">
-                        {formatCOP(calc.total)}
-                      </p>
+                    <div className="mt-2 flex justify-between items-center rounded-lg bg-white border border-blue-100 px-3 py-2">
+                      <span className="text-xs font-semibold text-blue-600">Total</span>
+                      <span className="font-mono text-sm font-semibold text-gray-900">{formatCOP(calc.total)}</span>
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
 
-            <div className="flex justify-start">
+            <div className="mt-4 flex justify-start">
               <Button type="button" variant="outline" onClick={agregarLinea}>
                 <Plus className="mr-1 h-4 w-4" /> Agregar otro articulo
               </Button>
             </div>
-          </div>
+          </>
         )}
       </div>
 
