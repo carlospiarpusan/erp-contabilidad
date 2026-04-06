@@ -146,6 +146,17 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
     }))
   }
 
+  function updateTotal(idx: number, nuevoTotal: number) {
+    setLineas((prev) => prev.map((linea, index) => {
+      if (index !== idx) return linea
+      const qty = linea.cantidad || 1
+      const ivaMult = 1 + (linea.iva_pct / 100)
+      const base = nuevoTotal / ivaMult
+      const precioUnitario = (base + linea.descuento_valor) / qty
+      return { ...linea, precio_unitario: Math.round(precioUnitario * 100) / 100 }
+    }))
+  }
+
   function quitarLinea(idx: number) {
     setLineas((prev) => prev.filter((_, index) => index !== idx))
   }
@@ -429,8 +440,15 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                             ))}
                           </select>
                         </td>
-                        <td className="py-2 px-2 text-right font-mono font-medium text-gray-900">
-                          {formatCOP(calc.total)}
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={Math.round(calc.total)}
+                            onChange={(event) => updateTotal(idx, parseFloat(event.target.value) || 0)}
+                            className={`${inputCls} ${noSpinnerCls} text-right font-mono font-medium`}
+                          />
                         </td>
                         <td className="py-2 pl-1">
                           <button
@@ -543,9 +561,16 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                       </div>
                     </div>
 
-                    <div className="mt-2 flex justify-between items-center rounded-lg bg-white border border-blue-100 px-3 py-2">
-                      <span className="text-xs font-semibold text-blue-600">Total</span>
-                      <span className="font-mono text-sm font-semibold text-gray-900">{formatCOP(calc.total)}</span>
+                    <div className="mt-2">
+                      <label className="mb-1 block text-xs text-gray-500">Total</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={Math.round(calc.total)}
+                        onChange={(event) => updateTotal(idx, parseFloat(event.target.value) || 0)}
+                        className={`${inputCls} ${noSpinnerCls} text-right font-mono font-semibold`}
+                      />
                     </div>
                   </div>
                 )
