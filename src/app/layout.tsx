@@ -29,11 +29,20 @@ export const metadata: Metadata = {
     siteName: 'ClovEnt',
     locale: 'es_CO',
     type: 'website',
+    images: [
+      {
+        url: '/clovent-icon.svg',
+        width: 512,
+        height: 512,
+        alt: 'ClovEnt',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ClovEnt',
     description: 'ERP para ventas, compras, inventario y contabilidad.',
+    images: ['/clovent-icon.svg'],
   },
 }
 
