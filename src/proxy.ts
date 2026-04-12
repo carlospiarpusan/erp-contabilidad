@@ -89,8 +89,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(home, request.url))
   }
 
-  if (!isApiRoute && context.rol === 'superadmin' && pathname === '/') {
-    return NextResponse.redirect(new URL('/superadmin', request.url))
+  if (!isApiRoute && pathname === '/') {
+    const home = context.rol === 'superadmin' ? '/superadmin' : '/dashboard'
+    return NextResponse.redirect(new URL(home, request.url))
   }
 
   if (!isApiRoute && context.rol === 'superadmin' && pathname === '/dashboard') {
