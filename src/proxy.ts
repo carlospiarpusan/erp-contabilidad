@@ -33,13 +33,20 @@ export async function proxy(request: NextRequest) {
   const unauthorizedApi = (status: 401 | 403, error: string) =>
     NextResponse.json({ error }, { status })
 
-  // Rutas públicas
-  if (
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname === '/funciones' ||
+    pathname === '/precios' ||
+    pathname === '/contacto' ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/auth/') ||
     pathname.startsWith('/print') ||
     pathname.startsWith('/api/health')
-  ) {
+
+  // Rutas públicas
+  if (isPublicRoute) {
     if (user && pathname === '/login') {
       const context = await getUsuarioContext(supabase, user.id)
       if (context) {
