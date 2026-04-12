@@ -43,7 +43,7 @@ export async function proxy(request: NextRequest) {
     if (user && pathname === '/login') {
       const context = await getUsuarioContext(supabase, user.id)
       if (context) {
-        const home = context.rol === 'superadmin' ? '/superadmin' : '/'
+        const home = context.rol === 'superadmin' ? '/superadmin' : '/dashboard'
         return NextResponse.redirect(new URL(home, request.url))
       }
     }
@@ -78,11 +78,15 @@ export async function proxy(request: NextRequest) {
       return unauthorizedApi(403, 'Sin permisos para este recurso')
     }
 
-    const home = context.rol === 'superadmin' ? '/superadmin' : '/'
+    const home = context.rol === 'superadmin' ? '/superadmin' : '/dashboard'
     return NextResponse.redirect(new URL(home, request.url))
   }
 
   if (!isApiRoute && context.rol === 'superadmin' && pathname === '/') {
+    return NextResponse.redirect(new URL('/superadmin', request.url))
+  }
+
+  if (!isApiRoute && context.rol === 'superadmin' && pathname === '/dashboard') {
     return NextResponse.redirect(new URL('/superadmin', request.url))
   }
 

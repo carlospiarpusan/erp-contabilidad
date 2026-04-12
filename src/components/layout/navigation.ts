@@ -47,7 +47,7 @@ const NAVIGATION_ITEMS: readonly NavigationItem[] = [
   {
     label: 'Dashboard',
     icon: LayoutDashboard,
-    href: '/',
+    href: '/dashboard',
     module: 'dashboard',
     section: 'principal',
   },

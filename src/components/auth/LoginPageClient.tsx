@@ -61,7 +61,7 @@ export function LoginPageClient() {
       return
     }
 
-    router.push('/')
+    router.push('/dashboard')
     router.refresh()
   }
 
