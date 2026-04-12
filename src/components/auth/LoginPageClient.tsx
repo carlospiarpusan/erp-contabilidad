@@ -35,20 +35,13 @@ export function LoginPageClient() {
       return
     }
 
-    if (body?.debe_cambiar_password) {
-      router.push('/cambiar-password')
-      router.refresh()
-      return
-    }
+    const target = body?.debe_cambiar_password
+      ? '/cambiar-password'
+      : body?.seleccionar_empresa
+        ? '/seleccionar-empresa'
+        : '/dashboard'
 
-    if (body?.seleccionar_empresa) {
-      router.push('/seleccionar-empresa')
-      router.refresh()
-      return
-    }
-
-    router.push('/dashboard')
-    router.refresh()
+    window.location.assign(target)
   }
 
   return (

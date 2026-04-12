@@ -48,7 +48,7 @@ export async function proxy(request: NextRequest) {
 
   // Rutas públicas
   if (isPublicRoute) {
-    if (user && pathname === '/login') {
+    if (user && (pathname === '/login' || pathname === '/')) {
       const context = await getUsuarioContext(supabase, user.id)
       if (context) {
         const home = context.rol === 'superadmin' ? '/superadmin' : '/dashboard'
