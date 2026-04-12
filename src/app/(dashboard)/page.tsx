@@ -77,14 +77,12 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* KPIs Anuales */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {/* KPIs principales */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { label: 'Facturado', value: formatCOP(kpis.facturado_anio), icon: TrendingUp, gradient: 'from-blue-500 to-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400', href: '/ventas/facturas' },
-          { label: 'Ganancia', value: formatCOP(kpis.ganancias_anio), icon: DollarSign, gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400', href: '/ventas/facturas' },
-          { label: 'Margen', value: `${kpis.margen}%`, icon: Percent, gradient: 'from-violet-500 to-violet-600', bg: 'bg-violet-50 dark:bg-violet-900/20', text: 'text-violet-600 dark:text-violet-400', href: null },
-          { label: 'Por cobrar', value: formatCOP(kpis.por_cobrar), icon: ArrowUpRight, gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400', href: '/ventas/facturas' },
-          { label: 'Por pagar', value: formatCOP(kpis.por_pagar), icon: ArrowDownRight, gradient: 'from-rose-500 to-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', text: 'text-rose-600 dark:text-rose-400', href: '/compras/facturas' },
+          { label: 'Facturado', value: formatCOP(kpis.facturado_anio), icon: TrendingUp, gradient: 'from-blue-500 to-blue-600', text: 'text-blue-600 dark:text-blue-400', href: '/ventas/facturas' },
+          { label: 'Por cobrar', value: formatCOP(kpis.por_cobrar), icon: ArrowUpRight, gradient: 'from-amber-500 to-amber-600', text: 'text-amber-600 dark:text-amber-400', href: '/ventas/facturas' },
+          { label: 'Por pagar', value: formatCOP(kpis.por_pagar), icon: ArrowDownRight, gradient: 'from-rose-500 to-rose-600', text: 'text-rose-600 dark:text-rose-400', href: '/compras/facturas' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900 p-4 group hover:shadow-md hover:shadow-gray-100/50 dark:hover:shadow-none transition-all">
             <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${k.gradient} shadow-sm mb-3`}>
@@ -100,12 +98,11 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* KPIs Mensuales */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* KPIs del mes */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { label: 'Ventas este mes', value: formatCOP(kpis.ventas_mes), icon: FileText, color: 'from-teal-500 to-teal-600', href: '/ventas/facturas' },
           { label: 'Cobrado este mes', value: formatCOP(kpis.cobrado_mes), icon: DollarSign, color: 'from-emerald-500 to-emerald-600', href: '/ventas/recibos' },
-          { label: 'Compras este mes', value: formatCOP(kpis.compras_mes), icon: Truck, color: 'from-amber-500 to-amber-600', href: '/compras/facturas' },
           { label: 'Gastos este mes', value: formatCOP(kpis.gastos_mes), icon: Receipt, color: 'from-rose-500 to-rose-600', href: '/gastos' },
         ].map(k => (
           <Link key={k.label} href={k.href}
