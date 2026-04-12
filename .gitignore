@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 /supabase/.temp
+/.playwright-cli
+/tmp
 import-productos.js
 
 # debug
