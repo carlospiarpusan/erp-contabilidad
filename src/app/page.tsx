@@ -87,7 +87,7 @@ export default function MarketingHomePage() {
             <Link href="/funciones" className="text-sm font-medium text-gray-600 transition hover:text-teal-700">Funciones</Link>
             <Link href="/precios" className="text-sm font-medium text-gray-600 transition hover:text-teal-700">Precios</Link>
             <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-full border border-gray-200 px-5 text-sm font-semibold text-gray-700 transition hover:border-teal-300 hover:text-teal-700">Iniciar sesión</Link>
-            <Link href="/contacto" className="inline-flex h-10 items-center justify-center rounded-full bg-gray-950 px-5 text-sm font-semibold text-white transition hover:bg-teal-700">Solicitar demo</Link>
+            <Link href="/registro" className="inline-flex h-10 items-center justify-center rounded-full bg-gray-950 px-5 text-sm font-semibold text-white transition hover:bg-teal-700">Registrar empresa</Link>
           </div>
         </div>
 
@@ -107,10 +107,10 @@ export default function MarketingHomePage() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/contacto"
+                href="/registro"
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-teal-600 px-6 text-sm font-semibold text-white shadow-lg shadow-teal-600/20 transition hover:bg-teal-700"
               >
-                Solicitar demo <ArrowRight className="h-4 w-4" />
+                Registrar empresa <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/funciones"
@@ -194,11 +194,11 @@ export default function MarketingHomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-teal-100">ClovEnt</p>
             <h2 className="mt-3 text-3xl font-black tracking-[-0.04em]">Haz que la operación deje de depender de hojas sueltas.</h2>
             <p className="mt-4 text-sm leading-7 text-teal-50/90">
-              Si quieres, agenda una demo y te mostramos cómo ordenar ventas, compras, inventario y contabilidad en un solo flujo.
+              Registra tu empresa y empieza a ordenar ventas, compras, inventario y contabilidad en un solo flujo.
             </p>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:mt-0">
-            <Link href="/contacto" className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-6 text-sm font-semibold text-teal-700 transition hover:bg-teal-50">Solicitar demo</Link>
+            <Link href="/registro" className="inline-flex h-12 items-center justify-center rounded-2xl bg-white px-6 text-sm font-semibold text-teal-700 transition hover:bg-teal-50">Registrar empresa</Link>
             <Link href="/precios" className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/30 px-6 text-sm font-semibold text-white transition hover:bg-white/10">Ver planes</Link>
           </div>
         </div>
