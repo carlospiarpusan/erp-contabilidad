@@ -86,6 +86,7 @@ export default function MarketingHomePage() {
           <div className="hidden items-center gap-3 sm:flex">
             <Link href="/funciones" className="text-sm font-medium text-gray-600 transition hover:text-teal-700">Funciones</Link>
             <Link href="/precios" className="text-sm font-medium text-gray-600 transition hover:text-teal-700">Precios</Link>
+            <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-full border border-gray-200 px-5 text-sm font-semibold text-gray-700 transition hover:border-teal-300 hover:text-teal-700">Iniciar sesión</Link>
             <Link href="/contacto" className="inline-flex h-10 items-center justify-center rounded-full bg-gray-950 px-5 text-sm font-semibold text-white transition hover:bg-teal-700">Solicitar demo</Link>
           </div>
         </div>

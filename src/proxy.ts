@@ -38,6 +38,7 @@ export async function proxy(request: NextRequest) {
     pathname === '/funciones' ||
     pathname === '/precios' ||
     pathname === '/contacto' ||
+    pathname === '/registro' ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
     pathname.startsWith('/login') ||
