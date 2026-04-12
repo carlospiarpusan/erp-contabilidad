@@ -84,12 +84,18 @@ export default async function MarketingHomePage() {
               >
                 Iniciar sesión <ArrowRight className="h-4 w-4" />
               </Link>
-              <a
-                href="mailto:info@clovent.co?subject=Quiero%20una%20demo%20de%20ClovEnt"
+              <Link
+                href="/funciones"
+                className="inline-flex h-12 items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 transition hover:border-teal-300 hover:text-teal-700"
+              >
+                Ver funciones
+              </Link>
+              <Link
+                href="/contacto"
                 className="inline-flex h-12 items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 transition hover:border-teal-300 hover:text-teal-700"
               >
                 Solicitar demo
-              </a>
+              </Link>
             </div>
 
             <ul className="mt-8 grid gap-3 text-sm text-gray-600 sm:grid-cols-2">
