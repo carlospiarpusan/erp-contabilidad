@@ -75,8 +75,8 @@ export default function PreciosPage() {
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link href="/contacto" className="inline-flex h-12 items-center justify-center rounded-2xl bg-teal-600 px-6 text-sm font-semibold text-white hover:bg-teal-700">
-            Solicitar propuesta
+          <Link href="/registro" className="inline-flex h-12 items-center justify-center rounded-2xl bg-teal-600 px-6 text-sm font-semibold text-white hover:bg-teal-700">
+            Registrar empresa
           </Link>
           <Link href="/registro" className="inline-flex h-12 items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 hover:border-teal-300 hover:text-teal-700">
             Registrar empresa

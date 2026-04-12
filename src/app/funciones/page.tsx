@@ -73,8 +73,8 @@ export default function FuncionesPage() {
             <Link href="/login" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-teal-600 px-5 text-sm font-semibold text-white hover:bg-teal-700">
               Entrar a ClovEnt <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/contacto" className="inline-flex h-11 items-center justify-center rounded-2xl border border-teal-200 bg-white px-5 text-sm font-semibold text-teal-800 hover:border-teal-300">
-              Hablar con el equipo
+            <Link href="/registro" className="inline-flex h-11 items-center justify-center rounded-2xl border border-teal-200 bg-white px-5 text-sm font-semibold text-teal-800 hover:border-teal-300">
+              Registrar empresa
             </Link>
           </div>
         </div>
