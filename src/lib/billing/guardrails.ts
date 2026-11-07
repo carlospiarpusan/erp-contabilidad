@@ -27,6 +27,7 @@ export const EMPRESA_CONFIG_UPDATE_FIELDS = [
   'email',
   'regimen',
   'tipo_org',
+  'plantilla_pdf',
 ] as const
 
 export function buildColaboradorLookupTerms(params: {

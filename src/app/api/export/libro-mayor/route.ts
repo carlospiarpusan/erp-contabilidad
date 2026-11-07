@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session'
 import { getLibroMayor } from '@/lib/db/informes'
 import { createClient } from '@/lib/supabase/server'
 import { createExportResponse, resolveExportFormat } from '@/lib/utils/csv'
+import { todayLocalISODate } from '@/utils/cn'
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,8 +12,9 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const codigoCuenta = searchParams.get('codigo_cuenta') ?? ''
-    const desde = searchParams.get('desde') ?? `${new Date().getFullYear()}-01-01`
-    const hasta = searchParams.get('hasta') ?? new Date().toISOString().split('T')[0]
+    const hoy = todayLocalISODate()
+    const desde = searchParams.get('desde') ?? `${hoy.slice(0, 4)}-01-01`
+    const hasta = searchParams.get('hasta') ?? hoy
     const format = resolveExportFormat(searchParams.get('format'))
     if (!codigoCuenta) {
       return NextResponse.json({ error: 'codigo_cuenta requerido' }, { status: 400 })

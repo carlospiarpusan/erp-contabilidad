@@ -13,23 +13,24 @@ interface ClienteOption {
   numero_documento?: string | null
 }
 
-const hoy = todayLocalISODate()
-const en7 = addDaysLocalISODate(7)
-
 export function FormServicio() {
   const router = useRouter()
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [clienteLabel, setClienteLabel] = useState('')
-  const [form, setForm] = useState({
-    cliente_id: '',
-    tipo: 'reparacion',
-    servicio: '',
-    direccion: '',
-    prioridad: 'normal',
-    fecha_inicio: hoy,
-    fecha_promesa: en7,
-    observaciones: '',
+  const [form, setForm] = useState(() => {
+    const hoy = todayLocalISODate()
+    const en7 = addDaysLocalISODate(7)
+    return {
+      cliente_id: '',
+      tipo: 'reparacion',
+      servicio: '',
+      direccion: '',
+      prioridad: 'normal',
+      fecha_inicio: hoy,
+      fecha_promesa: en7,
+      observaciones: '',
+    }
   })
 
   const setField = (key: keyof typeof form) => (

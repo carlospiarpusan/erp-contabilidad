@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { formatDateInTimeZone, getTodayInAppTimeZone } from '@/lib/utils/dates'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -34,20 +35,13 @@ export function formatFecha(fecha: string): string {
 }
 
 export function todayLocalISODate(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return getTodayInAppTimeZone()
 }
 
 export function addDaysLocalISODate(days: number, base = new Date()): string {
   const current = new Date(base)
   current.setDate(current.getDate() + days)
-  const year = current.getFullYear()
-  const month = String(current.getMonth() + 1).padStart(2, '0')
-  const day = String(current.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return formatDateInTimeZone(current)
 }
 
 export function calcularTotal(

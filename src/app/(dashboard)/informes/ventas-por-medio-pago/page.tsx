@@ -13,7 +13,7 @@ interface PageProps {
 export default async function InformeVentasPorMedioPagoPage({ searchParams }: PageProps) {
   const sp = await searchParams
   const hoy = todayLocalISODate()
-  const inicioMes = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`
+  const inicioMes = `${hoy.slice(0, 7)}-01`
   const desde = sp.desde || inicioMes
   const hasta = sp.hasta || hoy
   const forma_pago_id = sp.forma_pago_id || ''

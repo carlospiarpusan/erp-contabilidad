@@ -33,8 +33,6 @@ interface Props {
   colaboradores: FacturaColaborador[]
 }
 
-const hoy = todayLocalISODate()
-
 function normalizeLookupText(value: string) {
   return value
     .normalize('NFD')
@@ -45,6 +43,7 @@ function normalizeLookupText(value: string) {
 
 export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: Props) {
   const router = useRouter()
+  const [hoy] = useState(() => todayLocalISODate())
 
   const [cliente_id, setClienteId] = useState('')
   const [clienteLabel, setClienteLabel] = useState('')
