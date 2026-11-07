@@ -128,7 +128,7 @@ export function GestionImpuestos({ impuestos: inicial }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Código *</label>
-              <input
+              <input aria-label="Código"
                 value={form.codigo}
                 onChange={e => setForm(f => ({ ...f, codigo: e.target.value.toUpperCase() }))}
                 className={inputCls}
@@ -137,12 +137,12 @@ export function GestionImpuestos({ impuestos: inicial }: Props) {
             </div>
             <div>
               <label className={labelCls}>Porcentaje *</label>
-              <input type="number" min="0" max="100" step="0.01" value={form.porcentaje} onChange={e => setForm(f => ({ ...f, porcentaje: Number(e.target.value) }))} className={inputCls} />
+              <input aria-label="Porcentaje" type="number" min="0" max="100" step="0.01" value={form.porcentaje} onChange={e => setForm(f => ({ ...f, porcentaje: Number(e.target.value) }))} className={inputCls} />
             </div>
           </div>
           <div>
             <label className={labelCls}>Descripción *</label>
-            <input
+            <input aria-label="Descripción"
               value={form.descripcion}
               onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
               className={inputCls}
@@ -151,7 +151,7 @@ export function GestionImpuestos({ impuestos: inicial }: Props) {
           </div>
           <div>
             <label className={labelCls}>Recargo (%)</label>
-            <input
+            <input aria-label="Recargo (%)"
               type="number"
               min="0"
               max="100"

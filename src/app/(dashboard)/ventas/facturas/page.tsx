@@ -34,7 +34,7 @@ export default async function FacturasPage({ searchParams }: PageProps) {
           <TrendingUp className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Facturas de venta</h2>
+          <h1 className="text-xl font-bold text-gray-900">Facturas de venta</h1>
           <p className="text-sm text-gray-500">Gestiona tus ventas y cobros</p>
         </div>
       </div>

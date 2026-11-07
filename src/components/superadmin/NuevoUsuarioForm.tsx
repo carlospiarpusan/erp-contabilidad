@@ -60,22 +60,22 @@ export function NuevoUsuarioForm({ empresas, roles }: { empresas: Empresa[]; rol
       <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Nombre *</label>
-          <input type="text" value={form.nombre} onChange={set('nombre')} required
+          <input aria-label="Nombre" type="text" value={form.nombre} onChange={set('nombre')} required
             className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Email *</label>
-          <input type="email" value={form.email} onChange={set('email')} required
+          <input aria-label="Email" type="email" value={form.email} onChange={set('email')} required
             className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Contraseña *</label>
-          <input type="password" value={form.password} onChange={set('password')} required minLength={6}
+          <input aria-label="Contraseña" type="password" value={form.password} onChange={set('password')} required minLength={6}
             className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Empresa *</label>
-          <select value={form.empresa_id} onChange={set('empresa_id')} required
+          <select aria-label="Empresa" value={form.empresa_id} onChange={set('empresa_id')} required
             className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm">
             <option value="">— Seleccionar —</option>
             {empresas.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
@@ -83,7 +83,7 @@ export function NuevoUsuarioForm({ empresas, roles }: { empresas: Empresa[]; rol
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Rol *</label>
-          <select value={form.rol_id} onChange={set('rol_id')} required
+          <select aria-label="Rol" value={form.rol_id} onChange={set('rol_id')} required
             className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm">
             <option value="">— Seleccionar —</option>
             {roles.filter(r => r.nombre !== 'superadmin').map(r => (

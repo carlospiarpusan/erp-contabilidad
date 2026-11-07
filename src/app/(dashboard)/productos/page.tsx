@@ -39,7 +39,7 @@ export default async function ProductosPage({ searchParams }: PageProps) {
           <Package className="h-5 w-5 text-white" />
         </div>
         <div className="flex-1">
-          <h2 className="text-xl font-bold text-gray-900">Artículos / Productos</h2>
+          <h1 className="text-xl font-bold text-gray-900">Artículos / Productos</h1>
           <p className="text-sm text-gray-500">Inventario, precios y variantes</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

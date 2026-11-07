@@ -25,7 +25,7 @@ export default async function NuevaFacturaPage() {
           <TrendingUp className="h-5 w-5 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Nueva factura de venta</h2>
+          <h1 className="text-xl font-bold text-gray-900">Nueva factura de venta</h1>
           <p className="text-sm text-gray-500">Completa los datos y agrega los artículos</p>
         </div>
       </div>

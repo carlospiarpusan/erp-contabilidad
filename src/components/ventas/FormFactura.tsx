@@ -233,7 +233,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Forma de pago *</label>
-            <select
+            <select aria-label="Forma de pago"
               value={forma_pago_id}
               onChange={(event) => handleFormaPago(event.target.value)}
               required
@@ -249,7 +249,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Bodega *</label>
-            <select
+            <select aria-label="Bodega"
               value={bodega_id}
               onChange={(event) => setBodegaId(event.target.value)}
               required
@@ -265,7 +265,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Fecha *</label>
-            <input
+            <input aria-label="Fecha"
               type="date"
               value={fecha}
               onChange={(event) => {
@@ -280,7 +280,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Fecha vencimiento</label>
-            <input
+            <input aria-label="Fecha vencimiento"
               type="date"
               value={fecha_vencimiento}
               onChange={(event) => setVencimiento(event.target.value)}
@@ -295,7 +295,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
           {colaboradores.length > 0 && (
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Vendedor</label>
-              <select
+              <select aria-label="Vendedor"
                 value={colaborador_id}
                 onChange={(event) => setColaboradorId(event.target.value)}
                 className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -312,7 +312,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
           <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
             <label className="text-sm font-medium text-gray-700">Observaciones</label>
-            <input
+            <input aria-label="Observaciones"
               type="text"
               value={observaciones}
               onChange={(event) => setObs(event.target.value)}
@@ -370,6 +370,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                             }) : ''}
                             placeholder="Buscar producto..."
                             emptyMessage="Sin productos para mostrar"
+                            ariaLabel={`Producto del artículo ${idx + 1}`}
                             queryParams={{ activo: true }}
                             minChars={1}
                             panelClassName="min-w-[28rem]"
@@ -388,6 +389,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                             min="0.001"
                             step="0.001"
                             value={linea.cantidad}
+                            aria-label={`Cantidad del artículo ${idx + 1}`}
                             onChange={(event) => updateLinea(idx, 'cantidad', parseFloat(event.target.value) || 0)}
                             className={`${inputCls} ${noSpinnerCls} text-right`}
                           />
@@ -398,6 +400,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                             min="0"
                             step="0.01"
                             value={linea.precio_unitario}
+                            aria-label={`Precio unitario del artículo ${idx + 1}`}
                             onChange={(event) => updateLinea(idx, 'precio_unitario', parseFloat(event.target.value) || 0)}
                             className={`${inputCls} ${noSpinnerCls} text-right`}
                           />
@@ -408,6 +411,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                             min="0"
                             step="1"
                             value={linea.descuento_valor}
+                            aria-label={`Descuento en pesos del artículo ${idx + 1}`}
                             onChange={(event) => updateLinea(idx, 'descuento_valor', parseFloat(event.target.value) || 0)}
                             className={`${inputCls} ${noSpinnerCls} text-right`}
                           />
@@ -415,6 +419,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                         <td className="py-2 px-2">
                           <select
                             value={linea.impuesto_id}
+                            aria-label={`IVA del artículo ${idx + 1}`}
                             onChange={(event) => updateLinea(idx, 'impuesto_id', event.target.value)}
                             className={inputCls}
                           >
@@ -432,6 +437,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                             min="0"
                             step="1"
                             value={Math.round(calc.total)}
+                            aria-label={`Total del artículo ${idx + 1}`}
                             onChange={(event) => updateTotal(idx, parseFloat(event.target.value) || 0)}
                             className={`${inputCls} ${noSpinnerCls} text-right font-mono font-medium`}
                           />
@@ -500,7 +506,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="mb-1 block text-xs text-gray-500">Cant.</label>
-                        <input
+                        <input aria-label="Cantidad"
                           type="number"
                           min="0.001"
                           step="0.001"
@@ -511,7 +517,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                       </div>
                       <div>
                         <label className="mb-1 block text-xs text-gray-500">Precio unit.</label>
-                        <input
+                        <input aria-label="Precio unitario"
                           type="number"
                           min="0"
                           step="0.01"
@@ -522,7 +528,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                       </div>
                       <div>
                         <label className="mb-1 block text-xs text-gray-500">Descuento $</label>
-                        <input
+                        <input aria-label="Descuento en pesos"
                           type="number"
                           min="0"
                           step="1"
@@ -533,7 +539,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
                       </div>
                       <div>
                         <label className="mb-1 block text-xs text-gray-500">IVA</label>
-                        <select
+                        <select aria-label="IVA"
                           value={linea.impuesto_id}
                           onChange={(event) => updateLinea(idx, 'impuesto_id', event.target.value)}
                           className={inputCls}
@@ -550,7 +556,7 @@ export function FormFactura({ impuestos, bodegas, formasPago, colaboradores }: P
 
                     <div className="mt-2">
                       <label className="mb-1 block text-xs text-gray-500">Total</label>
-                      <input
+                      <input aria-label="Total"
                         type="number"
                         min="0"
                         step="1"

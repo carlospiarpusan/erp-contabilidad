@@ -81,10 +81,10 @@ export default async function PyGPage({ searchParams }: PageProps) {
       {/* Filtros */}
       <form className="flex gap-3 items-center">
         <label className="text-sm font-medium text-gray-600">Desde:</label>
-        <input type="date" name="desde" defaultValue={desde}
+        <input aria-label="Desde:" type="date" name="desde" defaultValue={desde}
           className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <label className="text-sm font-medium text-gray-600">Hasta:</label>
-        <input type="date" name="hasta" defaultValue={hasta}
+        <input aria-label="Hasta:" type="date" name="hasta" defaultValue={hasta}
           className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <button type="submit" className="h-9 px-4 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700">Ver</button>
         <div className="flex items-center gap-2">

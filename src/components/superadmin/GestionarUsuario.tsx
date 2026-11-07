@@ -140,7 +140,7 @@ export function GestionarUsuario({ usuario, roles, empresas, currentUserId }: Pr
       <div className="grid gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Nombre</label>
-          <input
+          <input aria-label="Nombre"
             value={form.nombre}
             onChange={set('nombre')}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm"
@@ -148,7 +148,7 @@ export function GestionarUsuario({ usuario, roles, empresas, currentUserId }: Pr
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Email</label>
-          <input
+          <input aria-label="Email"
             type="email"
             value={form.email}
             onChange={set('email')}
@@ -158,7 +158,7 @@ export function GestionarUsuario({ usuario, roles, empresas, currentUserId }: Pr
         {empresas && (
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Empresa</label>
-            <select
+            <select aria-label="Empresa"
               value={form.empresa_id}
               onChange={set('empresa_id')}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm"
@@ -171,7 +171,7 @@ export function GestionarUsuario({ usuario, roles, empresas, currentUserId }: Pr
         )}
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Rol</label>
-          <select
+          <select aria-label="Rol"
             value={form.rol_id}
             onChange={set('rol_id')}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm"
@@ -183,7 +183,7 @@ export function GestionarUsuario({ usuario, roles, empresas, currentUserId }: Pr
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Nueva contraseña</label>
-          <input
+          <input aria-label="Nueva contraseña"
             type="password"
             value={form.password}
             onChange={set('password')}

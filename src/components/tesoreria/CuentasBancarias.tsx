@@ -235,11 +235,11 @@ export function CuentasBancarias({ cuentas: inicial }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Nombre *</label>
-              <input value={formCuenta.nombre} onChange={e => setFormCuenta(f => ({ ...f, nombre: e.target.value }))} className={inputCls} placeholder="Bancolombia Ahorros" />
+              <input aria-label="Nombre" value={formCuenta.nombre} onChange={e => setFormCuenta(f => ({ ...f, nombre: e.target.value }))} className={inputCls} placeholder="Bancolombia Ahorros" />
             </div>
             <div>
               <label className={labelCls}>Banco *</label>
-              <select value={formCuenta.banco} onChange={e => setFormCuenta(f => ({ ...f, banco: e.target.value }))} className={inputCls}>
+              <select aria-label="Banco" value={formCuenta.banco} onChange={e => setFormCuenta(f => ({ ...f, banco: e.target.value }))} className={inputCls}>
                 {BANCOS.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
@@ -247,24 +247,24 @@ export function CuentasBancarias({ cuentas: inicial }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Tipo de cuenta *</label>
-              <select value={formCuenta.tipo_cuenta} onChange={e => setFormCuenta(f => ({ ...f, tipo_cuenta: e.target.value }))} className={inputCls}>
+              <select aria-label="Tipo de cuenta" value={formCuenta.tipo_cuenta} onChange={e => setFormCuenta(f => ({ ...f, tipo_cuenta: e.target.value }))} className={inputCls}>
                 <option value="ahorros">Ahorros</option>
                 <option value="corriente">Corriente</option>
               </select>
             </div>
             <div>
               <label className={labelCls}>Número de cuenta *</label>
-              <input value={formCuenta.numero_cuenta} onChange={e => setFormCuenta(f => ({ ...f, numero_cuenta: e.target.value }))} className={inputCls} placeholder="0000-0000-0000" />
+              <input aria-label="Número de cuenta" value={formCuenta.numero_cuenta} onChange={e => setFormCuenta(f => ({ ...f, numero_cuenta: e.target.value }))} className={inputCls} placeholder="0000-0000-0000" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Titular</label>
-              <input value={formCuenta.titular} onChange={e => setFormCuenta(f => ({ ...f, titular: e.target.value }))} className={inputCls} placeholder="Nombre del titular" />
+              <input aria-label="Titular" value={formCuenta.titular} onChange={e => setFormCuenta(f => ({ ...f, titular: e.target.value }))} className={inputCls} placeholder="Nombre del titular" />
             </div>
             <div>
               <label className={labelCls}>Saldo inicial</label>
-              <input type="number" min="0" step="1000" value={formCuenta.saldo_inicial} onChange={e => setFormCuenta(f => ({ ...f, saldo_inicial: e.target.value }))} className={inputCls} placeholder="0" />
+              <input aria-label="Saldo inicial" type="number" min="0" step="1000" value={formCuenta.saldo_inicial} onChange={e => setFormCuenta(f => ({ ...f, saldo_inicial: e.target.value }))} className={inputCls} placeholder="0" />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -281,28 +281,28 @@ export function CuentasBancarias({ cuentas: inicial }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Tipo *</label>
-            <select value={formMov.tipo} onChange={e => setFormMov(f => ({ ...f, tipo: e.target.value }))} className={inputCls}>
+            <select aria-label="Tipo" value={formMov.tipo} onChange={e => setFormMov(f => ({ ...f, tipo: e.target.value }))} className={inputCls}>
               <option value="ingreso">Ingreso</option>
               <option value="egreso">Egreso</option>
             </select>
           </div>
           <div>
             <label className={labelCls}>Concepto *</label>
-            <select value={formMov.concepto} onChange={e => setFormMov(f => ({ ...f, concepto: e.target.value }))} className={inputCls}>
+            <select aria-label="Concepto" value={formMov.concepto} onChange={e => setFormMov(f => ({ ...f, concepto: e.target.value }))} className={inputCls}>
               {CONCEPTOS.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
             <label className={labelCls}>Monto *</label>
-            <input type="number" min="1" step="1000" value={formMov.monto} onChange={e => setFormMov(f => ({ ...f, monto: e.target.value }))} className={inputCls} placeholder="0" />
+            <input aria-label="Monto" type="number" min="1" step="1000" value={formMov.monto} onChange={e => setFormMov(f => ({ ...f, monto: e.target.value }))} className={inputCls} placeholder="0" />
           </div>
           <div>
             <label className={labelCls}>Referencia</label>
-            <input value={formMov.referencia} onChange={e => setFormMov(f => ({ ...f, referencia: e.target.value }))} className={inputCls} placeholder="No. cheque, ref. transferencia..." />
+            <input aria-label="Referencia" value={formMov.referencia} onChange={e => setFormMov(f => ({ ...f, referencia: e.target.value }))} className={inputCls} placeholder="No. cheque, ref. transferencia..." />
           </div>
           <div>
             <label className={labelCls}>Descripción</label>
-            <input value={formMov.descripcion} onChange={e => setFormMov(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} placeholder="Detalle opcional" />
+            <input aria-label="Descripción" value={formMov.descripcion} onChange={e => setFormMov(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} placeholder="Detalle opcional" />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => setModalMov(false)}>Cancelar</Button>

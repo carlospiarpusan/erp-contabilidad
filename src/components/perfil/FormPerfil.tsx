@@ -325,7 +325,7 @@ export function FormPerfil({ usuario }: Props) {
             <form onSubmit={verificarMFA} className="mt-3 flex flex-wrap items-end gap-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-600">2) Código de 6 dígitos</label>
-                <input
+                <input aria-label="2) Código de 6 dígitos"
                   value={codigoMfa}
                   onChange={(e) => setCodigoMfa(e.target.value)}
                   maxLength={6}
@@ -357,7 +357,7 @@ export function FormPerfil({ usuario }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">Versión política de datos</label>
-            <input
+            <input aria-label="Versión política de datos"
               value={privacyVersion}
               onChange={(e) => setPrivacyVersion(e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

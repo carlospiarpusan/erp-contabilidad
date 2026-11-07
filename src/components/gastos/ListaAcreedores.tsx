@@ -108,24 +108,24 @@ export function ListaAcreedores({ acreedores: inicial, total }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Razón social *</label>
-            <input value={form.razon_social} onChange={e => setForm(f => ({ ...f, razon_social: e.target.value }))} className={inputCls} />
+            <input aria-label="Razón social" value={form.razon_social} onChange={e => setForm(f => ({ ...f, razon_social: e.target.value }))} className={inputCls} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Documento</label>
-              <input value={form.numero_documento} onChange={e => setForm(f => ({ ...f, numero_documento: e.target.value }))} className={inputCls} />
+              <input aria-label="Documento" value={form.numero_documento} onChange={e => setForm(f => ({ ...f, numero_documento: e.target.value }))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Contacto</label>
-              <input value={form.contacto} onChange={e => setForm(f => ({ ...f, contacto: e.target.value }))} className={inputCls} />
+              <input aria-label="Contacto" value={form.contacto} onChange={e => setForm(f => ({ ...f, contacto: e.target.value }))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Email</label>
-              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputCls} />
+              <input aria-label="Email" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Teléfono</label>
-              <input value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} className={inputCls} />
+              <input aria-label="Teléfono" value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} className={inputCls} />
             </div>
           </div>
           <div className="flex justify-end gap-2">

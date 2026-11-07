@@ -166,7 +166,7 @@ export function PagoMensualSistecredito({ meses: initialMeses, formasPago }: Pro
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Forma de recaudo</label>
-                  <select
+                  <select aria-label="Forma de recaudo"
                     value={formaPagoId}
                     onChange={(event) => setFormaPagoId(event.target.value)}
                     className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
@@ -182,7 +182,7 @@ export function PagoMensualSistecredito({ meses: initialMeses, formasPago }: Pro
 
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha del pago</label>
-                  <input
+                  <input aria-label="Fecha del pago"
                     type="date"
                     value={fechaPago}
                     onChange={(event) => setFechaPago(event.target.value)}
@@ -194,7 +194,7 @@ export function PagoMensualSistecredito({ meses: initialMeses, formasPago }: Pro
 
               <div className="mt-4 flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Observaciones</label>
-                <input
+                <input aria-label="Observaciones"
                   type="text"
                   value={observaciones}
                   onChange={(event) => setObservaciones(event.target.value)}

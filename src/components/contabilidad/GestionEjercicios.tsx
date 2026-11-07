@@ -127,11 +127,11 @@ export function GestionEjercicios({ ejercicios: inicial }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Año *</label>
-              <input type="number" value={form.año} onChange={e => setForm(f => ({ ...f, año: Number(e.target.value) }))} className={inputCls} />
+              <input aria-label="Año" type="number" value={form.año} onChange={e => setForm(f => ({ ...f, año: Number(e.target.value) }))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Estado</label>
-              <select value={form.estado} onChange={e => setForm(f => ({ ...f, estado: e.target.value }))} className={inputCls}>
+              <select aria-label="Estado" value={form.estado} onChange={e => setForm(f => ({ ...f, estado: e.target.value }))} className={inputCls}>
                 <option value="activo">Activo</option>
                 <option value="cerrado">Cerrado</option>
                 <option value="bloqueado">Bloqueado</option>
@@ -139,15 +139,15 @@ export function GestionEjercicios({ ejercicios: inicial }: Props) {
             </div>
             <div className="col-span-2">
               <label className={labelCls}>Descripción</label>
-              <input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} />
+              <input aria-label="Descripción" value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Fecha inicio *</label>
-              <input type="date" value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))} className={inputCls} />
+              <input aria-label="Fecha inicio" type="date" value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Fecha fin *</label>
-              <input type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} className={inputCls} />
+              <input aria-label="Fecha fin" type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} className={inputCls} />
             </div>
           </div>
           <div className="flex justify-end gap-2">

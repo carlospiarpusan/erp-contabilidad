@@ -28,6 +28,10 @@ type RemoteLookupProps<T extends LookupItem> = {
   panelClassName?: string
   resultsClassName?: string
   optionClassName?: string
+  /** id del campo de texto, para enlazarlo con un <label htmlFor>. */
+  id?: string
+  /** Nombre accesible cuando no hay <label> visible; por defecto, el placeholder. */
+  ariaLabel?: string
 }
 
 export function RemoteLookup<T extends LookupItem>({
@@ -52,6 +56,8 @@ export function RemoteLookup<T extends LookupItem>({
   panelClassName,
   resultsClassName,
   optionClassName,
+  id,
+  ariaLabel,
 }: RemoteLookupProps<T>) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [open, setOpen] = useState(false)
@@ -148,9 +154,17 @@ export function RemoteLookup<T extends LookupItem>({
   return (
     <div ref={containerRef} className={`relative ${className ?? ''}`}>
       <input
+        id={id}
         type="text"
         value={query}
         placeholder={placeholder}
+        aria-label={id ? undefined : (ariaLabel ?? placeholder)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && open) {
+            event.stopPropagation()
+            setOpen(false)
+          }
+        }}
         disabled={disabled}
         onFocus={() => setOpen(true)}
         onChange={(event) => {

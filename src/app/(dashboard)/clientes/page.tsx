@@ -93,7 +93,7 @@ export default async function ClientesPage({ searchParams }: PageProps) {
             <Users className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Clientes</h2>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Clientes</h1>
             <p className="text-sm text-gray-500">Gestión de clientes y grupos</p>
           </div>
         </div>

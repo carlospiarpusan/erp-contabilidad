@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Truck, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Search } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
@@ -264,7 +265,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100">
                       <Truck className="h-4 w-4 text-orange-600" />
                     </div>
-                    <span className="font-medium text-gray-900">{p.razon_social || 'Proveedor sin nombre'}</span>
+                    <Link href={`/compras/proveedores/${p.id}`} className="font-medium text-gray-900 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded" onClick={(e) => e.stopPropagation()}>{p.razon_social || 'Proveedor sin nombre'}</Link>
                   </div>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-gray-600">
@@ -360,7 +361,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
             {field('departamento', 'Departamento')}
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-gray-600 mb-1">Dirección</label>
-              <input
+              <input aria-label="Dirección"
                 value={(form.direccion as string) ?? ''}
                 onChange={e => setForm(f => ({ ...f, direccion: e.target.value }))}
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -368,7 +369,7 @@ export function ListaProveedores({ proveedores: inicial, total }: Props) {
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-gray-600 mb-1">Observaciones</label>
-              <textarea
+              <textarea aria-label="Observaciones"
                 rows={2}
                 value={(form.observaciones as string) ?? ''}
                 onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))}

@@ -213,7 +213,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
         <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
           <div className="flex-1 w-full">
             <label className={labelCls}>Caja</label>
-            <select
+            <select aria-label="Caja"
               value={cajaId}
               onChange={e => setCajaId(e.target.value)}
               className={inputCls}
@@ -380,11 +380,11 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Nombre *</label>
-            <input value={formCaja.nombre} onChange={e => setFormCaja(f => ({ ...f, nombre: e.target.value }))} className={inputCls} placeholder="Caja principal" />
+            <input aria-label="Nombre" value={formCaja.nombre} onChange={e => setFormCaja(f => ({ ...f, nombre: e.target.value }))} className={inputCls} placeholder="Caja principal" />
           </div>
           <div>
             <label className={labelCls}>Descripción</label>
-            <input value={formCaja.descripcion} onChange={e => setFormCaja(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} placeholder="Punto de venta 1" />
+            <input aria-label="Descripción" value={formCaja.descripcion} onChange={e => setFormCaja(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} placeholder="Punto de venta 1" />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setModalCaja(false)}>Cancelar</Button>
@@ -400,7 +400,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Saldo de apertura</label>
-            <input
+            <input aria-label="Saldo de apertura"
               type="number" min="0" step="100"
               value={formApertura}
               onChange={e => setFormApertura(e.target.value)}
@@ -426,7 +426,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
           </div>
           <div>
             <label className={labelCls}>Saldo de cierre (conteo fisico)</label>
-            <input
+            <input aria-label="Saldo de cierre (conteo fisico)"
               type="number" min="0" step="100"
               value={formCierre.saldo_cierre}
               onChange={e => setFormCierre(f => ({ ...f, saldo_cierre: e.target.value }))}
@@ -444,7 +444,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
           )}
           <div>
             <label className={labelCls}>Observaciones</label>
-            <textarea
+            <textarea aria-label="Observaciones"
               value={formCierre.observaciones}
               onChange={e => setFormCierre(f => ({ ...f, observaciones: e.target.value }))}
               className={inputCls}
@@ -466,7 +466,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Tipo *</label>
-            <select
+            <select aria-label="Tipo"
               value={formMov.tipo}
               onChange={e => setFormMov(f => ({ ...f, tipo: e.target.value }))}
               className={inputCls}
@@ -477,7 +477,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
           </div>
           <div>
             <label className={labelCls}>Concepto *</label>
-            <select
+            <select aria-label="Concepto"
               value={formMov.concepto}
               onChange={e => setFormMov(f => ({ ...f, concepto: e.target.value }))}
               className={inputCls}
@@ -487,7 +487,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
           </div>
           <div>
             <label className={labelCls}>Monto *</label>
-            <input
+            <input aria-label="Monto"
               type="number" min="1" step="100"
               value={formMov.monto}
               onChange={e => setFormMov(f => ({ ...f, monto: e.target.value }))}
@@ -497,7 +497,7 @@ export function CajaDiaria({ cajas: cajasInicial }: Props) {
           </div>
           <div>
             <label className={labelCls}>Descripción</label>
-            <input
+            <input aria-label="Descripción"
               value={formMov.descripcion}
               onChange={e => setFormMov(f => ({ ...f, descripcion: e.target.value }))}
               className={inputCls}

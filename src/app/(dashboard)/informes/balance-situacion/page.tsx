@@ -71,7 +71,7 @@ export default async function BalanceSituacionPage({ searchParams }: PageProps) 
       {/* Selector de fecha */}
       <form className="flex gap-3 items-center">
         <label className="text-sm font-medium text-gray-600">Fecha de corte:</label>
-        <input type="date" name="fecha" defaultValue={fecha_corte}
+        <input aria-label="Fecha de corte:" type="date" name="fecha" defaultValue={fecha_corte}
           className="h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
         <button type="submit" className="h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700">Ver</button>
         <div className="flex items-center gap-2">

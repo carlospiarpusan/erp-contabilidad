@@ -52,7 +52,7 @@ export default async function RecibosPage({ searchParams }: PageProps) {
       <form className={cn('flex flex-wrap gap-3', cardCls, 'p-4')}>
         <div className="flex min-w-[240px] flex-1 flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Buscar</label>
-          <input
+          <input aria-label="Buscar"
             type="text"
             name="q"
             defaultValue={busqueda}
@@ -62,12 +62,12 @@ export default async function RecibosPage({ searchParams }: PageProps) {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Desde</label>
-          <input type="date" name="desde" defaultValue={desde}
+          <input aria-label="Desde" type="date" name="desde" defaultValue={desde}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Hasta</label>
-          <input type="date" name="hasta" defaultValue={hasta}
+          <input aria-label="Hasta" type="date" name="hasta" defaultValue={hasta}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" />
         </div>
         <div className="flex items-end gap-2">
@@ -104,13 +104,12 @@ export default async function RecibosPage({ searchParams }: PageProps) {
               const cliente = (r.documento as { cliente?: { razon_social?: string; numero_documento?: string } } | null)?.cliente
               const fp  = r.forma_pago as { descripcion?: string } | null
               return (
-                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => { window.location.href = `/ventas/recibos/${r.id}` }}>
-                  <td className="px-4 py-3 font-mono text-gray-600 dark:text-gray-300">{r.numero}</td>
+                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td className="px-4 py-3 font-mono text-gray-600 dark:text-gray-300"><Link href={`/ventas/recibos/${r.id}`} className="hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">{r.numero}</Link></td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{formatFecha(r.fecha)}</td>
                   <td className="px-4 py-3">
                     {doc?.id ? (
-                      <Link href={`/ventas/facturas/${doc.id}`} className="font-mono text-xs text-blue-600 hover:underline dark:text-blue-300"
-                        onClick={e => e.stopPropagation()}>
+                      <Link href={`/ventas/facturas/${doc.id}`} className="font-mono text-xs text-blue-600 hover:underline dark:text-blue-300">
                         {doc.prefijo}{doc.numero}
                       </Link>
                     ) : <span className="text-gray-400 dark:text-gray-500">—</span>}

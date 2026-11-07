@@ -132,7 +132,7 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
       {bodegas.length > 1 && (
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Bodega</label>
-          <select
+          <select aria-label="Bodega"
             value={bodega_id}
             onChange={e => setBodega(e.target.value)}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
@@ -168,7 +168,7 @@ export function AjusteStock({ producto, bodegas, onDone, onCancel }: Props) {
       {/* Notas */}
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Notas (opcional)</label>
-        <textarea
+        <textarea aria-label="Notas (opcional)"
           value={notas}
           onChange={e => setNotas(e.target.value)}
           rows={2}

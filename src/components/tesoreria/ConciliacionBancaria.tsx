@@ -148,27 +148,27 @@ export function ConciliacionBancaria({ cuentas, conciliaciones: inicial }: Props
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Cuenta bancaria *</label>
-            <select value={form.cuenta_bancaria_id} onChange={e => setForm(f => ({ ...f, cuenta_bancaria_id: e.target.value }))} className={inputCls}>
+            <select aria-label="Cuenta bancaria" value={form.cuenta_bancaria_id} onChange={e => setForm(f => ({ ...f, cuenta_bancaria_id: e.target.value }))} className={inputCls}>
               {cuentas.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.banco})</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Fecha inicio *</label>
-              <input type="date" value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))} className={inputCls} />
+              <input aria-label="Fecha inicio" type="date" value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>Fecha fin *</label>
-              <input type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} className={inputCls} />
+              <input aria-label="Fecha fin" type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} className={inputCls} />
             </div>
           </div>
           <div>
             <label className={labelCls}>Saldo según extracto bancario *</label>
-            <input type="number" step="0.01" value={form.saldo_extracto} onChange={e => setForm(f => ({ ...f, saldo_extracto: e.target.value }))} className={inputCls} placeholder="0.00" />
+            <input aria-label="Saldo según extracto bancario" type="number" step="0.01" value={form.saldo_extracto} onChange={e => setForm(f => ({ ...f, saldo_extracto: e.target.value }))} className={inputCls} placeholder="0.00" />
           </div>
           <div>
             <label className={labelCls}>Observaciones</label>
-            <textarea value={form.observaciones} onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))} className={inputCls} rows={2} placeholder="Notas..." />
+            <textarea aria-label="Observaciones" value={form.observaciones} onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))} className={inputCls} rows={2} placeholder="Notas..." />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => setModalNueva(false)}>Cancelar</Button>

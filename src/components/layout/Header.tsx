@@ -6,7 +6,7 @@ import { LogOut, ChevronDown, UserCircle, Settings, Building2, LockKeyhole } fro
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { BusquedaGlobal } from '@/components/busqueda/BusquedaGlobal'
 import { Notificaciones } from '@/components/layout/Notificaciones'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { canAccessModule, getRoleLabel, type AppRole } from '@/lib/auth/permissions'
 import { BrandMark } from '@/components/brand/BrandMark'
@@ -14,17 +14,29 @@ import { BrandLogo } from '@/components/brand/BrandLogo'
 import { formatLongDateInAppTimeZone } from '@/lib/utils/dates'
 
 interface HeaderProps {
-  titulo: string
   userName?: string
   userEmail?: string
   userRol?: AppRole
   tieneMultiEmpresa?: boolean
 }
 
-export function Header({ titulo, userName, userEmail, userRol, tieneMultiEmpresa }: HeaderProps) {
+export function Header({ userName, userEmail, userRol, tieneMultiEmpresa }: HeaderProps) {
   const router = useRouter()
   const supabase = createClient()
   const [menu, setMenu] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!menu) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenu(false)
+        menuButtonRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [menu])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -51,7 +63,6 @@ export function Header({ titulo, userName, userEmail, userRol, tieneMultiEmpresa
           <BrandMark size="sm" className="sm:hidden" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="sr-only">{titulo}</h1>
               <div className="hidden sm:block">
                 <span className="dark:hidden"><BrandLogo className="!w-[122px]" /></span>
                 <span className="hidden dark:block"><BrandLogo light className="!w-[122px]" /></span>
@@ -73,6 +84,8 @@ export function Header({ titulo, userName, userEmail, userRol, tieneMultiEmpresa
 
         <div className="relative">
           <button
+            ref={menuButtonRef}
+            type="button"
             onClick={() => setMenu(p => !p)}
             aria-expanded={menu}
             className="flex items-center gap-2.5 rounded-2xl border border-white/70 bg-white/72 px-2.5 py-1.5 shadow-sm shadow-slate-200/40 backdrop-blur hover:bg-white dark:border-gray-800 dark:bg-gray-900/72 dark:shadow-none dark:hover:bg-gray-900 transition-colors"
@@ -133,6 +146,7 @@ export function Header({ titulo, userName, userEmail, userRol, tieneMultiEmpresa
                 )}
                 <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className="flex w-full items-center gap-2.5 px-4 py-2 text-[13px] text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >

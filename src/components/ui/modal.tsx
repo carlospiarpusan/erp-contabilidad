@@ -26,6 +26,16 @@ export function Modal({ open, onClose, titulo, descripcion, children, size = 'md
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/45 backdrop-blur-sm animate-in fade-in dark:bg-black/60" />
         <Dialog.Content
+          onOpenAutoFocus={(event) => {
+            // Llevar el foco al primer campo del formulario en lugar del botón de cerrar.
+            const campo = (event.currentTarget as HTMLElement | null)?.querySelector<HTMLElement>(
+              'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled])'
+            )
+            if (campo) {
+              event.preventDefault()
+              campo.focus()
+            }
+          }}
           className={cn(
             'fixed left-1/2 top-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2',
             'rounded-xl border border-gray-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 dark:border-gray-700 dark:bg-gray-900/95',
@@ -45,7 +55,9 @@ export function Modal({ open, onClose, titulo, descripcion, children, size = 'md
               )}
             </div>
             <button
+              type="button"
               onClick={onClose}
+              aria-label="Cerrar"
               className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors dark:text-gray-500 dark:hover:bg-gray-800/80"
             >
               <X className="h-4 w-4" />

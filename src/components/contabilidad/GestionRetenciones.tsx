@@ -189,7 +189,7 @@ export function GestionRetenciones({ retenciones: inicial }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Tipo *</label>
-              <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inputCls} disabled={!!editandoId}>
+              <select aria-label="Tipo" value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inputCls} disabled={!!editandoId}>
                 <option value="retefuente">Retefuente</option>
                 <option value="reteica">ReteICA</option>
                 <option value="reteiva">ReteIVA</option>
@@ -197,7 +197,7 @@ export function GestionRetenciones({ retenciones: inicial }: Props) {
             </div>
             <div>
               <label className={labelCls}>Aplica a *</label>
-              <select value={form.aplica_a} onChange={e => setForm(f => ({ ...f, aplica_a: e.target.value }))} className={inputCls}>
+              <select aria-label="Aplica a" value={form.aplica_a} onChange={e => setForm(f => ({ ...f, aplica_a: e.target.value }))} className={inputCls}>
                 <option value="compras">Compras</option>
                 <option value="ventas">Ventas</option>
                 <option value="ambos">Ambos</option>
@@ -206,20 +206,20 @@ export function GestionRetenciones({ retenciones: inicial }: Props) {
           </div>
           <div>
             <label className={labelCls}>Nombre *</label>
-            <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inputCls} placeholder="Ej: Retefuente Compras 2.5%" />
+            <input aria-label="Nombre" value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} className={inputCls} placeholder="Ej: Retefuente Compras 2.5%" />
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className={labelCls}>Porcentaje (%) *</label>
-              <input type="number" min="0" step="0.01" value={form.porcentaje} onChange={e => setForm(f => ({ ...f, porcentaje: e.target.value }))} className={inputCls} placeholder="2.5" />
+              <input aria-label="Porcentaje (%)" type="number" min="0" step="0.01" value={form.porcentaje} onChange={e => setForm(f => ({ ...f, porcentaje: e.target.value }))} className={inputCls} placeholder="2.5" />
             </div>
             <div>
               <label className={labelCls}>Base mínima ($)</label>
-              <input type="number" min="0" step="1000" value={form.base_minima} onChange={e => setForm(f => ({ ...f, base_minima: e.target.value }))} className={inputCls} placeholder="0" />
+              <input aria-label="Base mínima ($)" type="number" min="0" step="1000" value={form.base_minima} onChange={e => setForm(f => ({ ...f, base_minima: e.target.value }))} className={inputCls} placeholder="0" />
             </div>
             <div>
               <label className={labelCls}>Base UVT</label>
-              <input type="number" min="0" step="1" value={form.base_uvt} onChange={e => setForm(f => ({ ...f, base_uvt: e.target.value }))} className={inputCls} placeholder="27" />
+              <input aria-label="Base UVT" type="number" min="0" step="1" value={form.base_uvt} onChange={e => setForm(f => ({ ...f, base_uvt: e.target.value }))} className={inputCls} placeholder="27" />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">

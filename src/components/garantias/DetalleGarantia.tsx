@@ -79,7 +79,7 @@ export function DetalleGarantia({ garantia }: Props) {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold text-gray-900">Garantía #{garantia.numero}</h2>
+                <h1 className="text-lg font-bold text-gray-900">Garantía #{garantia.numero}</h1>
                 <Badge variant={BADGE_ESTADO[garantia.estado] ?? 'outline'}>{garantia.estado}</Badge>
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORIDAD_COLOR[garantia.prioridad] ?? 'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500'}`}>
                   {garantia.prioridad}
@@ -152,14 +152,14 @@ export function DetalleGarantia({ garantia }: Props) {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">N° RMA</label>
-            <input type="text" value={rma} onChange={e => setRma(e.target.value)}
+            <input aria-label="N° RMA" type="text" value={rma} onChange={e => setRma(e.target.value)}
               placeholder="RMA-001"
               disabled={!activo}
               className="h-9 w-48 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-50 disabled:text-gray-400" />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Descripción / Resolución</label>
-            <textarea value={notas} onChange={e => setNotas(e.target.value)} rows={4}
+            <textarea aria-label="Descripción / Resolución" value={notas} onChange={e => setNotas(e.target.value)} rows={4}
               disabled={!activo}
               placeholder="Describe el defecto, acciones tomadas, solución aplicada..."
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-gray-50 disabled:text-gray-400" />

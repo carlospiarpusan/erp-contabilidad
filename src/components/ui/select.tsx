@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { cn } from '@/utils/cn'
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
@@ -8,10 +9,15 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   options: { value: string; label: string }[]
 }
 
-export function Select({ label, error, options, className, ...props }: SelectProps) {
+export function Select({ label, error, options, className, id, ...props }: SelectProps) {
+  const generatedId = useId()
+  const selectId = id ?? generatedId
+  const errorId = `${selectId}-error`
+  const describedBy = [props['aria-describedby'], error ? errorId : undefined].filter(Boolean).join(' ') || undefined
+
   return (
     <div className="flex flex-col gap-1">
-      {label && <label className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>}
+      {label && <label htmlFor={selectId} className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>}
       <select
         className={cn(
           'flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm',
@@ -22,13 +28,16 @@ export function Select({ label, error, options, className, ...props }: SelectPro
           className
         )}
         {...props}
+        id={selectId}
+        aria-invalid={error ? true : props['aria-invalid']}
+        aria-describedby={describedBy}
       >
         <option value="">— Seleccionar —</option>
         {options.map(o => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
-      {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
+      {error && <p id={errorId} className="text-xs text-red-500 dark:text-red-400">{error}</p>}
     </div>
   )
 }

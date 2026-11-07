@@ -80,7 +80,7 @@ export function DetalleRemision({ remision, formasPago }: Props) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-gray-900">{remision.prefijo}{remision.numero}</h2>
+                <h1 className="text-lg font-bold text-gray-900">{remision.prefijo}{remision.numero}</h1>
                 <Badge variant={BADGE_ESTADO[remision.estado] ?? 'outline'}>{remision.estado}</Badge>
               </div>
               <p className="text-sm text-gray-500">Fecha: {formatFecha(remision.fecha)}</p>
@@ -192,14 +192,14 @@ export function DetalleRemision({ remision, formasPago }: Props) {
           <p className="text-sm text-gray-600">Selecciona forma de pago y vencimiento para crear la factura:</p>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Forma de pago *</label>
-            <select value={fpId} onChange={e => setFpId(e.target.value)}
+            <select aria-label="Forma de pago" value={fpId} onChange={e => setFpId(e.target.value)}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
               {formasPago.map(fp => <option key={fp.id} value={fp.id}>{fp.descripcion}</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Fecha vencimiento</label>
-            <input type="date" value={vencimiento} onChange={e => setVenc(e.target.value)}
+            <input aria-label="Fecha vencimiento" type="date" value={vencimiento} onChange={e => setVenc(e.target.value)}
               className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500" />
           </div>
           <div className="flex gap-2 justify-end pt-2">

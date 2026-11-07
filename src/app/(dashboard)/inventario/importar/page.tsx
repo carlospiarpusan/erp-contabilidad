@@ -19,7 +19,7 @@ export default async function ImportarInventarioPage() {
           <Boxes className="h-5 w-5 text-white" />
         </div>
         <div className="flex-1">
-          <h2 className="text-xl font-bold text-gray-900">Importar inventario</h2>
+          <h1 className="text-xl font-bold text-gray-900">Importar inventario</h1>
           <p className="text-sm text-gray-500">Carga existencias, stock mínimo y costo sobre productos existentes</p>
         </div>
         <Link href="/productos" className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50">

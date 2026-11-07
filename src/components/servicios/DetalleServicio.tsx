@@ -112,7 +112,7 @@ export function DetalleServicio({ servicio }: Props) {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold text-gray-900">Orden #{servicio.numero}</h2>
+                <h1 className="text-lg font-bold text-gray-900">Orden #{servicio.numero}</h1>
                 <Badge variant={BADGE_ESTADO[servicio.estado] ?? 'outline'}>{servicio.estado.replace('_', ' ')}</Badge>
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${PRIORIDAD_COLOR[servicio.prioridad] ?? 'bg-gray-100 text-gray-600 dark:text-gray-400 dark:text-gray-500'}`}>
                   {servicio.prioridad}
@@ -186,19 +186,19 @@ export function DetalleServicio({ servicio }: Props) {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Diagnóstico</label>
-            <textarea value={notas.diagnostico} onChange={e => setNotas(p => ({ ...p, diagnostico: e.target.value }))}
+            <textarea aria-label="Diagnóstico" value={notas.diagnostico} onChange={e => setNotas(p => ({ ...p, diagnostico: e.target.value }))}
               rows={2} disabled={!activo} placeholder="Diagnóstico del técnico..."
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:bg-gray-50 disabled:text-gray-400" />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Solución aplicada</label>
-            <textarea value={notas.solucion} onChange={e => setNotas(p => ({ ...p, solucion: e.target.value }))}
+            <textarea aria-label="Solución aplicada" value={notas.solucion} onChange={e => setNotas(p => ({ ...p, solucion: e.target.value }))}
               rows={2} disabled={!activo} placeholder="Descripción de la solución..."
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:bg-gray-50 disabled:text-gray-400" />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Observaciones adicionales</label>
-            <textarea value={notas.observaciones} onChange={e => setNotas(p => ({ ...p, observaciones: e.target.value }))}
+            <textarea aria-label="Observaciones adicionales" value={notas.observaciones} onChange={e => setNotas(p => ({ ...p, observaciones: e.target.value }))}
               rows={2} disabled={!activo} placeholder="Piezas reemplazadas, accesorios entregados..."
               className="rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:bg-gray-50 disabled:text-gray-400" />
           </div>

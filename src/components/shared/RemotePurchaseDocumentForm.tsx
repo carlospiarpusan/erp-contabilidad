@@ -244,25 +244,25 @@ export function RemotePurchaseDocumentForm({
           {mode === 'compra' && (
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">N° Factura proveedor *</label>
-              <input value={numeroExterno} onChange={(event) => setNumeroExterno(event.target.value)} className={inputClass} required />
+              <input aria-label="N° Factura proveedor" value={numeroExterno} onChange={(event) => setNumeroExterno(event.target.value)} className={inputClass} required />
             </div>
           )}
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Fecha</label>
-            <input type="date" value={fecha} onChange={(event) => setFecha(event.target.value)} className={inputClass} />
+            <input aria-label="Fecha" type="date" value={fecha} onChange={(event) => setFecha(event.target.value)} className={inputClass} />
           </div>
 
           {mode === 'orden' && (
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Entrega estimada</label>
-              <input type="date" value={vencimiento} onChange={(event) => setVencimiento(event.target.value)} className={inputClass} />
+              <input aria-label="Entrega estimada" type="date" value={vencimiento} onChange={(event) => setVencimiento(event.target.value)} className={inputClass} />
             </div>
           )}
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Bodega *</label>
-            <select value={bodegaId} onChange={(event) => setBodegaId(event.target.value)} required className={inputClass}>
+            <select aria-label="Bodega" value={bodegaId} onChange={(event) => setBodegaId(event.target.value)} required className={inputClass}>
               {bodegas.map((bodega) => (
                 <option key={bodega.id} value={bodega.id}>{bodega.nombre}</option>
               ))}
@@ -271,7 +271,7 @@ export function RemotePurchaseDocumentForm({
 
           <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
             <label className="text-sm font-medium text-gray-700">Observaciones</label>
-            <textarea
+            <textarea aria-label="Observaciones"
               value={observaciones}
               onChange={(event) => setObservaciones(event.target.value)}
               rows={2}
