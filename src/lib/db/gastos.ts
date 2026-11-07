@@ -3,6 +3,7 @@ import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
 import { assertDocumentoCancelacionPermitida } from '@/lib/db/documentos-contables'
 import { getTodayInAppTimeZone } from '@/lib/utils/dates'
+import { sanitizeSearchTerm } from '@/lib/utils/search'
 
 function isMissingRpcSignature(error: unknown) {
   if (!error || typeof error !== 'object') return false
@@ -17,7 +18,10 @@ export async function getAcreedores(params?: { busqueda?: string; activo?: boole
   const supabase = await createClient()
   let q = supabase.from('acreedores').select('*', { count: 'exact' }).order('razon_social')
   if (params?.activo !== undefined) q = q.eq('activo', params.activo)
-  if (params?.busqueda) q = q.ilike('razon_social', `%${params.busqueda}%`)
+  if (params?.busqueda) {
+    const term = sanitizeSearchTerm(params.busqueda)
+    if (term) q = q.ilike('razon_social', `%${term}%`)
+  }
   const { data, count, error } = await q
   if (error) throw error
   return { acreedores: data ?? [], total: count ?? 0 }
@@ -123,7 +127,10 @@ export async function getGastos(params?: {
     .range(offset, offset + limit - 1)
   if (desde) q = q.gte('fecha', desde)
   if (hasta) q = q.lte('fecha', hasta)
-  if (busqueda) q = q.ilike('observaciones', `%${busqueda}%`)
+  if (busqueda) {
+    const term = sanitizeSearchTerm(busqueda)
+    if (term) q = q.ilike('observaciones', `%${term}%`)
+  }
   const { data, count, error } = await q
   if (error) throw error
   return { gastos: data ?? [], total: count ?? 0 }

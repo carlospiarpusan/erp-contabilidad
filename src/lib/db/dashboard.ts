@@ -112,7 +112,7 @@ async function getKPIsDashboardFallback(): Promise<DashboardKPIs> {
 
 async function getResumenMensualFallback(anio?: number): Promise<DashboardResumenMes[]> {
   const supabase = await createClient()
-  const currentYear = anio ?? new Date().getFullYear()
+  const currentYear = anio ?? mesActual().anio
   const desde = `${currentYear}-01-01`
   const hasta = `${currentYear}-12-31`
 
@@ -215,7 +215,7 @@ export async function getKPIsDashboard(): Promise<DashboardKPIs> {
 
 export async function getResumenMensual(anio?: number): Promise<DashboardResumenMes[]> {
   const supabase = await createClient()
-  const currentYear = anio ?? new Date().getFullYear()
+  const currentYear = anio ?? mesActual().anio
   const { data, error } = await supabase.rpc('secure_get_resumen_mensual', { p_anio: currentYear })
 
   if (error) {

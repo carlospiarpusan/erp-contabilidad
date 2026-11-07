@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getSession, type UserSession } from '@/lib/auth/session'
 import { calcularFechaPagoSistecredito, isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
-import { todayLocalISODate } from '@/utils/cn'
+import { todayLocalISODate, parseFecha, addDaysLocalISODate } from '@/utils/cn'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -418,7 +418,7 @@ export async function getInformeFacturas(params: {
   desde?: string; hasta?: string; estado?: string; cliente_id?: string
 }) {
   const hoy = todayLocalISODate()
-  const desde = params.desde || `${new Date().getFullYear()}-01-01`
+  const desde = params.desde || `${hoy.slice(0, 4)}-01-01`
   const hasta = params.hasta || hoy
   const estado = params.estado || ''
   const cliente_id = params.cliente_id || ''
@@ -460,7 +460,7 @@ export async function getInformeFacturas(params: {
 
 export async function getInformeVentasPorMedioPago(params?: { desde?: string; hasta?: string; forma_pago_id?: string }) {
   const hoy = todayLocalISODate()
-  const inicioMes = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`
+  const inicioMes = `${hoy.slice(0, 7)}-01`
   const desde = params?.desde || inicioMes
   const hasta = params?.hasta || hoy
   const forma_pago_id = params?.forma_pago_id || ''
@@ -562,7 +562,7 @@ export async function getInformeVentasPorMedioPago(params?: { desde?: string; ha
 
 export async function getInformeCartera() {
   return withReportCache('informe-cartera', {}, async ({ supabase, session }) => {
-    const hoy = new Date()
+    const hoy = parseFecha(todayLocalISODate())
 
     const documentos = await fetchAllRows<any>(async (from, to) => {
       const { data, error } = await supabase
@@ -649,7 +649,7 @@ export async function getInformeCartera() {
 
 export async function getInformeClientes(params?: { desde?: string; hasta?: string }) {
   const hoy  = todayLocalISODate()
-  const desde = params?.desde || `${new Date().getFullYear()}-01-01`
+  const desde = params?.desde || `${hoy.slice(0, 4)}-01-01`
   const hasta  = params?.hasta  || hoy
 
   return withReportCache('informe-clientes', { desde, hasta }, async ({ supabase, session }) => {
@@ -749,7 +749,7 @@ export async function getInformeArticulos(params?: { familia_id?: string; con_st
 // ── Informe Balances (Ventas vs Compras vs Gastos) ────────────────────────────
 
 export async function getInformeBalances(params?: { anio?: number }) {
-  const anio  = params?.anio ?? new Date().getFullYear()
+  const anio  = params?.anio ?? Number(todayLocalISODate().slice(0, 4))
   const desde = `${anio}-01-01`
   const hasta  = `${anio}-12-31`
 
@@ -1201,19 +1201,15 @@ export async function getSugeridoCompra(params?: {
     max_items,
     incluir_sin_movimiento,
   }, async ({ supabase, session }) => {
-    const hoy = new Date()
-    const hasta = hoy.toISOString().slice(0, 10)
+    const hasta = todayLocalISODate()
+    const desde = addDaysLocalISODate(-ventana_dias)
 
-    const fechaDesde = new Date(hoy)
-    fechaDesde.setDate(fechaDesde.getDate() - ventana_dias)
-    const desde = fechaDesde.toISOString().slice(0, 10)
-
-    const anioActual = hoy.getFullYear()
-    const mesActual = hoy.getMonth() + 1
-    const mesActualStr = String(mesActual).padStart(2, '0')
-    const inicioMesActual = `${anioActual}-${mesActualStr}-01`
+    const anioActual = Number(hasta.slice(0, 4))
+    const mesActual = Number(hasta.slice(5, 7))
+    const mesActualStr = hasta.slice(5, 7)
+    const inicioMesActual = `${hasta.slice(0, 7)}-01`
     const diasMesActual = new Date(anioActual, mesActual, 0).getDate()
-    const diaActualMes = Math.max(1, hoy.getDate())
+    const diaActualMes = Math.max(1, Number(hasta.slice(8, 10)))
     const aniosAnteriores = [1, 2, 3].map((d) => anioActual - d)
 
     const rangosMismoMesHistorico = aniosAnteriores.map((anio) => ({

@@ -1,4 +1,5 @@
 /** Selects y utilidades compartidas entre documentos de venta (pedidos, remisiones, cotizaciones) */
+import { sanitizeSearchTerm } from '@/lib/utils/search'
 
 export const SELECT_DOC_HEADER = `
   id, numero, prefijo, fecha, fecha_vencimiento, estado, subtotal, total_iva, total_descuento, total, observaciones, created_at,
@@ -24,6 +25,9 @@ export function applyDateFilters<T>(query: T, params: DateRangeFilters) {
   if (params.estado) q = q.eq('estado', params.estado)
   if (params.desde) q = q.gte('fecha', params.desde)
   if (params.hasta) q = q.lte('fecha', params.hasta)
-  if (params.busqueda) q = q.or(`numero::text.ilike.%${params.busqueda}%`)
+  if (params.busqueda) {
+    const term = sanitizeSearchTerm(params.busqueda)
+    if (term) q = q.or(`numero::text.ilike.%${term}%`)
+  }
   return q as T
 }

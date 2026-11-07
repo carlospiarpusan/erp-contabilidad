@@ -3,6 +3,7 @@ import type { Cliente, GrupoCliente } from '@/types'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { getEmpresaId } from '@/lib/db/maestros'
 import { isSistecreditoFormaPago } from '@/lib/utils/formas-pago'
+import { sanitizeSearchTerm } from '@/lib/utils/search'
 
 const CLIENTES_SELECT_FULL = '*, grupo:grupos_clientes(id, nombre), colaborador:colaboradores(id, nombre)'
 const CLIENTES_SELECT_SELECTOR = 'id, razon_social, numero_documento, email, telefono, activo'
@@ -35,12 +36,15 @@ export async function getClientes(params?: GetClientesParams) {
     if (activo !== undefined) query = query.eq('activo', activo)
     if (grupo_id) query = query.eq('grupo_id', grupo_id)
     if (tipo_documento) query = query.eq('tipo_documento', tipo_documento)
-    if (ciudad) query = query.ilike('ciudad', `%${ciudad}%`)
+    if (ciudad) query = query.ilike('ciudad', `%${sanitizeSearchTerm(ciudad)}%`)
     if (limite_credito) query = query.gt('limite_credito', 0)
     if (busqueda) {
-      query = query.or(
-        `razon_social.ilike.%${busqueda}%,numero_documento.ilike.%${busqueda}%,email.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%`
-      )
+      const term = sanitizeSearchTerm(busqueda)
+      if (term) {
+        query = query.or(
+          `razon_social.ilike.%${term}%,numero_documento.ilike.%${term}%,email.ilike.%${term}%,telefono.ilike.%${term}%`
+        )
+      }
     }
     return query
   }

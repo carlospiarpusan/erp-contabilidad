@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { SELECT_DOC_HEADER, SELECT_DOC_LINEA, applyDateFilters } from './shared'
+import { sanitizeSearchTerm } from '@/lib/utils/search'
 
 // ── Cotizaciones ─────────────────────────────────────────────────────────────
 
@@ -150,7 +151,10 @@ export async function getOrdenesCompra(params?: {
   if (estado) q = q.eq('estado', estado)
   if (desde) q = q.gte('fecha', desde)
   if (hasta) q = q.lte('fecha', hasta)
-  if (busqueda) q = q.or(`numero::text.ilike.%${busqueda}%`)
+  if (busqueda) {
+    const term = sanitizeSearchTerm(busqueda)
+    if (term) q = q.or(`numero::text.ilike.%${term}%`)
+  }
 
   const { data, count, error } = await q
   if (error) throw error
