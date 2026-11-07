@@ -4,6 +4,7 @@ import { getEjercicioActivo } from '@/lib/db/maestros'
 import { getSession, puedeAcceder } from '@/lib/auth/session'
 import { createServiceClient } from '@/lib/supabase/service'
 import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
+import { getErrorStatus } from '@/lib/utils/errors'
 import { buildDescripcionConCodigo } from '@/lib/import/factura-electronica-shared'
 
 type LineaConfirmada = {
@@ -175,13 +176,6 @@ function isValidDateRange(fecha: string, inicio: string, fin: string) {
   return fecha >= inicio && fecha <= fin
 }
 
-function getErrorStatus(error: unknown) {
-  if (typeof error === 'object' && error !== null && 'code' in error) {
-    const code = String((error as { code?: string }).code ?? '')
-    if (code === 'P0001' || code.startsWith('23')) return 400
-  }
-  return 500
-}
 
 function buildObservaciones(base: string | undefined, fechaOriginal: string | undefined, numeroExterno: string) {
   const lines = [normalizeText(base)]

@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProductosSinRotacion, getStockBajo } from '@/lib/db/productos'
-import { todayLocalISODate } from '@/utils/cn'
 import { getTodayInAppTimeZone } from '@/lib/utils/dates'
 
 export interface DashboardKPIs {
@@ -287,7 +286,7 @@ export async function getAlertasSinRotacion(limit = 20): Promise<DashboardAlerta
 
 export async function getFacturasVencidas(limit = 5) {
   const supabase = await createClient()
-  const hoy = todayLocalISODate()
+  const hoy = getTodayInAppTimeZone()
   const { data } = await supabase
     .from('documentos')
     .select('id, numero, prefijo, total, fecha_vencimiento, cliente:cliente_id(razon_social)')

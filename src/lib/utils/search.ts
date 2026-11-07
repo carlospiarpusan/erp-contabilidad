@@ -3,7 +3,7 @@ export function normalizeSearchTerm(value?: string | null) {
 }
 
 export function sanitizeSearchTerm(value?: string | null) {
-  return normalizeSearchTerm(value).replace(/[%_(),]/g, ' ').replace(/\s+/g, ' ').trim()
+  return normalizeSearchTerm(value).replace(/[%_(),\\'"]/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 export function parseDocumentSearchTerm(value?: string | null) {

@@ -2,13 +2,13 @@ export const dynamic = 'force-dynamic'
 
 import { createClient } from '@/lib/supabase/server'
 import { getEmpresaId } from '@/lib/db/maestros'
-import { formatCOP, formatFecha , cardCls , cn, parseFecha } from '@/utils/cn'
+import { formatCOP, formatFecha , cardCls , cn, parseFecha, todayLocalISODate } from '@/utils/cn'
 import Link from 'next/link'
 import { ChevronLeft, AlertTriangle } from 'lucide-react'
 
 async function getCuentasPorPagar() {
   const [supabase, empresa_id] = await Promise.all([createClient(), getEmpresaId()])
-  const hoy = new Date()
+  const hoy = parseFecha(todayLocalISODate())
 
   const { data } = await supabase
     .from('documentos')

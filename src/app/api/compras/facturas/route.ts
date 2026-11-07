@@ -1,4 +1,4 @@
-import { toErrorMsg } from '@/lib/utils/errors'
+import { getErrorStatus, toErrorMsg } from '@/lib/utils/errors'
 import { NextRequest, NextResponse } from 'next/server'
 import { getCompras, createCompra } from '@/lib/db/compras'
 import { getEmpresaId, getEjercicioActivo } from '@/lib/db/maestros'
@@ -6,13 +6,6 @@ import { getSession } from '@/lib/auth/session'
 import { revalidateInventoryDependentViews } from '@/lib/cache/revalidate-inventory'
 import { todayLocalISODate } from '@/utils/cn'
 
-function getErrorStatus(error: unknown) {
-  if (typeof error === 'object' && error !== null && 'code' in error) {
-    const code = String((error as { code?: string }).code ?? '')
-    if (code === 'P0001' || code.startsWith('23')) return 400
-  }
-  return 500
-}
 
 export async function GET(req: NextRequest) {
   try {

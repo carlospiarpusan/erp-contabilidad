@@ -33,7 +33,6 @@ interface POSFacturaMobileProps {
 }
 
 const CONSUMIDOR_FINAL_DOCUMENTO = '222222222222'
-const hoy = todayLocalISODate()
 
 function isEfectivoFormaPago(formaPago?: FacturaFormaPago | null) {
   return (formaPago?.descripcion ?? '')
@@ -46,6 +45,7 @@ function isEfectivoFormaPago(formaPago?: FacturaFormaPago | null) {
 
 export function POSFacturaMobile({ impuestos, bodegas, formasPago, colaboradores }: POSFacturaMobileProps) {
   const router = useRouter()
+  const [hoy] = useState(() => todayLocalISODate())
   const [clienteId, setClienteId] = useState('')
   const [clienteLabel, setClienteLabel] = useState('')
   const [bodegaId, setBodegaId] = useState(getDefaultBodegaId(bodegas))
