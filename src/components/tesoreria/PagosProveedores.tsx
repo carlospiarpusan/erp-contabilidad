@@ -328,7 +328,7 @@ export function PagosProveedores({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Forma de pago *</label>
-              <select
+              <select aria-label="Forma de pago"
                 value={form.forma_pago_id}
                 onChange={(event) => setForm((current) => ({ ...current, forma_pago_id: event.target.value }))}
                 className={inputCls}
@@ -343,7 +343,7 @@ export function PagosProveedores({
             </div>
             <div>
               <label className={labelCls}>Fecha del pago</label>
-              <input
+              <input aria-label="Fecha del pago"
                 type="date"
                 value={form.fecha}
                 onChange={(event) => setForm((current) => ({ ...current, fecha: event.target.value }))}
@@ -354,7 +354,7 @@ export function PagosProveedores({
 
           <div>
             <label className={labelCls}>Monto a pagar *</label>
-            <input
+            <input aria-label="Monto a pagar"
               type="number"
               min="0"
               step="0.01"
@@ -380,7 +380,7 @@ export function PagosProveedores({
 
           <div>
             <label className={labelCls}>Observaciones</label>
-            <textarea
+            <textarea aria-label="Observaciones"
               value={form.observaciones}
               onChange={(event) => setForm((current) => ({ ...current, observaciones: event.target.value }))}
               className={inputCls}

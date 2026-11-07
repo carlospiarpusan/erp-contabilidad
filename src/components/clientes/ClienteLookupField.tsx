@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import { RemoteLookup } from '@/components/ui/remote-lookup'
 import {
   ClienteQuickCreateButton,
@@ -28,10 +29,11 @@ export function ClienteLookupField({
   queryParams = { activo: true },
   onChange,
 }: ClienteLookupFieldProps) {
+  const inputId = useId()
   return (
     <div className={className}>
       <div className="mb-1 flex items-center justify-between gap-2">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>
+        <label htmlFor={inputId} className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>
         <ClienteQuickCreateButton
           onCreated={(cliente) => onChange(cliente)}
           triggerLabel="Nuevo cliente"
@@ -44,6 +46,7 @@ export function ClienteLookupField({
       <RemoteLookup<ClienteLookupOption>
         endpoint="/api/clientes"
         responseKey="clientes"
+        id={inputId}
         value={value}
         initialLabel={initialLabel}
         placeholder={placeholder}

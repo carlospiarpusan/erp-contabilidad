@@ -308,6 +308,7 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-4">
+      <h1 className="sr-only">Punto de venta</h1>
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -316,11 +317,12 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
             value={busqueda}
             onChange={(event) => setBusqueda(event.target.value)}
             placeholder="Buscar por codigo o nombre..."
+            aria-label="Buscar producto por código o nombre"
             autoFocus
             className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
           />
           {busqueda && (
-            <button type="button" onClick={() => setBusqueda('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+            <button type="button" onClick={() => setBusqueda('')} aria-label="Limpiar búsqueda" className="absolute right-3 top-1/2 -translate-y-1/2">
               <X className="h-4 w-4 text-gray-400" />
             </button>
           )}
@@ -355,12 +357,14 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
             <button
               type="button"
               onClick={() => setShowClientes((prev) => !prev)}
+              aria-expanded={showClientes}
+              aria-label={`Cliente: ${cliente.razon_social}. Cambiar cliente`}
               className="flex-1 truncate text-left text-sm font-medium text-gray-700 dark:text-gray-200"
             >
               {cliente.razon_social}
             </button>
             {cliente.id !== cfReal.id && (
-              <button type="button" onClick={() => setCliente(cfReal)}>
+              <button type="button" onClick={() => setCliente(cfReal)} aria-label="Volver a consumidor final">
                 <X className="h-3.5 w-3.5 text-gray-400" />
               </button>
             )}
@@ -372,7 +376,8 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
                   value={busqCliente}
                   onChange={(event) => setBusqCliente(event.target.value)}
                   placeholder="Buscar cliente..."
-                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none dark:border-gray-600 dark:bg-gray-900"
+                  aria-label="Buscar cliente"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
                   autoFocus
                 />
               </div>
@@ -424,17 +429,17 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
                     <p className="line-clamp-2 text-sm font-medium text-gray-800 dark:text-gray-100">{linea.descripcion}</p>
                     <p className="text-xs font-mono text-gray-400">{linea.codigo}</p>
                   </div>
-                  <button type="button" onClick={() => eliminar(idx)}>
+                  <button type="button" onClick={() => eliminar(idx)} aria-label={`Quitar ${linea.descripcion}`}>
                     <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => cambiarCantidad(idx, -1)} className="rounded-lg bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-800">
+                  <button type="button" onClick={() => cambiarCantidad(idx, -1)} aria-label={`Restar una unidad de ${linea.descripcion}`} className="rounded-lg bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-800">
                     <Minus className="h-3.5 w-3.5" />
                   </button>
-                  <span className="min-w-8 text-center text-sm font-semibold">{linea.cantidad}</span>
-                  <button type="button" onClick={() => cambiarCantidad(idx, 1)} className="rounded-lg bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-800">
+                  <span className="min-w-8 text-center text-sm font-semibold" aria-live="polite">{linea.cantidad}</span>
+                  <button type="button" onClick={() => cambiarCantidad(idx, 1)} aria-label={`Sumar una unidad de ${linea.descripcion}`} className="rounded-lg bg-gray-100 p-1.5 hover:bg-gray-200 dark:bg-gray-800">
                     <Plus className="h-3.5 w-3.5" />
                   </button>
 
@@ -442,7 +447,8 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
                     type="number"
                     value={linea.precio_unitario}
                     onChange={(event) => cambiarPrecio(idx, event.target.value)}
-                    className="ml-auto w-24 rounded-lg border border-gray-200 px-2 py-1 text-right text-sm focus:outline-none dark:border-gray-700 dark:bg-gray-800"
+                    aria-label={`Precio unitario de ${linea.descripcion}`}
+                    className="ml-auto w-24 rounded-lg border border-gray-200 px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
                   />
                 </div>
 
@@ -457,11 +463,12 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
         <div className="space-y-3 border-t border-gray-100 p-4 dark:border-gray-800">
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Bodega</span>
+              <label htmlFor="pos-bodega" className="text-gray-500">Bodega</label>
               <select
+                id="pos-bodega"
                 value={bodegaId}
                 onChange={(event) => setBodegaId(event.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm focus:outline-none dark:border-gray-700 dark:bg-gray-800"
+                className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
               >
                 {bodegas.map((bodega) => (
                   <option key={bodega.id} value={bodega.id}>
@@ -471,11 +478,12 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
               </select>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-500">Forma de pago</span>
+              <label htmlFor="pos-forma-pago" className="text-gray-500">Forma de pago</label>
               <select
+                id="pos-forma-pago"
                 value={formaPagoId}
                 onChange={(event) => setFormaPagoId(event.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm focus:outline-none dark:border-gray-700 dark:bg-gray-800"
+                className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
               >
                 {formasPago.map((formaPago) => (
                   <option key={formaPago.id} value={formaPago.id}>
@@ -498,15 +506,16 @@ function PantallaPOSDesktop({ bodegas, formasPago }: Pick<Props, 'bodegas' | 'fo
           </div>
 
           <div className="space-y-2">
-            <label className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-gray-500">
+            <label htmlFor="pos-efectivo" className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-gray-500">
               <Calculator className="h-3.5 w-3.5" /> Efectivo recibido
             </label>
             <input
+              id="pos-efectivo"
               type="number"
               value={efectivoRecibido}
               onChange={(event) => setEfectivoRecibido(event.target.value)}
               placeholder="0"
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-right text-sm focus:outline-none dark:border-gray-700 dark:bg-gray-800"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
             />
             {efectivoRecibido && (
               <p className="text-right text-sm text-green-600">

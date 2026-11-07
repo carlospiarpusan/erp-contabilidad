@@ -63,7 +63,7 @@ export function FormRecibo({ documentoId, totalFactura, totalPagado, formasPago,
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Forma de pago</label>
-        <select
+        <select aria-label="Forma de pago"
           value={forma_pago_id}
           onChange={e => setForma(e.target.value)}
           className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -74,7 +74,7 @@ export function FormRecibo({ documentoId, totalFactura, totalPagado, formasPago,
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Valor recibido</label>
-        <input
+        <input aria-label="Valor recibido"
           type="number"
           min="1"
           step="1"
@@ -87,7 +87,7 @@ export function FormRecibo({ documentoId, totalFactura, totalPagado, formasPago,
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Fecha</label>
-        <input
+        <input aria-label="Fecha"
           type="date"
           value={fecha}
           onChange={e => setFecha(e.target.value)}
@@ -98,7 +98,7 @@ export function FormRecibo({ documentoId, totalFactura, totalPagado, formasPago,
 
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Observaciones</label>
-        <input
+        <input aria-label="Observaciones"
           type="text"
           value={obs}
           onChange={e => setObs(e.target.value)}

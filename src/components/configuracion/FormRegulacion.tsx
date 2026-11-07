@@ -231,7 +231,7 @@ export function FormRegulacion({ config, uvts, jobs }: Props) {
               <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
                 Versión política de datos
               </label>
-              <input
+              <input aria-label="Versión política de datos"
                 className={inputCls}
                 value={form.politica_datos_version}
                 onChange={(e) => updateField('politica_datos_version', e.target.value)}
@@ -242,7 +242,7 @@ export function FormRegulacion({ config, uvts, jobs }: Props) {
               <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
                 Email contacto privacidad
               </label>
-              <input
+              <input aria-label="Email contacto privacidad"
                 className={inputCls}
                 type="email"
                 value={form.contacto_privacidad_email}
@@ -254,7 +254,7 @@ export function FormRegulacion({ config, uvts, jobs }: Props) {
               <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
                 URL política de datos
               </label>
-              <input
+              <input aria-label="URL política de datos"
                 className={inputCls}
                 value={form.politica_datos_url}
                 onChange={(e) => updateField('politica_datos_url', e.target.value)}
@@ -265,7 +265,7 @@ export function FormRegulacion({ config, uvts, jobs }: Props) {
               <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">
                 URL aviso de privacidad
               </label>
-              <input
+              <input aria-label="URL aviso de privacidad"
                 className={inputCls}
                 value={form.aviso_privacidad_url}
                 onChange={(e) => updateField('aviso_privacidad_url', e.target.value)}

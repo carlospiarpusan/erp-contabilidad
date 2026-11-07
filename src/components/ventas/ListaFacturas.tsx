@@ -129,7 +129,7 @@ export function ListaFacturas({ facturas, total, busqueda: busqInicial, estadoFi
         <div className="flex flex-wrap gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Estado</label>
-            <select
+            <select aria-label="Estado"
               value={estado}
               onChange={e => setEstado(e.target.value)}
               className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"

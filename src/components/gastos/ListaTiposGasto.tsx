@@ -105,11 +105,11 @@ export function ListaTiposGasto({ tipos: inicial }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Descripción *</label>
-            <input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} />
+            <input aria-label="Descripción" value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} />
           </div>
           <div>
             <label className={labelCls}>Valor estimado mensual</label>
-            <input type="number" min="0" step="1000" value={form.valor_estimado} onChange={e => setForm(f => ({ ...f, valor_estimado: Number(e.target.value) }))} className={inputCls} />
+            <input aria-label="Valor estimado mensual" type="number" min="0" step="1000" value={form.valor_estimado} onChange={e => setForm(f => ({ ...f, valor_estimado: Number(e.target.value) }))} className={inputCls} />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" size="sm" onClick={() => setModal(false)}>Cancelar</Button>

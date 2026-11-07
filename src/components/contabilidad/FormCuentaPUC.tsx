@@ -83,7 +83,7 @@ export function FormCuentaPUC({ inicial, cuentasPadre }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Código *</label>
-          <input
+          <input aria-label="Código"
             value={codigo}
             onChange={(e) => setCodigo(e.target.value)}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -93,7 +93,7 @@ export function FormCuentaPUC({ inicial, cuentasPadre }: Props) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Nivel *</label>
-          <input
+          <input aria-label="Nivel"
             type="number"
             min={1}
             max={5}
@@ -105,7 +105,7 @@ export function FormCuentaPUC({ inicial, cuentasPadre }: Props) {
         </div>
         <div className="md:col-span-2">
           <label className="mb-1 block text-xs font-medium text-gray-600">Descripción *</label>
-          <input
+          <input aria-label="Descripción"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -115,7 +115,7 @@ export function FormCuentaPUC({ inicial, cuentasPadre }: Props) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Tipo *</label>
-          <select
+          <select aria-label="Tipo"
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -129,7 +129,7 @@ export function FormCuentaPUC({ inicial, cuentasPadre }: Props) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">Naturaleza *</label>
-          <select
+          <select aria-label="Naturaleza"
             value={naturaleza}
             onChange={(e) => setNaturaleza(e.target.value as 'debito' | 'credito')}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -140,7 +140,7 @@ export function FormCuentaPUC({ inicial, cuentasPadre }: Props) {
         </div>
         <div className="md:col-span-2">
           <label className="mb-1 block text-xs font-medium text-gray-600">Cuenta padre</label>
-          <select
+          <select aria-label="Cuenta padre"
             value={cuentaPadreId}
             onChange={(e) => setCuentaPadreId(e.target.value)}
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

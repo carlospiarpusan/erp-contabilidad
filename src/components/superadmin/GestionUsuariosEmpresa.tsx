@@ -105,7 +105,7 @@ export function GestionUsuariosEmpresa({
           ))}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Rol *</label>
-            <select value={form.rol_id} onChange={set('rol_id')} required
+            <select aria-label="Rol" value={form.rol_id} onChange={set('rol_id')} required
               className="h-8 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 text-sm">
               <option value="">— Seleccionar —</option>
               {roles.filter(r => r.nombre !== 'superadmin').map(r => (

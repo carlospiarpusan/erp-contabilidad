@@ -238,7 +238,7 @@ export function GruposClientes({ grupos: init }: Props) {
 
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">Descripción (opcional)</label>
-            <textarea
+            <textarea aria-label="Descripción (opcional)"
               value={form.descripcion}
               onChange={f('descripcion')}
               rows={2}

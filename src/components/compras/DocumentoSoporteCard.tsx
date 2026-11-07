@@ -121,7 +121,7 @@ export function DocumentoSoporteCard({ documentoId, requerido, estadoDocumento, 
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Estado</label>
-            <select
+            <select aria-label="Estado"
               value={requerido ? soporte.estado : 'no_requerido'}
               onChange={(e) => updateField('estado', e.target.value as DocumentoSoporte['estado'])}
               disabled={!requerido}
@@ -136,7 +136,7 @@ export function DocumentoSoporteCard({ documentoId, requerido, estadoDocumento, 
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Proveedor tecnológico</label>
-            <input
+            <input aria-label="Proveedor tecnológico"
               value={soporte.proveedor_tecnologico ?? ''}
               onChange={(e) => updateField('proveedor_tecnologico', e.target.value)}
               className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
@@ -145,7 +145,7 @@ export function DocumentoSoporteCard({ documentoId, requerido, estadoDocumento, 
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Número externo</label>
-            <input
+            <input aria-label="Número externo"
               value={soporte.numero_externo ?? ''}
               onChange={(e) => updateField('numero_externo', e.target.value)}
               className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
@@ -154,7 +154,7 @@ export function DocumentoSoporteCard({ documentoId, requerido, estadoDocumento, 
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Fecha de emisión</label>
-            <input
+            <input aria-label="Fecha de emisión"
               type="date"
               value={soporte.fecha_emision ?? ''}
               onChange={(e) => updateField('fecha_emision', e.target.value)}
@@ -163,7 +163,7 @@ export function DocumentoSoporteCard({ documentoId, requerido, estadoDocumento, 
           </div>
           <div className="md:col-span-2">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Adjunto asociado</label>
-            <select
+            <select aria-label="Adjunto asociado"
               value={selectedAdjunto ?? ''}
               onChange={(e) => updateField('archivo_adjunto_id', e.target.value || null)}
               className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"
@@ -178,7 +178,7 @@ export function DocumentoSoporteCard({ documentoId, requerido, estadoDocumento, 
           </div>
           <div className="md:col-span-2">
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Observaciones</label>
-            <textarea
+            <textarea aria-label="Observaciones"
               rows={3}
               value={soporte.observaciones ?? ''}
               onChange={(e) => updateField('observaciones', e.target.value)}

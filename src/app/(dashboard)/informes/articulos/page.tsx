@@ -46,7 +46,7 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
       <form className={cn('flex flex-wrap gap-3', cardCls, 'p-4')}>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Familia</label>
-          <select name="familia_id" defaultValue={sp.familia_id ?? ''}
+          <select aria-label="Familia" name="familia_id" defaultValue={sp.familia_id ?? ''}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Todas las familias</option>
             {familias.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
@@ -54,7 +54,7 @@ export default async function InformeArticulosPage({ searchParams }: PageProps) 
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Stock</label>
-          <select name="con_stock" defaultValue={conStock ? '1' : ''}
+          <select aria-label="Stock" name="con_stock" defaultValue={conStock ? '1' : ''}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Todos</option>
             <option value="1">Solo con stock</option>

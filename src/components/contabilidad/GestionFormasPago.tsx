@@ -142,12 +142,12 @@ export function GestionFormasPago({ formasPago: inicial, cuentas }: Props) {
         <div className="flex flex-col gap-4">
           <div>
             <label className={labelCls}>Descripción *</label>
-            <input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} />
+            <input aria-label="Descripción" value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))} className={inputCls} />
           </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Tipo</label>
-            <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inputCls}>
+            <select aria-label="Tipo" value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))} className={inputCls}>
                 <option value="contado">Contado</option>
                 <option value="credito">Crédito</option>
                 <option value="anticipo">Anticipo</option>
@@ -156,12 +156,12 @@ export function GestionFormasPago({ formasPago: inicial, cuentas }: Props) {
             </div>
             <div>
               <label className={labelCls}>Días vencimiento</label>
-              <input type="number" min="0" value={form.dias_vencimiento} onChange={e => setForm(f => ({ ...f, dias_vencimiento: Number(e.target.value) }))} className={inputCls} />
+              <input aria-label="Días vencimiento" type="number" min="0" value={form.dias_vencimiento} onChange={e => setForm(f => ({ ...f, dias_vencimiento: Number(e.target.value) }))} className={inputCls} />
             </div>
           </div>
           <div>
             <label className={labelCls}>Cuenta PUC</label>
-            <select value={form.cuenta_id} onChange={e => setForm(f => ({ ...f, cuenta_id: e.target.value }))} className={inputCls}>
+            <select aria-label="Cuenta PUC" value={form.cuenta_id} onChange={e => setForm(f => ({ ...f, cuenta_id: e.target.value }))} className={inputCls}>
               <option value="">— Sin cuenta específica —</option>
               {cuentas.map(c => (
                 <option key={c.id} value={c.id}>{c.codigo} — {c.descripcion}</option>

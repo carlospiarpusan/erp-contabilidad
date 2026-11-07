@@ -140,7 +140,7 @@ export function FormProducto({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Familia / Categoría</label>
-            <select
+            <select aria-label="Familia / Categoría"
               {...register('familia_id')}
               className={SELECT_CLS}
             >
@@ -150,7 +150,7 @@ export function FormProducto({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Fabricante / Marca</label>
-            <select
+            <select aria-label="Fabricante / Marca"
               {...register('fabricante_id')}
               className={SELECT_CLS}
             >
@@ -160,7 +160,7 @@ export function FormProducto({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-200">IVA</label>
-            <select
+            <select aria-label="IVA"
               {...register('impuesto_id')}
               className={SELECT_CLS}
             >
@@ -228,7 +228,7 @@ export function FormProducto({
               />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Bodega inicial</label>
-                <select
+                <select aria-label="Bodega inicial"
                   {...register('bodega_inicial_id')}
                   disabled={Number(inventarioInicial ?? 0) <= 0 || bodegas.length === 0}
                   className={`${SELECT_CLS} disabled:cursor-not-allowed disabled:bg-gray-100 dark:disabled:bg-gray-800/70 dark:disabled:text-gray-500`}
@@ -293,7 +293,7 @@ export function FormProducto({
               <div key={field.id} className="grid grid-cols-5 items-end gap-2 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900/80">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Talla</label>
-                  <select
+                  <select aria-label="Talla"
                     {...register(`variantes.${idx}.talla`)}
                     className={SELECT_SM_CLS}
                   >
@@ -303,7 +303,7 @@ export function FormProducto({
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Color</label>
-                  <select
+                  <select aria-label="Color"
                     {...register(`variantes.${idx}.color`)}
                     className={SELECT_SM_CLS}
                   >

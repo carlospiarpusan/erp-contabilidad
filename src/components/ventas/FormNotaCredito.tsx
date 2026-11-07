@@ -205,7 +205,7 @@ export function FormNotaCredito({ facturaInicial }: { facturaInicial: Factura | 
           {/* Motivo */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Motivo de la devolución *</label>
-            <textarea
+            <textarea aria-label="Motivo de la devolución"
               value={motivo}
               onChange={e => setMotivo(e.target.value)}
               required

@@ -105,7 +105,7 @@ export function FormEmpresa({ empresa }: Props) {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Régimen</label>
-            <select
+            <select aria-label="Régimen"
               value={form.regimen ?? ''}
               onChange={e => set('regimen', e.target.value)}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -116,7 +116,7 @@ export function FormEmpresa({ empresa }: Props) {
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Tipo de organización</label>
-            <select
+            <select aria-label="Tipo de organización"
               value={form.tipo_org ?? ''}
               onChange={e => set('tipo_org', e.target.value)}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

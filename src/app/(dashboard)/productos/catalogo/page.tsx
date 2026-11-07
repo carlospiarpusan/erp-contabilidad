@@ -42,12 +42,12 @@ export default async function CatalogoPage({ searchParams }: PageProps) {
       <form className={cn('flex flex-wrap gap-3', cardCls, 'p-4')}>
         <div className="flex-1 min-w-48 flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Buscar</label>
-          <input type="text" name="q" defaultValue={busqueda} placeholder="Código, descripción..."
+          <input aria-label="Buscar" type="text" name="q" defaultValue={busqueda} placeholder="Código, descripción..."
             className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Familia</label>
-          <select name="familia_id" defaultValue={familia_id ?? ''}
+          <select aria-label="Familia" name="familia_id" defaultValue={familia_id ?? ''}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Todas las familias</option>
             {familias.map(f => (

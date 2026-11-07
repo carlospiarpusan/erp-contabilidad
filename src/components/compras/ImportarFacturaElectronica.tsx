@@ -847,7 +847,7 @@ export function ImportarFacturaElectronica() {
                   <div className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3">
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-gray-500">Producto del sistema</label>
-                      <select
+                      <select aria-label="Producto del sistema"
                         value={mapeo.producto_id}
                         onChange={(e) => setMapeo(index, 'producto_id', e.target.value)}
                         className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -884,7 +884,7 @@ export function ImportarFacturaElectronica() {
                   <div className="grid grid-cols-1 gap-3 rounded-lg border border-gray-200 p-3 md:grid-cols-3">
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-gray-500">Codigo interno nuevo</label>
-                      <input
+                      <input aria-label="Codigo interno nuevo"
                         value={mapeo.nuevo_codigo}
                         onChange={(e) => setMapeo(index, 'nuevo_codigo', e.target.value.toUpperCase())}
                         className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -893,7 +893,7 @@ export function ImportarFacturaElectronica() {
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-gray-500">Descripcion</label>
-                      <input
+                      <input aria-label="Descripcion"
                         value={mapeo.nueva_descripcion}
                         onChange={(e) => setMapeo(index, 'nueva_descripcion', e.target.value)}
                         className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -901,7 +901,7 @@ export function ImportarFacturaElectronica() {
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs text-gray-500">Precio de venta</label>
-                      <input
+                      <input aria-label="Precio de venta"
                         type="number"
                         value={mapeo.nuevo_precio_venta}
                         onChange={(e) => setMapeo(index, 'nuevo_precio_venta', e.target.value)}

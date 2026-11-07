@@ -75,7 +75,7 @@ export function GestionPeriodosContables({ ejercicios, periodos }: Props) {
         <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Ejercicio</label>
-            <select
+            <select aria-label="Ejercicio"
               value={selectedEjercicio}
               onChange={(e) => setSelectedEjercicio(e.target.value)}
               className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm"

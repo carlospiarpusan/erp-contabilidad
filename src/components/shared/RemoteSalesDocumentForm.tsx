@@ -211,7 +211,7 @@ export function RemoteSalesDocumentForm({
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Bodega *</label>
-            <select value={bodegaId} onChange={(event) => setBodegaId(event.target.value)} required className={inputClass}>
+            <select aria-label="Bodega" value={bodegaId} onChange={(event) => setBodegaId(event.target.value)} required className={inputClass}>
               {bodegas.map((bodega) => (
                 <option key={bodega.id} value={bodega.id}>{bodega.nombre}</option>
               ))}
@@ -230,7 +230,7 @@ export function RemoteSalesDocumentForm({
 
           <div className="flex flex-col gap-1 sm:col-span-2 lg:col-span-3">
             <label className="text-sm font-medium text-gray-700">Observaciones</label>
-            <textarea
+            <textarea aria-label="Observaciones"
               value={observaciones}
               onChange={(event) => setObservaciones(event.target.value)}
               rows={2}

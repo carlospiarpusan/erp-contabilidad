@@ -35,7 +35,7 @@ export default async function InformeBalancesPage({ searchParams }: PageProps) {
       {/* Selector año */}
       <form className="flex gap-3 items-center">
         <label className="text-sm font-medium text-gray-600">Año:</label>
-        <select name="anio" defaultValue={anio}
+        <select aria-label="Año:" name="anio" defaultValue={anio}
           onChange={undefined}
           className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           {anios.map(a => <option key={a} value={a}>{a}</option>)}

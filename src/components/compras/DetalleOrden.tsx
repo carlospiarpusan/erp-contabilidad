@@ -65,7 +65,7 @@ export function DetalleOrden({ orden }: Props) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-gray-900">{orden.prefijo}{orden.numero}</h2>
+                <h1 className="text-lg font-bold text-gray-900">{orden.prefijo}{orden.numero}</h1>
                 <Badge variant={BADGE_ESTADO[orden.estado] ?? 'outline'}>{orden.estado}</Badge>
               </div>
               <p className="text-sm text-gray-500">

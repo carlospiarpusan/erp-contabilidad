@@ -48,6 +48,19 @@ export function Notificaciones() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const botonRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        botonRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
+
   const iconoPorTipo = (tipo: string) => {
     if (tipo === 'factura_vencida') return <FileWarning className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5" />
     if (tipo === 'cotizacion_vencida') return <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
@@ -57,7 +70,11 @@ export function Notificaciones() {
   return (
     <div ref={ref} className="relative">
       <button
+        ref={botonRef}
+        type="button"
         onClick={() => setOpen(p => !p)}
+        aria-expanded={open}
+        aria-label={alertas.length > 0 ? `Notificaciones (${alertas.length} pendientes)` : 'Notificaciones'}
         className="relative rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800/80"
       >
         <Bell className="h-5 w-5" />
@@ -81,7 +98,7 @@ export function Notificaciones() {
                 <Link href="/notificaciones" onClick={() => setOpen(false)} className="text-xs text-blue-600 hover:underline dark:text-blue-300">
                   Ver todas
                 </Link>
-                <button onClick={() => setOpen(false)}>
+                <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar notificaciones">
                   <X className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 </button>
               </div>

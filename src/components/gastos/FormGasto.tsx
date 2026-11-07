@@ -76,24 +76,24 @@ export function FormGasto({ acreedores, tiposGasto, formasPago, retenciones = []
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <label className={labelCls}>Tipo de gasto *</label>
-          <select value={tipo_gasto_id} onChange={e => handleTipoGasto(e.target.value)} className={inputCls} required>
+          <select aria-label="Tipo de gasto" value={tipo_gasto_id} onChange={e => handleTipoGasto(e.target.value)} className={inputCls} required>
             <option value="">— Seleccionar —</option>
             {tiposGasto.map(t => <option key={t.id} value={t.id}>{t.descripcion}</option>)}
           </select>
         </div>
         <div>
           <label className={labelCls}>Forma de pago *</label>
-          <select value={forma_pago_id} onChange={e => setFormaPagoId(e.target.value)} className={inputCls} required>
+          <select aria-label="Forma de pago" value={forma_pago_id} onChange={e => setFormaPagoId(e.target.value)} className={inputCls} required>
             {formasPago.map(f => <option key={f.id} value={f.id}>{f.descripcion}</option>)}
           </select>
         </div>
         <div className="sm:col-span-2">
           <label className={labelCls}>Descripción del gasto *</label>
-          <input value={descripcion} onChange={e => setDescripcion(e.target.value)} className={inputCls} required />
+          <input aria-label="Descripción del gasto" value={descripcion} onChange={e => setDescripcion(e.target.value)} className={inputCls} required />
         </div>
         <div>
           <label className={labelCls}>Valor *</label>
-          <input
+          <input aria-label="Valor"
             type="number" min="0.01" step="0.01"
             value={valor} onChange={e => setValor(Number(e.target.value))}
             className={inputCls} required
@@ -104,18 +104,18 @@ export function FormGasto({ acreedores, tiposGasto, formasPago, retenciones = []
         </div>
         <div>
           <label className={labelCls}>Fecha *</label>
-          <input type="date" value={fecha} onChange={e => setFecha(e.target.value)} className={inputCls} required />
+          <input aria-label="Fecha" type="date" value={fecha} onChange={e => setFecha(e.target.value)} className={inputCls} required />
         </div>
         <div>
           <label className={labelCls}>Acreedor (opcional)</label>
-          <select value={acreedor_id} onChange={e => setAcreedorId(e.target.value)} className={inputCls}>
+          <select aria-label="Acreedor (opcional)" value={acreedor_id} onChange={e => setAcreedorId(e.target.value)} className={inputCls}>
             <option value="">— Sin acreedor —</option>
             {acreedores.map(a => <option key={a.id} value={a.id}>{a.razon_social}</option>)}
           </select>
         </div>
         <div>
           <label className={labelCls}>Observaciones</label>
-          <input value={observaciones} onChange={e => setObservaciones(e.target.value)} className={inputCls} />
+          <input aria-label="Observaciones" value={observaciones} onChange={e => setObservaciones(e.target.value)} className={inputCls} />
         </div>
         <div className="sm:col-span-2">
           <RetencionesSelector

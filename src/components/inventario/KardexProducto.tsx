@@ -168,7 +168,7 @@ export function KardexProducto({ bodegas, productos }: Props) {
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Bodega
             </label>
-            <select
+            <select aria-label="Bodega"
               value={bodegaId}
               onChange={(e) => setBodegaId(e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -185,7 +185,7 @@ export function KardexProducto({ bodegas, productos }: Props) {
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Desde
             </label>
-            <input
+            <input aria-label="Desde"
               type="date"
               value={desde}
               onChange={(e) => setDesde(e.target.value)}
@@ -196,7 +196,7 @@ export function KardexProducto({ bodegas, productos }: Props) {
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Hasta
             </label>
-            <input
+            <input aria-label="Hasta"
               type="date"
               value={hasta}
               onChange={(e) => setHasta(e.target.value)}

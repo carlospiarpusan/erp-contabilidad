@@ -147,7 +147,7 @@ export function ListaClientes({
         <div className="flex flex-wrap gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Grupo</label>
-            <select
+            <select aria-label="Grupo"
               value={grupo_id}
               onChange={e => setGrupoId(e.target.value)}
               className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -158,7 +158,7 @@ export function ListaClientes({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600">Tipo documento</label>
-            <select
+            <select aria-label="Tipo documento"
               value={tipo}
               onChange={e => setTipo(e.target.value)}
               className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"

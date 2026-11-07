@@ -61,7 +61,7 @@ export function EnviarEmailButton({ apiPath, docId, emailCliente }: Props) {
             <form onSubmit={enviar} className="flex flex-col gap-3">
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Dirección de correo</label>
-                <input
+                <input aria-label="Dirección de correo"
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="cliente@email.com" required
                   className="w-full h-9 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -171,7 +171,7 @@ export function ListaProductos({
         <div className="flex flex-wrap gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Familia / Categoría</label>
-            <select
+            <select aria-label="Familia / Categoría"
               value={familia_id}
               onChange={e => setFamiliaId(e.target.value)}
               className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"
@@ -182,7 +182,7 @@ export function ListaProductos({
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Fabricante / Marca</label>
-            <select
+            <select aria-label="Fabricante / Marca"
               value={fabricante_id}
               onChange={e => setFabricanteId(e.target.value)}
               className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400"

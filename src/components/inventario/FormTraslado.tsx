@@ -160,7 +160,7 @@ export function FormTraslado({ bodegas }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="mb-2 block text-[11px] uppercase tracking-wider font-semibold text-gray-500">Bodega origen</label>
-            <select
+            <select aria-label="Bodega origen"
               value={bodegaOrigenId}
               onChange={(e) => setBodegaOrigenId(e.target.value)}
               className="w-full rounded-xl border border-gray-100 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
@@ -172,7 +172,7 @@ export function FormTraslado({ bodegas }: Props) {
           </div>
           <div>
             <label className="mb-2 block text-[11px] uppercase tracking-wider font-semibold text-gray-500">Bodega destino</label>
-            <select
+            <select aria-label="Bodega destino"
               value={bodegaDestinoId}
               onChange={(e) => setBodegaDestinoId(e.target.value)}
               className="w-full rounded-xl border border-gray-100 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-800"
@@ -266,7 +266,7 @@ export function FormTraslado({ bodegas }: Props) {
       {/* Observaciones */}
       <div className={`${cardCls} p-4`}>
         <label className="mb-2 block text-[11px] uppercase tracking-wider font-semibold text-gray-500">Observaciones</label>
-        <textarea
+        <textarea aria-label="Observaciones"
           value={observaciones}
           onChange={(e) => setObservaciones(e.target.value)}
           placeholder="Notas opcionales sobre el traslado..."

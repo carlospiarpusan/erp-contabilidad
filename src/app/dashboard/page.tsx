@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     <div className="flex max-w-[1400px] flex-col gap-5">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Resumen General</h2>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Resumen General</h1>
           <p className="mt-0.5 text-sm text-gray-400">Ejercicio {new Date().getFullYear()} · {MESES[mesActual]}</p>
         </div>
         <div className="flex gap-2">
@@ -48,7 +48,7 @@ export default async function DashboardPage() {
       <Suspense fallback={<CargandoResumen />}>
         <ResumenPrincipal />
       </Suspense>
-      <Suspense fallback={<div aria-label="Cargando actividad" aria-busy="true" className="h-80 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />}>
+      <Suspense fallback={<div role="status" aria-label="Cargando actividad" aria-busy="true" className="h-80 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />}>
         <ActividadDashboard puedeVerSugeridos={puedeVerSugeridos} />
       </Suspense>
     </div>
@@ -57,7 +57,7 @@ export default async function DashboardPage() {
 
 function CargandoResumen() {
   return (
-    <div aria-label="Cargando resumen" aria-busy="true" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div role="status" aria-label="Cargando resumen" aria-busy="true" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} className={`${i < 3 ? 'h-[134px]' : 'h-[78px]'} animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800`} />
       ))}

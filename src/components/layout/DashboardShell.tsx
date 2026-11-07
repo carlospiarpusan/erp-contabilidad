@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
 import { MobileLayoutProvider, useMobileLayout } from '@/components/layout/MobileLayoutProvider'
 import { Sidebar, type EmpresaAcceso } from '@/components/layout/Sidebar'
@@ -28,6 +29,26 @@ function ShellInner({
   empresas,
 }: DashboardShellProps) {
   const { isMobile, sidebarOpen, closeSidebar } = useMobileLayout()
+  const pathname = usePathname()
+  const mainRef = useRef<HTMLElement>(null)
+
+  // Título de la pestaña a partir del encabezado principal de cada página,
+  // para distinguir pestañas y que los lectores de pantalla anuncien la página.
+  useEffect(() => {
+    const main = mainRef.current
+    if (!main) return
+    const aplicar = () => {
+      const texto = main.querySelector('h1')?.textContent?.replace(/\s+/g, ' ').trim()
+      if (!texto) return false
+      const titulo = `${texto} | ClovEnt`
+      if (document.title !== titulo) document.title = titulo
+      return true
+    }
+    aplicar()
+    const observer = new MutationObserver(() => { aplicar() })
+    observer.observe(main, { childList: true, subtree: true, characterData: true })
+    return () => observer.disconnect()
+  }, [pathname])
 
   useEffect(() => {
     if (!isMobile && sidebarOpen) closeSidebar()
@@ -52,6 +73,16 @@ function ShellInner({
 
   return (
     <div className="app-shell-height clovent-grid flex overflow-hidden">
+      <a
+        href="#contenido-principal"
+        onClick={(event) => {
+          event.preventDefault()
+          mainRef.current?.focus()
+        }}
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-teal-700 focus:shadow-lg focus:ring-2 focus:ring-teal-500 dark:focus:bg-gray-900 dark:focus:text-teal-300"
+      >
+        Saltar al contenido
+      </a>
       <div className="hidden md:flex">
         <Sidebar
           rol={rol}
@@ -94,13 +125,16 @@ function ShellInner({
       {/* Main content */}
       <div className="relative flex flex-1 flex-col overflow-hidden">
         <Header
-          titulo="ClovEnt"
           userName={userName}
           userEmail={userEmail}
           userRol={rol}
           tieneMultiEmpresa={tieneMultiEmpresa}
         />
-        <main className="relative flex-1 overflow-y-auto px-4 py-4 pb-24 sm:px-6 sm:py-6 md:pb-6">
+        <main
+          ref={mainRef}
+          id="contenido-principal"
+          tabIndex={-1}
+          className="relative flex-1 overflow-y-auto focus:outline-none px-4 py-4 pb-24 sm:px-6 sm:py-6 md:pb-6">
           {children}
         </main>
       </div>

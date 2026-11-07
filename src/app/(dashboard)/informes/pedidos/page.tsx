@@ -62,17 +62,17 @@ export default async function InformePedidosPage({ searchParams }: PageProps) {
       <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Desde</label>
-          <input type="date" name="desde" defaultValue={desde}
+          <input aria-label="Desde" type="date" name="desde" defaultValue={desde}
             className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Hasta</label>
-          <input type="date" name="hasta" defaultValue={hasta}
+          <input aria-label="Hasta" type="date" name="hasta" defaultValue={hasta}
             className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Estado</label>
-          <select name="estado" defaultValue={estado}
+          <select aria-label="Estado" name="estado" defaultValue={estado}
             className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Todos</option>
             <option value="borrador">Borrador</option>

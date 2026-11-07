@@ -97,7 +97,7 @@ export function FormServicio() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Tipo de servicio</label>
-            <select
+            <select aria-label="Tipo de servicio"
               value={form.tipo}
               onChange={setField('tipo')}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
@@ -112,7 +112,7 @@ export function FormServicio() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Prioridad</label>
-            <select
+            <select aria-label="Prioridad"
               value={form.prioridad}
               onChange={setField('prioridad')}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
@@ -126,7 +126,7 @@ export function FormServicio() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Fecha de ingreso</label>
-            <input
+            <input aria-label="Fecha de ingreso"
               type="date"
               value={form.fecha_inicio}
               onChange={setField('fecha_inicio')}
@@ -136,7 +136,7 @@ export function FormServicio() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Fecha promesa entrega</label>
-            <input
+            <input aria-label="Fecha promesa entrega"
               type="date"
               value={form.fecha_promesa}
               onChange={setField('fecha_promesa')}
@@ -146,7 +146,7 @@ export function FormServicio() {
 
           <div className="flex flex-col gap-1 sm:col-span-2">
             <label className="text-sm font-medium text-gray-700">Direccion de servicio (si aplica)</label>
-            <input
+            <input aria-label="Direccion de servicio (si aplica)"
               type="text"
               value={form.direccion}
               onChange={setField('direccion')}
@@ -157,7 +157,7 @@ export function FormServicio() {
 
           <div className="flex flex-col gap-1 sm:col-span-2">
             <label className="text-sm font-medium text-gray-700">Descripcion del servicio *</label>
-            <textarea
+            <textarea aria-label="Descripcion del servicio"
               value={form.servicio}
               onChange={setField('servicio')}
               rows={3}
@@ -169,7 +169,7 @@ export function FormServicio() {
 
           <div className="flex flex-col gap-1 sm:col-span-2">
             <label className="text-sm font-medium text-gray-700">Observaciones</label>
-            <textarea
+            <textarea aria-label="Observaciones"
               value={form.observaciones}
               onChange={setField('observaciones')}
               rows={2}

@@ -75,7 +75,7 @@ export function ListaGastos({ gastos: inicial, total }: Props) {
               <tr><td colSpan={6} className="px-4 py-12 text-center text-gray-400">No hay gastos registrados</td></tr>
             ) : filtrados.map(g => (
               <tr key={g.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:bg-gray-950/50 cursor-pointer" onClick={() => { window.location.href = `/gastos/${g.id}` }}>
-                <td className="px-4 py-3 font-mono text-xs text-gray-500">{g.prefijo}{g.numero}</td>
+                <td className="px-4 py-3 font-mono text-xs text-gray-500"><Link href={`/gastos/${g.id}`} className="hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded" onClick={(e) => e.stopPropagation()}>{g.prefijo}{g.numero}</Link></td>
                 <td className="px-4 py-3 text-gray-700">{formatFecha(g.fecha)}</td>
                 <td className="px-4 py-3 text-gray-900 font-medium">
                   {g.lineas?.[0]?.descripcion ?? g.observaciones ?? '—'}

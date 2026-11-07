@@ -285,7 +285,7 @@ export function GestorPrecios({ precios: init, grupos }: Props) {
 
             <div className="col-span-2 flex flex-col gap-1">
               <label className="text-sm font-medium text-gray-700">Aplica para</label>
-              <select
+              <select aria-label="Aplica para"
                 value={scopeMode}
                 onChange={(event) => {
                   const next = event.target.value as ScopeMode
@@ -309,7 +309,7 @@ export function GestorPrecios({ precios: init, grupos }: Props) {
             {scopeMode === 'grupo' && (
               <div className="col-span-2 flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">Grupo</label>
-                <select
+                <select aria-label="Grupo"
                   value={form.grupo_id ?? ''}
                   onChange={(event) => setForm((prev) => ({ ...prev, grupo_id: event.target.value }))}
                   className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

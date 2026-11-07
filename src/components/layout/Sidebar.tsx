@@ -42,6 +42,7 @@ function MenuItemComponent({
         <button
           type="button"
           onClick={() => setOpen(!open)}
+          aria-expanded={open}
           className={cn(
             'flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] font-medium transition-all duration-150',
             isActive
@@ -70,6 +71,7 @@ function MenuItemComponent({
                   href={child.href}
                   prefetch={false}
                   onClick={onNavigate}
+                  aria-current={childActive ? 'page' : undefined}
                   className={cn(
                     'rounded-xl px-2.5 py-1.5 text-[13px] transition-all duration-150',
                     childActive
@@ -95,6 +97,7 @@ function MenuItemComponent({
       href={item.href!}
       prefetch={false}
       onClick={onNavigate}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150',
         isActive
@@ -173,6 +176,8 @@ export function Sidebar({
             <button
               type="button"
               onClick={() => setShowEmpresas(!showEmpresas)}
+              aria-expanded={showEmpresas}
+              aria-label={`${empresaNombre ?? 'ClovEnt'}: cambiar de empresa`}
               className="flex w-full items-center gap-3 text-left transition-colors hover:opacity-80"
             >
               <BrandMark />

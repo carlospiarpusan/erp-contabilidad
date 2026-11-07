@@ -67,17 +67,17 @@ export default async function AsientosPage({ searchParams }: PageProps) {
       <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Desde</label>
-          <input type="date" name="desde" defaultValue={desde}
+          <input aria-label="Desde" type="date" name="desde" defaultValue={desde}
             className="h-8 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Hasta</label>
-          <input type="date" name="hasta" defaultValue={hasta}
+          <input aria-label="Hasta" type="date" name="hasta" defaultValue={hasta}
             className="h-8 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Tipo</label>
-          <select name="tipo_doc" defaultValue={tipo_doc}
+          <select aria-label="Tipo" name="tipo_doc" defaultValue={tipo_doc}
             className="h-8 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:ring-blue-400">
             {TIPOS_DOC.map(t => (
               <option key={t.value} value={t.value}>{t.label}</option>

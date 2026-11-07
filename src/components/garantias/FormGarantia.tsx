@@ -124,7 +124,7 @@ export function FormGarantia() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Numero de serie</label>
-            <input
+            <input aria-label="Numero de serie"
               type="text"
               value={form.numero_serie}
               onChange={setField('numero_serie')}
@@ -135,7 +135,7 @@ export function FormGarantia() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Numero RMA</label>
-            <input
+            <input aria-label="Numero RMA"
               type="text"
               value={form.numero_rma}
               onChange={setField('numero_rma')}
@@ -146,7 +146,7 @@ export function FormGarantia() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Fecha de venta original</label>
-            <input
+            <input aria-label="Fecha de venta original"
               type="date"
               value={form.fecha_venta}
               onChange={setField('fecha_venta')}
@@ -156,7 +156,7 @@ export function FormGarantia() {
 
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-gray-700">Prioridad</label>
-            <select
+            <select aria-label="Prioridad"
               value={form.prioridad}
               onChange={setField('prioridad')}
               className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -170,7 +170,7 @@ export function FormGarantia() {
 
           <div className="flex flex-col gap-1 sm:col-span-2">
             <label className="text-sm font-medium text-gray-700">Descripcion del problema *</label>
-            <textarea
+            <textarea aria-label="Descripcion del problema"
               value={form.observaciones}
               onChange={setField('observaciones')}
               rows={3}

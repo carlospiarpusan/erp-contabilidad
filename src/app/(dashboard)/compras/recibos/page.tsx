@@ -44,12 +44,12 @@ export default async function ComprasRecibosPage({ searchParams }: PageProps) {
       <form className={cn('flex flex-wrap gap-3', cardCls, 'p-4')}>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Desde</label>
-          <input type="date" name="desde" defaultValue={desde}
+          <input aria-label="Desde" type="date" name="desde" defaultValue={desde}
             className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600">Hasta</label>
-          <input type="date" name="hasta" defaultValue={hasta}
+          <input aria-label="Hasta" type="date" name="hasta" defaultValue={hasta}
             className="h-9 rounded-lg border border-gray-300 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
         </div>
         <div className="flex items-end gap-2">
@@ -86,8 +86,8 @@ export default async function ComprasRecibosPage({ searchParams }: PageProps) {
               const prov = r.proveedor as { razon_social?: string } | null
               const fp   = r.forma_pago as { descripcion?: string } | null
               return (
-                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => { window.location.href = `/compras/recibos/${r.id}` }}>
-                  <td className="px-4 py-3 font-mono text-gray-600">{r.numero}</td>
+                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td className="px-4 py-3 font-mono text-gray-600"><Link href={`/compras/recibos/${r.id}`} className="hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">{r.numero}</Link></td>
                   <td className="px-4 py-3 text-gray-600">{formatFecha(r.fecha)}</td>
                   <td className="px-4 py-3">
                     {doc?.id ? (

@@ -80,7 +80,7 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
       <form className="flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900/85">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Buscar producto</label>
-          <input
+          <input aria-label="Buscar producto"
             name="q"
             defaultValue={sp.q ?? ''}
             placeholder="Código o descripción"
@@ -89,7 +89,7 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Ventana ventas (días)</label>
-          <input
+          <input aria-label="Ventana ventas (días)"
             name="dias"
             type="number"
             min={30}
@@ -100,7 +100,7 @@ export default async function SugeridosCompraPage({ searchParams }: PageProps) {
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-gray-600 dark:text-gray-300">Lead time (días)</label>
-          <input
+          <input aria-label="Lead time (días)"
             name="lead"
             type="number"
             min={7}
