@@ -5,6 +5,7 @@ import { cleanUUIDs } from '@/lib/utils/db'
 import { hasLowStock, isLowStock } from '@/lib/utils/stock'
 import { formatDateInTimeZone } from '@/lib/utils/dates'
 import { getEmpresaId } from '@/lib/db/maestros'
+import { sanitizeSearchTerm } from '@/lib/utils/search'
 
 export interface ProductoSinRotacion {
   id: string
@@ -90,9 +91,12 @@ export async function getProductos(params?: GetProductosParams) {
     if (familia_id) query = query.eq('familia_id', familia_id)
     if (fabricante_id) query = query.eq('fabricante_id', fabricante_id)
     if (busqueda) {
-      query = query.or(
-        `descripcion.ilike.%${busqueda}%,codigo.ilike.%${busqueda}%,codigo_barras.ilike.%${busqueda}%`
-      )
+      const term = sanitizeSearchTerm(busqueda)
+      if (term) {
+        query = query.or(
+          `descripcion.ilike.%${term}%,codigo.ilike.%${term}%,codigo_barras.ilike.%${term}%`
+        )
+      }
     }
     return query
   }

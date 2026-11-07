@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { cleanUUIDs } from '@/lib/utils/db'
 import { todayLocalISODate } from '@/utils/cn'
+import { sanitizeSearchTerm } from '@/lib/utils/search'
 
 async function getCurrentEmpresaId() {
   const supabase = await createClient()
@@ -58,7 +59,10 @@ export async function getCuentasPUC(params?: { busqueda?: string; nivel?: number
     .order('codigo')
   if (params?.nivel) q = q.eq('nivel', params.nivel)
   if (params?.busqueda) {
-    q = q.or(`codigo.ilike.%${params.busqueda}%,descripcion.ilike.%${params.busqueda}%`)
+    const term = sanitizeSearchTerm(params.busqueda)
+    if (term) {
+      q = q.or(`codigo.ilike.%${term}%,descripcion.ilike.%${term}%`)
+    }
   }
   const { data, count, error } = await q
   if (error) throw error

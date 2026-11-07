@@ -268,7 +268,10 @@ export async function getCompras(params?: {
   if (desde) q = q.gte('fecha', desde)
   if (hasta) q = q.lte('fecha', hasta)
   if (proveedor_id) q = q.eq('proveedor_id', proveedor_id)
-  if (busqueda) q = q.ilike('numero_externo', `%${busqueda}%`)
+  if (busqueda) {
+    const term = sanitizeSearchTerm(busqueda)
+    if (term) q = q.ilike('numero_externo', `%${term}%`)
+  }
 
   const { data, count, error } = await q
   if (error) throw error
